@@ -43,7 +43,7 @@ namespace DoAnWeb.Controllers
 
                     // Redirect to login page
                     TempData["SuccessMessage"] = "Registration successful. Please login.";
-                    return RedirectToAction("Login");
+                    return RedirectToAction("Login", "Account", new { area = string.Empty });
                 }
                 catch (ArgumentException ex)
                 {
@@ -91,7 +91,7 @@ namespace DoAnWeb.Controllers
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                         return Redirect(returnUrl);
                     else
-                        return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Index", "Home", new { area = string.Empty });
                 }
 
                 ModelState.AddModelError("", "Invalid username or password");
@@ -105,7 +105,7 @@ namespace DoAnWeb.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("CookieAuth");
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Home", new { area = string.Empty });
         }
 
         [HttpGet]
@@ -114,12 +114,12 @@ namespace DoAnWeb.Controllers
             // Get current user ID from claims
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                return RedirectToAction("Login");
+                return RedirectToAction("Login", "Account", new { area = string.Empty });
 
             // Get user from database
             var user = _userService.GetUserById(userId);
             if (user == null)
-                return RedirectToAction("Login");
+                return RedirectToAction("Login", "Account", new { area = string.Empty });
 
             // Create view model
             var model = new ProfileViewModel
@@ -146,12 +146,12 @@ namespace DoAnWeb.Controllers
                     // Get current user ID from claims
                     var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                     if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId) || userId != model.UserId)
-                        return RedirectToAction("Login");
+                        return RedirectToAction("Login", "Account", new { area = string.Empty });
 
                     // Get user from database
                     var user = _userService.GetUserById(userId);
                     if (user == null)
-                        return RedirectToAction("Login");
+                        return RedirectToAction("Login", "Account", new { area = string.Empty });
 
                     // Update user properties
                     user.DisplayName = model.DisplayName;

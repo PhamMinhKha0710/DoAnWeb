@@ -19,7 +19,21 @@ public class HomeController : Controller
         var questionService = HttpContext.RequestServices.GetService<IQuestionService>();
         var repositoryService = HttpContext.RequestServices.GetService<IRepositoryService>();
         
-        var recentQuestions = questionService.GetQuestionsWithUsers().OrderByDescending(q => q.CreatedDate).Take(5).ToList();
+        var recentQuestions = questionService.GetQuestionsWithUsers()
+            .OrderByDescending(q => q.CreatedDate)
+            .Take(5)
+            .Select(q => new Models.Question
+            {
+                QuestionId = q.QuestionId,
+                Title = q.Title,
+                Body = q.Body,
+                CreatedDate = q.CreatedDate,
+                ViewCount = q.ViewCount,
+                User = q.User,
+                QuestionTags = q.QuestionTags
+            })
+            .ToList();
+
         var recentRepositories = repositoryService.GetAllRepositories().OrderByDescending(r => r.UpdatedDate).Take(5).ToList();
         
         ViewBag.RecentQuestions = recentQuestions;

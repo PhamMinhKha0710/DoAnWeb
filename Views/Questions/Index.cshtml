@@ -29,17 +29,17 @@
                     <span class="text-muted">@Model.Count() questions</span>
                 </div>
                 <div class="btn-group">
-                    <a href="#" class="btn btn-outline-secondary active btn-sm">Newest</a>
-                    <a href="#" class="btn btn-outline-secondary btn-sm">Active</a>
-                    <a href="#" class="btn btn-outline-secondary btn-sm">Bountied</a>
-                    <a href="#" class="btn btn-outline-secondary btn-sm">Unanswered</a>
+                    <a asp-action="Index" asp-route-sort="newest" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "newest" || ViewData["CurrentSort"] == null ? "active" : "")">Newest</a>
+                    <a asp-action="Index" asp-route-sort="active" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "active" ? "active" : "")">Active</a>
+                    <a asp-action="Index" asp-route-sort="bountied" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "bountied" ? "active" : "")">Bountied</a>
+                    <a asp-action="Index" asp-route-sort="unanswered" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "unanswered" ? "active" : "")">Unanswered</a>
                     <div class="btn-group">
                         <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
                             More
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Frequent</a></li>
-                            <li><a class="dropdown-item" href="#">Score</a></li>
+                            <li><a class="dropdown-item" asp-action="Index" asp-route-sort="frequent">Frequent</a></li>
+                            <li><a class="dropdown-item" asp-action="Index" asp-route-sort="score">Score</a></li>
                         </ul>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                             <div class="d-flex">
                                 <div class="me-3 text-center" style="min-width: 60px;">
                                     <div class="votes">@item.Score votes</div>
-                                    <div class="answers zero">0 answers</div>
+                                    <div class="answers @(item.Answers?.Any() != true ? "zero" : "")">@(item.Answers?.Count ?? 0) answers</div>
                                     <div class="views">@item.ViewCount views</div>
                                 </div>
                                 <div>
@@ -89,7 +89,7 @@
                                                 }
                                             }
                                         </div>
-                                        <small class="text-muted">asked @(item.CreatedDate?.ToString("MMM dd")) by @item.User?.DisplayName</small>
+                                        <small class="text-muted">asked @(item.CreatedDate.ToString("MMM dd")) by @item.User?.DisplayName</small>
                                     </div>
                                 </div>
                             </div>
@@ -101,71 +101,77 @@
 
         <!-- Right Sidebar -->
         <div class="col-md-3">
+            <!-- The Overflow Blog -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">The Overflow Blog</h5>
+                    <h6 class="mb-0">The Overflow Blog</h6>
                 </div>
                 <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li class="mb-2">
-                            <i class="bi bi-pencil-fill me-1"></i>
-                            <a href="#" class="text-decoration-none">Secure coding beyond just memory safety</a>
-                        </li>
-                        <li>
-                            <i class="bi bi-pencil-fill me-1"></i>
-                            <a href="#" class="text-decoration-none">How can AI perform on the edge?</a>
-                        </li>
-                    </ul>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-pencil-square me-2"></i>
+                        <a href="#" class="text-decoration-none">Featured blog post 1</a>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-pencil-square me-2"></i>
+                        <a href="#" class="text-decoration-none">Featured blog post 2</a>
+                    </div>
                 </div>
             </div>
 
+            <!-- Featured on Meta -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Featured on Meta</h5>
+                    <h6 class="mb-0">Featured on Meta</h6>
                 </div>
                 <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li class="mb-2">
-                            <i class="bi bi-chat-square-text me-1"></i>
-                            <a href="#" class="text-decoration-none">Recapping Stack's first community-wide AMA (Ask Me Anything)</a>
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-chat-square-text me-1"></i>
-                            <a href="#" class="text-decoration-none">How might Chat evolve? Help us identify problems and opportunities</a>
-                        </li>
-                        <li>
-                            <i class="bi bi-chat-square-text me-1"></i>
-                            <a href="#" class="text-decoration-none">Policy: Generative AI (e.g., ChatGPT) is banned</a>
-                        </li>
-                    </ul>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-star-fill me-2 text-warning"></i>
+                        <a href="#" class="text-decoration-none">Meta discussion 1</a>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-star-fill me-2 text-warning"></i>
+                        <a href="#" class="text-decoration-none">Meta discussion 2</a>
+                    </div>
                 </div>
             </div>
 
+            <!-- Watched Tags -->
             <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Custom Filters</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Watched Tags</h6>
+                    <a href="#" class="text-decoration-none">edit</a>
                 </div>
                 <div class="card-body">
-                    <a href="#" class="btn btn-outline-primary btn-sm">Create a custom filter</a>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <p class="text-muted">Add tags to customize your feed</p>
+                        <button class="btn btn-outline-secondary btn-sm">Watch a tag</button>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Sign up to watch tags</p>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary btn-sm">Sign up</a>
+                    }
                 </div>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Watched Tags</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted">Watch tags to curate your list of questions.</p>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Watch a tag</a>
-                </div>
-            </div>
-
+            <!-- Ignored Tags -->
             <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Ignored Tags</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Ignored Tags</h6>
+                    <a href="#" class="text-decoration-none">edit</a>
                 </div>
                 <div class="card-body">
-                    <a href="#" class="btn btn-outline-primary btn-sm">Add an ignored tag</a>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <p class="text-muted">Add tags to hide questions</p>
+                        <button class="btn btn-outline-secondary btn-sm">Ignore a tag</button>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Sign up to ignore tags</p>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary btn-sm">Sign up</a>
+                    }
                 </div>
             </div>
         </div>

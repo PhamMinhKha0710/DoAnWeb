@@ -17,7 +17,7 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: Questions
-        public IActionResult Index(string searchTerm = null, string tag = null)
+        public IActionResult Index(string searchTerm = null, string tag = null, string sort = "newest")
         {
             IEnumerable<Question> questions;
 
@@ -36,7 +36,31 @@ namespace DoAnWeb.Controllers
                 questions = _questionService.GetQuestionsWithUsers();
             }
 
+            // Apply sorting based on the sort parameter
+            questions = SortQuestions(questions, sort);
+            ViewData["CurrentSort"] = sort;
+
             return View(questions);
+        }
+
+        private IEnumerable<Question> SortQuestions(IEnumerable<Question> questions, string sort)
+        {
+            switch (sort.ToLower())
+            {
+                case "active":
+                    return questions.OrderByDescending(q => q.UpdatedDate ?? q.CreatedDate);
+                case "bountied":
+                    return questions.Where(q => q.Score > 0).OrderByDescending(q => q.Score);
+                case "unanswered":
+                    return questions.Where(q => !q.Answers.Any()).OrderByDescending(q => q.CreatedDate);
+                case "frequent":
+                    return questions.OrderByDescending(q => q.ViewCount);
+                case "score":
+                    return questions.OrderByDescending(q => q.Score);
+                case "newest":
+                default:
+                    return questions.OrderByDescending(q => q.CreatedDate);
+            }
         }
 
         // GET: Questions/Details/5
@@ -51,11 +75,42 @@ namespace DoAnWeb.Controllers
             return View(question);
         }
 
+        // POST: Questions/SubmitAnswer
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult SubmitAnswer(int questionId, string body)
+        {
+            if (string.IsNullOrEmpty(body))
+            {
+                return RedirectToAction(nameof(Details), new { id = questionId });
+            }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var answer = new Answer
+            {
+                QuestionId = questionId,
+                UserId = userId,
+                Body = body,
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow
+            };
+
+            _questionService.AddAnswer(answer);
+
+            return RedirectToAction(nameof(Details), new { id = questionId });
+        }
+
         // GET: Questions/Create
         [Authorize]
         public IActionResult Create()
         {
-            return View();
+            return View(viewName: string.Empty, model: string.Empty);
         }
 
         // POST: Questions/Create
@@ -255,5 +310,43 @@ namespace DoAnWeb.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
         }
+        // POST: Questions/AddAnswer
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult AddAnswer(int questionId, string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                TempData["ErrorMessage"] = "Answer cannot be empty.";
+                return RedirectToAction("Details", new { id = questionId });
+            }
+
+            try
+            {
+                // Lấy ID người dùng hiện tại
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                    return RedirectToAction("Login", "Account");
+
+                // Tạo câu trả lời mới
+                var answer = new Answer
+                {
+                    QuestionId = questionId,
+                    Body = content,
+                    UserId = userId
+                };
+
+                _questionService.AddAnswer(answer);
+
+                return RedirectToAction("Details", new { id = questionId });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction("Details", new { id = questionId });
+            }
+        }
     }
+
 }

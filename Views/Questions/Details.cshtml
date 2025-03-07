@@ -38,7 +38,7 @@
                             <span class="badge bg-info">@Model.Status</span>
                         </div>
                         <div>
-                            <small class="text-muted">Asked on @Model.CreatedDate?.ToString("MMM dd, yyyy")</small>
+                            <small class="text-muted">Asked on @Model.CreatedDate.ToString("MMM dd, yyyy")</small>
                             @if (Model.UpdatedDate != Model.CreatedDate)
                             {
                                 <small class="text-muted"> | Updated on @Model.UpdatedDate?.ToString("MMM dd, yyyy")</small>
@@ -71,6 +71,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="card-footer">
                     @if (User.Identity.IsAuthenticated)
                     {
@@ -91,6 +92,70 @@
                     }
                 </div>
             </div>
+
+            <!-- Answers Section -->
+            <h3 class="mt-4">Answers (@(Model.Answers?.Count() ?? 0))</h3>
+            <div class="answers-container">
+                @if (Model.Answers != null && Model.Answers.Any())
+                {
+                    foreach (var answer in Model.Answers.OrderByDescending(a => a.IsAccepted).ThenByDescending(a => a.Score))
+                    {
+                        <div class="card mb-3 @(answer.IsAccepted ? "border-success" : "")">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div class="vote-section">
+                                        <span class="badge bg-secondary">@answer.Score votes</span>
+                                        @if (answer.IsAccepted)
+                                        {
+                                            <span class="badge bg-success">Accepted</span>
+                                        }
+                                    </div>
+                                    <small class="text-muted">Answered on @answer.CreatedDate.ToString("MMM dd, yyyy")</small>
+                                </div>
+                                <div class="answer-content mt-3">
+                                    @Html.Raw(answer.Body)
+                                </div>
+                                <div class="answer-footer mt-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="user-info">
+                                            <small class="text-muted">Answered by @answer.User.DisplayName</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No answers yet. Be the first to answer!</p>
+                }
+
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Your Answer</h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="SubmitAnswer" method="post">
+                                <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                <div class="form-group">
+                                    <textarea name="body" class="form-control" rows="6" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-3">Post Your Answer</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mt-4">
+                        <p class="mb-0">Please <a asp-controller="Account" asp-action="Login">log in</a> to post an answer.</p>
+                    </div>
+                }
+            </div>
+
         </div>
     </div>
 </div>

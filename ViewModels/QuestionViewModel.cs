@@ -16,5 +16,8 @@ namespace DoAnWeb.ViewModels
 
         [Display(Name = "Tags (comma separated)")]
         public string Tags { get; set; }
+
+        public int UserId { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }

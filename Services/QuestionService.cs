@@ -8,15 +8,18 @@ namespace DoAnWeb.Services
         private readonly IQuestionRepository _questionRepository;
         private readonly IRepository<Tag> _tagRepository;
         private readonly IRepository<Vote> _voteRepository;
+        private readonly IRepository<Answer> _answerRepository;
 
         public QuestionService(
             IQuestionRepository questionRepository,
             IRepository<Tag> tagRepository,
-            IRepository<Vote> voteRepository)
+            IRepository<Vote> voteRepository,
+            IRepository<Answer> answerRepository)
         {
             _questionRepository = questionRepository;
             _tagRepository = tagRepository;
             _voteRepository = voteRepository;
+            _answerRepository = answerRepository;
         }
 
         public IEnumerable<Question> GetAllQuestions()
@@ -187,6 +190,16 @@ namespace DoAnWeb.Services
             _questionRepository.Update(question);
             _voteRepository.Save();
             _questionRepository.Save();
+        }
+         public void AddAnswer(Answer answer)
+        {
+            if (answer == null)
+                throw new ArgumentNullException(nameof(answer));
+
+            answer.CreatedDate = DateTime.Now;
+
+            _answerRepository.Add(answer);
+            _answerRepository.Save();
         }
     }
 }

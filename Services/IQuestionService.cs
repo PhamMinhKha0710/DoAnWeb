@@ -36,5 +36,8 @@ namespace DoAnWeb.Services
         
         // Vote question
         void VoteQuestion(int questionId, int userId, bool isUpvote);
+        //add answer
+        void AddAnswer(Answer answer);
+
     }
 }

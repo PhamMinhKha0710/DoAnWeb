@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using DoAnWeb.Models;
 
-namespace DoAnWeb.Models;
+namespace DoAnWeb;
 
 public partial class DevCommunityContext : DbContext
 {
-    public DevCommunityContext()
-    {
-    }
-
     public DevCommunityContext(DbContextOptions<DevCommunityContext> options)
         : base(options)
     {
     }
 
     public virtual DbSet<ActivityLog> ActivityLogs { get; set; }
+
+    public virtual DbSet<Answer> Answers { get; set; }
 
     public virtual DbSet<Comment> Comments { get; set; }
 
@@ -35,18 +34,11 @@ public partial class DevCommunityContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<Vote> Votes { get; set; }
+    public virtual DbSet<UserWatchedTag> UserWatchedTags { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        // Connection string is configured through DI in Program.cs
-        // Only use this if options are not provided through DI
-        if (!optionsBuilder.IsConfigured)
-        {
-            // This is a fallback and should not be used in production
-            optionsBuilder.UseSqlServer("Name=ConnectionStrings:DevCommunityDB");
-        }
-    }
+    public virtual DbSet<UserIgnoredTag> UserIgnoredTags { get; set; }
+
+    public virtual DbSet<Vote> Votes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,6 +56,24 @@ public partial class DevCommunityContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__ActivityL__UserI__05D8E0BE");
+        });
+
+        modelBuilder.Entity<Answer>(entity =>
+        {
+            entity.HasKey(e => e.AnswerId).HasName("PK__Answers__D482500454278ED7");
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Score).HasDefaultValue(0);
+
+            entity.HasOne(d => d.Question).WithMany(p => p.Answers)
+                .HasForeignKey(d => d.QuestionId)
+                .HasConstraintName("FK__Answers__Questio__2CF2ADDF");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Answers)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK__Answers__UserId__2DE6D218");
         });
 
         modelBuilder.Entity<Comment>(entity =>
