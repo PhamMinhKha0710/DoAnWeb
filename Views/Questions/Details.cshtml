@@ -1,0 +1,96 @@
+@model DoAnWeb.Models.Question
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Questions</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h1 class="card-title mb-0">@Model.Title</h1>
+                    @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString())
+                    {
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@Model.QuestionId" class="btn btn-outline-primary btn-sm">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@Model.QuestionId" class="btn btn-outline-danger btn-sm">Delete</a>
+                        </div>
+                    }
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <span class="badge bg-primary">@Model.Score votes</span>
+                            <span class="badge bg-secondary">@Model.ViewCount views</span>
+                            <span class="badge bg-info">@Model.Status</span>
+                        </div>
+                        <div>
+                            <small class="text-muted">Asked on @Model.CreatedDate?.ToString("MMM dd, yyyy")</small>
+                            @if (Model.UpdatedDate != Model.CreatedDate)
+                            {
+                                <small class="text-muted"> | Updated on @Model.UpdatedDate?.ToString("MMM dd, yyyy")</small>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="question-body mb-4">
+                        @Html.Raw(Model.Body)
+                    </div>
+
+                    <div class="mb-3">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-secondary text-decoration-none">@tag.TagName</a>
+                        }
+                    </div>
+
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <img src="@(string.IsNullOrEmpty(Model.User?.AvatarUrl) ? "/img/default-avatar.png" : Model.User.AvatarUrl)" alt="@Model.User?.DisplayName" class="rounded-circle" width="50" height="50">
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h5 class="mt-0">@Model.User?.DisplayName</h5>
+                                    <p class="mb-0">@Model.User?.Bio</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <form asp-action="Vote" method="post" class="d-inline">
+                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                    <input type="hidden" name="isUpvote" value="true" />
+                                    <button type="submit" class="btn btn-outline-success btn-sm">Upvote</button>
+                                </form>
+                                <form asp-action="Vote" method="post" class="d-inline">
+                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                    <input type="hidden" name="isUpvote" value="false" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Downvote</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

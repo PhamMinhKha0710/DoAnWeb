@@ -1,0 +1,173 @@
+@model IEnumerable<DoAnWeb.Models.Question>
+
+@{
+    ViewData["Title"] = "Newest Questions";
+}
+
+<div class="container">
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-md-2">
+            <div class="nav flex-column nav-pills mb-4">
+                <a class="nav-link text-dark" href="/"><i class="bi bi-house"></i> Home</a>
+                <a class="nav-link text-dark active" href="/Questions"><i class="bi bi-question-circle"></i> Questions</a>
+                <a class="nav-link text-dark" href="#"><i class="bi bi-tag"></i> Tags</a>
+                <a class="nav-link text-dark" href="#"><i class="bi bi-people"></i> Users</a>
+                <a class="nav-link text-dark" href="#"><i class="bi bi-bookmark"></i> Saves</a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-7">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Newest Questions</h1>
+                <a asp-action="Create" class="btn btn-primary">Ask Question</a>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="text-muted">@Model.Count() questions</span>
+                </div>
+                <div class="btn-group">
+                    <a href="#" class="btn btn-outline-secondary active btn-sm">Newest</a>
+                    <a href="#" class="btn btn-outline-secondary btn-sm">Active</a>
+                    <a href="#" class="btn btn-outline-secondary btn-sm">Bountied</a>
+                    <a href="#" class="btn btn-outline-secondary btn-sm">Unanswered</a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                            More
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Frequent</a></li>
+                            <li><a class="dropdown-item" href="#">Score</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-funnel"></i> Filter</button>
+                </div>
+            </div>
+
+            @if (ViewData["Tag"] != null)
+            {
+                <div class="alert alert-info">
+                    Showing questions tagged with: <strong>@ViewData["Tag"]</strong>
+                    <a asp-action="Index" class="float-end">Clear filter</a>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-warning">
+                    No questions found. Be the first to <a asp-action="Create">ask a question</a>!
+                </div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var item in Model)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex">
+                                <div class="me-3 text-center" style="min-width: 60px;">
+                                    <div class="votes">@item.Score votes</div>
+                                    <div class="answers zero">0 answers</div>
+                                    <div class="views">@item.ViewCount views</div>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">
+                                        <a asp-action="Details" asp-route-id="@item.QuestionId">@item.Title</a>
+                                    </h5>
+                                    <p class="mb-1">@(item.Body?.Length > 200 ? item.Body.Substring(0, 200) + "..." : item.Body)</p>
+                                    <div class="d-flex align-items-center">
+                                        <div class="tags me-auto">
+                                            @if (item.Tags != null)
+                                            {
+                                                @foreach (var tag in item.Tags)
+                                                {
+                                                    <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark me-1 text-decoration-none">@tag.TagName</a>
+                                                }
+                                            }
+                                        </div>
+                                        <small class="text-muted">asked @(item.CreatedDate?.ToString("MMM dd")) by @item.User?.DisplayName</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">The Overflow Blog</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-pencil-fill me-1"></i>
+                            <a href="#" class="text-decoration-none">Secure coding beyond just memory safety</a>
+                        </li>
+                        <li>
+                            <i class="bi bi-pencil-fill me-1"></i>
+                            <a href="#" class="text-decoration-none">How can AI perform on the edge?</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Featured on Meta</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-chat-square-text me-1"></i>
+                            <a href="#" class="text-decoration-none">Recapping Stack's first community-wide AMA (Ask Me Anything)</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-chat-square-text me-1"></i>
+                            <a href="#" class="text-decoration-none">How might Chat evolve? Help us identify problems and opportunities</a>
+                        </li>
+                        <li>
+                            <i class="bi bi-chat-square-text me-1"></i>
+                            <a href="#" class="text-decoration-none">Policy: Generative AI (e.g., ChatGPT) is banned</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Custom Filters</h5>
+                </div>
+                <div class="card-body">
+                    <a href="#" class="btn btn-outline-primary btn-sm">Create a custom filter</a>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Watched Tags</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Watch tags to curate your list of questions.</p>
+                    <a href="#" class="btn btn-outline-primary btn-sm">Watch a tag</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Ignored Tags</h5>
+                </div>
+                <div class="card-body">
+                    <a href="#" class="btn btn-outline-primary btn-sm">Add an ignored tag</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
