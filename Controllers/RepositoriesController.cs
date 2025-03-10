@@ -22,15 +22,43 @@ namespace DoAnWeb.Controllers
         public IActionResult Index(string searchTerm = null)
         {
             IEnumerable<Repository> repositories;
-
-            if (!string.IsNullOrEmpty(searchTerm))
+            
+            // Check if user is authenticated
+            if (User.Identity?.IsAuthenticated == true)
             {
-                repositories = _repositoryService.SearchRepositories(searchTerm);
-                ViewData["SearchTerm"] = searchTerm;
+                // Get current user ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    // Show user's own repositories
+                    repositories = _repositoryService.GetRepositoriesByOwner(userId);
+                    ViewData["PersonalRepositories"] = true;
+                }
+                else
+                {
+                    // Fallback to public repositories if user ID can't be parsed
+                    repositories = _repositoryService.GetAllRepositories()
+                        .Where(r => r.Visibility == "Public")
+                        .OrderByDescending(r => r.UpdatedDate);
+                    ViewData["PersonalRepositories"] = false;
+                }
             }
             else
             {
-                repositories = _repositoryService.GetAllRepositories();
+                // For non-authenticated users, show only public repositories
+                repositories = _repositoryService.GetAllRepositories()
+                    .Where(r => r.Visibility == "Public")
+                    .OrderByDescending(r => r.UpdatedDate);
+                ViewData["PersonalRepositories"] = false;
+            }
+
+            // Apply search filter if provided
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                repositories = repositories.Where(r => 
+                    r.RepositoryName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                    (r.Description != null && r.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+                ViewData["SearchTerm"] = searchTerm;
             }
 
             return View(repositories);

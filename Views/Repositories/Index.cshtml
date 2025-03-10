@@ -2,15 +2,31 @@
 
 @{
     ViewData["Title"] = "Repositories";
+    bool isPersonalRepositories = ViewData["PersonalRepositories"] != null && (bool)ViewData["PersonalRepositories"];
 }
 
 <div class="container">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>Repositories</h1>
+            @if (isPersonalRepositories)
+            {
+                <h1>My Repositories</h1>
+            }
+            else
+            {
+                <h1>Public Repositories</h1>
+                <p class="text-muted">Showing popular public repositories. <a asp-controller="Account" asp-action="Login">Log in</a> to see your personal repositories.</p>
+            }
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Create" class="btn btn-primary">Create Repository</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-action="Create" class="btn btn-primary">Create Repository</a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Log in to create</a>
+            }
         </div>
     </div>
 
@@ -26,7 +42,14 @@
     @if (!Model.Any())
     {
         <div class="alert alert-warning">
-            No repositories found. Be the first to <a asp-action="Create">create a repository</a>!
+            @if (isPersonalRepositories)
+            {
+                <span>You don't have any repositories yet. <a asp-action="Create">Create a repository</a> to get started!</span>
+            }
+            else
+            {
+                <span>No public repositories found. <a asp-controller="Account" asp-action="Login">Log in</a> to see your personal repositories or create new ones.</span>
+            }
         </div>
     }
     else

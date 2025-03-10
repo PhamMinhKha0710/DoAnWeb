@@ -45,12 +45,6 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Questions" asp-action="Index">Questions</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Repositories" asp-action="Index">Repositories</a>
                         </li>
                     </ul>
@@ -73,7 +67,6 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a></li>
-                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Logout</a></li>
                                 </ul>
                             </li>
@@ -112,8 +105,11 @@
                         <a class="nav-link text-dark d-flex align-items-center @(currentController == "Tags" ? "active" : "")" asp-area="" asp-controller="Tags" asp-action="Index">
                             <i class="bi bi-tags me-2"></i> Tag
                         </a>
-                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Account" ? "active" : "")" asp-area="" asp-controller="Account" asp-action="Index">
+                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Users" ? "active" : "")" asp-area="" asp-controller="Users" asp-action="Index">
                             <i class="bi bi-people me-2"></i> User
+                        </a>
+                         <a class="nav-link text-dark d-flex align-items-center @(currentController == "Repositories" ? "active" : "")" asp-area="" asp-controller="Repositories" asp-action="Index">
+                            <i class="bi-display"></i>  Repositories
                         </a>
                         <a class="nav-link text-dark d-flex align-items-center" asp-area="" asp-controller="Account" asp-action="Saves">
                             <i class="bi bi-bookmark me-2"></i> Save
