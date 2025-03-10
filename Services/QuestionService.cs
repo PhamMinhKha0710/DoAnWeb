@@ -133,6 +133,21 @@ namespace DoAnWeb.Services
 
         public void DeleteQuestion(int id)
         {
+            // Get the question with its answers
+            var question = _questionRepository.GetQuestionWithDetails(id);
+            if (question == null)
+                return;
+
+            // Delete all answers associated with the question first
+            if (question.Answers != null && question.Answers.Any())
+            {
+                foreach (var answer in question.Answers.ToList())
+                {
+                    _answerRepository.Delete(answer);
+                }
+            }
+
+            // Now delete the question
             _questionRepository.Delete(id);
             _questionRepository.Save();
         }
@@ -150,14 +165,17 @@ namespace DoAnWeb.Services
             if (existingVote != null)
             {
                 // Update existing vote
-                if ((existingVote.IsUpvote && !isUpvote) || (!existingVote.IsUpvote && isUpvote))
+                int currentVoteValue = existingVote.VoteValue;
+                int newVoteValue = isUpvote ? 1 : -1;
+                
+                if (currentVoteValue != newVoteValue)
                 {
                     // Change vote direction
-                    existingVote.IsUpvote = isUpvote;
+                    existingVote.VoteValue = newVoteValue;
                     _voteRepository.Update(existingVote);
 
                     // Update question score
-                    question.Score += isUpvote ? 2 : -2;
+                    question.Score += newVoteValue - currentVoteValue;
                 }
                 else
                 {
@@ -165,7 +183,7 @@ namespace DoAnWeb.Services
                     _voteRepository.Delete(existingVote);
 
                     // Update question score
-                    question.Score += isUpvote ? -1 : 1;
+                    question.Score -= currentVoteValue;
                 }
             }
             else
@@ -176,14 +194,14 @@ namespace DoAnWeb.Services
                     UserId = userId,
                     TargetId = questionId,
                     TargetType = "Question",
-                    IsUpvote = isUpvote,
+                    VoteValue = isUpvote ? 1 : -1,
                     CreatedDate = DateTime.Now
                 };
 
                 _voteRepository.Add(vote);
 
                 // Update question score
-                question.Score += isUpvote ? 1 : -1;
+                question.Score += vote.VoteValue;
             }
 
             // Save changes

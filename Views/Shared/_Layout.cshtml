@@ -93,9 +93,48 @@
         </nav>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        <div class="row">
+            @{
+                var currentController = ViewContext.RouteData.Values["Controller"].ToString();
+                var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repositories";
+            }
+            
+            @if (showSidebar)
+            {
+                <div class="col-md-2 sidebar">
+                    <nav class="nav flex-column">
+                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-house-door me-2"></i> Home
+                        </a>
+                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Questions" ? "active" : "")" asp-area="" asp-controller="Questions" asp-action="Index">
+                            <i class="bi bi-question-circle me-2"></i> Question
+                        </a>
+                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Tags" ? "active" : "")" asp-area="" asp-controller="Tags" asp-action="Index">
+                            <i class="bi bi-tags me-2"></i> Tag
+                        </a>
+                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Account" ? "active" : "")" asp-area="" asp-controller="Account" asp-action="Index">
+                            <i class="bi bi-people me-2"></i> User
+                        </a>
+                        <a class="nav-link text-dark d-flex align-items-center" asp-area="" asp-controller="Account" asp-action="Saves">
+                            <i class="bi bi-bookmark me-2"></i> Save
+                        </a>
+                    </nav>
+                </div>
+                <div class="col-md-10">
+                    <main role="main" class="pb-3">
+                        @RenderBody()
+                    </main>
+                </div>
+            }
+            else
+            {
+                <div class="col-md-12">
+                    <main role="main" class="pb-3">
+                        @RenderBody()
+                    </main>
+                </div>
+            }
+        </div>
     </div>
 
     <footer class="border-top footer text-muted">

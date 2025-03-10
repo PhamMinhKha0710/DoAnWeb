@@ -10,10 +10,12 @@ namespace DoAnWeb.Controllers
     public class QuestionsController : Controller
     {
         private readonly IQuestionService _questionService;
+        private readonly IAnswerService _answerService;
 
-        public QuestionsController(IQuestionService questionService)
+        public QuestionsController(IQuestionService questionService, IAnswerService answerService)
         {
             _questionService = questionService;
+            _answerService = answerService;
         }
 
         // GET: Questions
@@ -110,7 +112,7 @@ namespace DoAnWeb.Controllers
         [Authorize]
         public IActionResult Create()
         {
-            return View(viewName: string.Empty, model: string.Empty);
+            return View(new QuestionViewModel());
         }
 
         // POST: Questions/Create
@@ -302,6 +304,9 @@ namespace DoAnWeb.Controllers
 
                 _questionService.VoteQuestion(id, userId, isUpvote);
 
+                // Add success message
+                TempData["SuccessMessage"] = isUpvote ? "Upvote recorded successfully." : "Downvote recorded successfully.";
+                
                 return RedirectToAction(nameof(Details), new { id });
             }
             catch (Exception ex)
@@ -324,12 +329,12 @@ namespace DoAnWeb.Controllers
 
             try
             {
-                // Lấy ID người dùng hiện tại
+                // Get current user ID
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                     return RedirectToAction("Login", "Account");
 
-                // Tạo câu trả lời mới
+                // Create new answer
                 var answer = new Answer
                 {
                     QuestionId = questionId,
@@ -337,7 +342,7 @@ namespace DoAnWeb.Controllers
                     UserId = userId
                 };
 
-                _questionService.AddAnswer(answer);
+                _answerService.CreateAnswer(answer);
 
                 return RedirectToAction("Details", new { id = questionId });
             }
@@ -347,6 +352,32 @@ namespace DoAnWeb.Controllers
                 return RedirectToAction("Details", new { id = questionId });
             }
         }
-    }
 
+        // POST: Questions/VoteAnswer
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult VoteAnswer(int answerId, int questionId, bool isUpvote)
+        {
+            try
+            {
+                // Get current user ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                    return RedirectToAction("Login", "Account");
+
+                _answerService.VoteAnswer(answerId, userId, isUpvote);
+
+                // Add success message
+                TempData["SuccessMessage"] = isUpvote ? "Answer upvote recorded successfully." : "Answer downvote recorded successfully.";
+                
+                return RedirectToAction(nameof(Details), new { id = questionId });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(Details), new { id = questionId });
+            }
+        }
+    }
 }

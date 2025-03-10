@@ -76,7 +76,7 @@ namespace DoAnWeb.Controllers
         [Authorize]
         public IActionResult Create()
         {
-            return View(model: string.Empty);
+            return View(new RepositoryViewModel());
         }
 
         // POST: Repositories/Create

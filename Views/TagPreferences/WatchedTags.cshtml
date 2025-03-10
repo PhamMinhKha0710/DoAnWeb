@@ -1,0 +1,94 @@
+@model IEnumerable<DoAnWeb.Models.Tag>
+
+@{
+    ViewData["Title"] = "Watched Tags";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>Watched Tags</h1>
+            <p class="lead">Tags you are watching will appear in your personalized view.</p>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-info">
+                    @TempData["InfoMessage"]
+                </div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Add a Tag to Watch</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="WatchTag" method="post" class="row g-3">
+                        <div class="col-md-8">
+                            <select name="tagId" class="form-select">
+                                <option value="">-- Select a tag --</option>
+                                @foreach (var tag in ViewBag.AllTags)
+                                {
+                                    if (!Model.Any(t => t.TagId == tag.TagId))
+                                    {
+                                        <option value="@tag.TagId">@tag.TagName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary">Watch Tag</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Watched Tags</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Any())
+                    {
+                        <p class="text-muted">You are not watching any tags yet.</p>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            @foreach (var tag in Model)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">@tag.TagName</span>
+                                        <form asp-action="UnwatchTag" method="post" class="d-inline">
+                                            <input type="hidden" name="tagId" value="@tag.TagId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Unwatch</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a asp-action="IgnoredTags" class="btn btn-outline-secondary">Manage Ignored Tags</a>
+                <a asp-controller="Questions" asp-action="Index" class="btn btn-outline-primary">Back to Questions</a>
+            </div>
+        </div>
+    </div>
+</div>

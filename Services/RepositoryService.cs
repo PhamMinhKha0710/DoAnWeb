@@ -41,12 +41,77 @@ namespace DoAnWeb.Services
 
         public Repository GetRepositoryWithFiles(int id)
         {
-            return _repositoryRepository.GetRepositoryWithFiles(id);
+            try
+            {
+                return _repositoryRepository.GetRepositoryWithFiles(id);
+            }
+            catch (Exception ex) when (ex.Message.Contains("Invalid column name 'FileSize'") || 
+                                      ex.Message.Contains("Invalid column name 'UpdatedDate'"))
+            {
+                // Handle the case where the database schema doesn't match the model
+                // Get the repository without files first
+                var repository = _repositoryRepository.GetById(id);
+                if (repository == null) return null;
+                
+                try
+                {
+                    // Try to get files directly from the repository context
+                    var files = _fileRepository.GetAll().Where(f => f.RepositoryId == id).ToList();
+                    
+                    // Set default values for missing columns
+                    foreach (var file in files)
+                    {
+                        file.UpdatedDate = repository.UpdatedDate ?? DateTime.Now;
+                        file.FileSize = file.FileContent != null ? file.FileContent.Length : 0;
+                    }
+                    
+                    repository.RepositoryFiles = files;
+                }
+                catch (Exception)
+                {
+                    // If we still have issues, just return an empty collection
+                    repository.RepositoryFiles = new List<RepositoryFile>();
+                }
+                
+                return repository;
+            }
         }
 
         public Repository GetRepositoryWithCommits(int id)
         {
-            return _repositoryRepository.GetRepositoryWithCommits(id);
+            try
+            {
+                return _repositoryRepository.GetRepositoryWithCommits(id);
+            }
+            catch (Exception ex) when (ex.Message.Contains("Invalid column name 'CommitHash'"))
+            {
+                // Handle the case where the database schema doesn't match the model
+                // Get the repository without commits first
+                var repository = _repositoryRepository.GetById(id);
+                if (repository == null) return null;
+                
+                try
+                {
+                    // Try to get commits directly from the repository context
+                    var commits = _commitRepository.GetAll().Where(c => c.RepositoryId == id).ToList();
+                    
+                    // Set default values for missing columns
+                    foreach (var commit in commits)
+                    {
+                        // Generate a simple hash based on commit ID if CommitHash is missing
+                        commit.CommitHash = $"temp-{commit.CommitId}";
+                    }
+                    
+                    repository.RepositoryCommits = commits;
+                }
+                catch (Exception)
+                {
+                    // If we still have issues, just return an empty collection
+                    repository.RepositoryCommits = new List<RepositoryCommit>();
+                }
+                
+                return repository;
+            }
         }
 
         public IEnumerable<Repository> SearchRepositories(string searchTerm)

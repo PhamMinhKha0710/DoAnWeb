@@ -73,17 +73,31 @@
                 </div>
 
                 <div class="card-footer">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success mb-3">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger mb-3">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    
                     @if (User.Identity.IsAuthenticated)
                     {
                         <div class="d-flex justify-content-between">
                             <div>
                                 <form asp-action="Vote" method="post" class="d-inline">
-                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                    <input type="hidden" name="id" value="@Model.QuestionId" />
                                     <input type="hidden" name="isUpvote" value="true" />
                                     <button type="submit" class="btn btn-outline-success btn-sm">Upvote</button>
                                 </form>
                                 <form asp-action="Vote" method="post" class="d-inline">
-                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                    <input type="hidden" name="id" value="@Model.QuestionId" />
                                     <input type="hidden" name="isUpvote" value="false" />
                                     <button type="submit" class="btn btn-outline-danger btn-sm">Downvote</button>
                                 </form>

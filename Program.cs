@@ -22,6 +22,7 @@ builder.Services.AddScoped<IRepositoryRepository, RepositoryRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+builder.Services.AddScoped<IAnswerService, AnswerService>();
 
 // ✅ 5. Thêm dịch vụ MVC (Controllers + Views)
 builder.Services.AddControllersWithViews();
@@ -35,7 +36,19 @@ builder.Services.AddAuthentication("CookieAuth")
         options.AccessDeniedPath = "/Account/AccessDenied";
     });
 
+
+
 var app = builder.Build();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.ToString().Contains("admin", StringComparison.OrdinalIgnoreCase))
+    {
+        await context.Response.WriteAsync("Hello");
+        return; // Dừng middleware để không xử lý tiếp
+    }
+    await next();
+});
 
 // ✅ 4. Middleware xử lý lỗi & bảo mật
 if (!app.Environment.IsDevelopment())

@@ -1,0 +1,67 @@
+@model DoAnWeb.Models.Question
+
+@{
+    ViewData["Title"] = "Delete Question";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Questions</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.QuestionId">@Model.Title</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4>Delete Question</h4>
+                </div>
+                <div class="card-body">
+                    <h3>Are you sure you want to delete this question?</h3>
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> This action cannot be undone. The question, all answers, comments, and associated data will be permanently deleted.
+                    </div>
+                    
+                    <dl class="row mt-4">
+                        <dt class="col-sm-3">Title</dt>
+                        <dd class="col-sm-9">@Model.Title</dd>
+                        
+                        <dt class="col-sm-3">Created Date</dt>
+                        <dd class="col-sm-9">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                        
+                        <dt class="col-sm-3">Answers</dt>
+                        <dd class="col-sm-9">@Model.Answers.Count</dd>
+                        
+                        <dt class="col-sm-3">Tags</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Tags != null && Model.Tags.Any())
+                            {
+                                @string.Join(", ", Model.Tags.Select(t => t.TagName))
+                            }
+                            else
+                            {
+                                <span>No tags</span>
+                            }
+                        </dd>
+                    </dl>
+                    
+                    <form asp-action="Delete" method="post" class="mt-4">
+                        <input type="hidden" asp-for="QuestionId" />
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">Delete Question</button>
+                            <a asp-action="Details" asp-route-id="@Model.QuestionId" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

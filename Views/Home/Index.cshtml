@@ -1,4 +1,5 @@
-﻿@{
+﻿@using System.Linq;
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -21,7 +22,7 @@
 
     <div class="row">
         <div class="col-md-3">
-            <!-- Left Sidebar -->
+            <!-- Content Sidebar -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Reputation</h5>
@@ -88,7 +89,7 @@
                                     <div class="d-flex">
                                         <div class="me-3 text-center" style="min-width: 60px;">
                                             <div class="votes">0 votes</div>
-                                            <div class="answers">1 answer</div>
+                                            <div class="answers @(question.Answers?.Count > 0 ? "" : "zero")">@(question.Answers?.Count ?? 0) answers</div>
                                             <div class="views">@question.ViewCount views</div>
                                         </div>
                                         <div>
@@ -137,7 +138,13 @@
                                     <h5><a asp-controller="Repositories" asp-action="Details" asp-route-id="@repo.RepositoryId">@repo.RepositoryName</a></h5>
                                     <p class="mb-1">@(repo.Description ?? "No description available")</p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">By @(repo.Owner?.Username ?? "Anonymous") • Updated @repo.UpdatedDate?.ToString("MMM dd, yyyy")</small>
+                                        <div>
+                                            <small class="text-muted">By @(repo.Owner?.Username ?? "Anonymous") • Updated @repo.UpdatedDate?.ToString("MMM dd, yyyy")</small>
+                                            <div class="mt-1">
+                                                <small class="text-muted me-2"><i class="bi bi-file-earmark"></i> @repo.RepositoryFiles.Count files</small>
+                                                <small class="text-muted"><i class="bi bi-git"></i> @repo.RepositoryCommits.Count commits</small>
+                                            </div>
+                                        </div>
                                         <span class="badge bg-secondary">@repo.Visibility</span>
                                     </div>
                                 </div>
@@ -160,5 +167,6 @@
 @section Scripts {
     <script>
         // Add any JavaScript needed for the Stack Overflow-like interface
+               
     </script>
 }

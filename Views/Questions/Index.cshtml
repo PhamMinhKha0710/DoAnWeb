@@ -6,19 +6,8 @@
 
 <div class="container">
     <div class="row">
-        <!-- Left Sidebar -->
-        <div class="col-md-2">
-            <div class="nav flex-column nav-pills mb-4">
-                <a class="nav-link text-dark" href="/"><i class="bi bi-house"></i> Home</a>
-                <a class="nav-link text-dark active" href="/Questions"><i class="bi bi-question-circle"></i> Questions</a>
-                <a class="nav-link text-dark" href="#"><i class="bi bi-tag"></i> Tags</a>
-                <a class="nav-link text-dark" href="#"><i class="bi bi-people"></i> Users</a>
-                <a class="nav-link text-dark" href="#"><i class="bi bi-bookmark"></i> Saves</a>
-            </div>
-        </div>
-        
         <!-- Main Content -->
-        <div class="col-md-7">
+        <div class="col-md-9">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Newest Questions</h1>
                 <a asp-action="Create" class="btn btn-primary">Ask Question</a>
@@ -139,13 +128,13 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">Watched Tags</h6>
-                    <a href="#" class="text-decoration-none">edit</a>
+                    <a asp-controller="TagPreferences" asp-action="WatchedTags" class="text-decoration-none">edit</a>
                 </div>
                 <div class="card-body">
                     @if (User.Identity.IsAuthenticated)
                     {
                         <p class="text-muted">Add tags to customize your feed</p>
-                        <button class="btn btn-outline-secondary btn-sm">Watch a tag</button>
+                        <a asp-controller="TagPreferences" asp-action="WatchedTags" class="btn btn-outline-secondary btn-sm">Watch a tag</a>
                     }
                     else
                     {
@@ -159,13 +148,13 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">Ignored Tags</h6>
-                    <a href="#" class="text-decoration-none">edit</a>
+                    <a asp-controller="TagPreferences" asp-action="IgnoredTags" class="text-decoration-none">edit</a>
                 </div>
                 <div class="card-body">
                     @if (User.Identity.IsAuthenticated)
                     {
                         <p class="text-muted">Add tags to hide questions</p>
-                        <button class="btn btn-outline-secondary btn-sm">Ignore a tag</button>
+                        <a asp-controller="TagPreferences" asp-action="IgnoredTags" class="btn btn-outline-secondary btn-sm">Ignore a tag</a>
                     }
                     else
                     {

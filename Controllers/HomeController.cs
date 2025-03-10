@@ -30,11 +30,23 @@ public class HomeController : Controller
                 CreatedDate = q.CreatedDate,
                 ViewCount = q.ViewCount,
                 User = q.User,
-                QuestionTags = q.QuestionTags
+                QuestionTags = q.QuestionTags,
+                Answers = q.Answers
             })
             .ToList();
 
-        var recentRepositories = repositoryService.GetAllRepositories().OrderByDescending(r => r.UpdatedDate).Take(5).ToList();
+        var recentRepositories = repositoryService.GetAllRepositories()
+            .OrderByDescending(r => r.UpdatedDate)
+            .Take(5)
+            .Select(r => {
+                var repoWithFiles = repositoryService.GetRepositoryWithFiles(r.RepositoryId);
+                var repoWithCommits = repositoryService.GetRepositoryWithCommits(r.RepositoryId);
+                r.RepositoryFiles = repoWithFiles?.RepositoryFiles ?? new List<RepositoryFile>();
+                r.RepositoryCommits = repoWithCommits?.RepositoryCommits ?? new List<RepositoryCommit>();
+                r.Owner = repoWithFiles?.Owner ?? repoWithCommits?.Owner;
+                return r;
+            })
+            .ToList();
         
         ViewBag.RecentQuestions = recentQuestions;
         ViewBag.RecentRepositories = recentRepositories;
