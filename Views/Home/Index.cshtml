@@ -1,8 +1,172 @@
-﻿@{
+﻿@using System.Linq;
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <img src="/img/welcome-icon.svg" alt="Welcome" class="me-3" style="width: 64px; height: 64px;">
+                        <div>
+                            <h2 class="mb-1">Welcome back, @(User.Identity.IsAuthenticated ? User.Identity.Name : "Guest") </h2>
+                            <p class="text-muted mb-0">Find answers to your technical questions and help others answer theirs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Content Sidebar -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Reputation</h5>
+                </div>
+                <div class="card-body">
+                    <h1 class="display-4 text-center">1</h1>
+                    <p class="text-muted text-center">Earn reputation by Asking, Answering and Editing.</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Badge progress</h5>
+                </div>
+                <div class="card-body">
+                    <p>Take the tour to earn your first badge!</p>
+                    <a href="#" class="btn btn-primary">Get started here</a>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Watched tags</h5>
+                    <a asp-controller="Tags" asp-action="Index" class="text-decoration-none"><i class="bi bi-gear"></i></a>
+                </div>
+                <div class="card-body">
+                    @if (User.Identity.IsAuthenticated && ViewBag.WatchedTags != null && ViewBag.WatchedTags.Count > 0)
+                    {
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            @foreach (var watchedTag in ViewBag.WatchedTags)
+                            {
+                                <div class="d-flex align-items-center">
+                                    <a asp-controller="Questions" asp-action="Index" asp-route-tag="@watchedTag.Tag.TagName" class="badge bg-light text-dark me-1 text-decoration-none">@watchedTag.Tag.TagName</a>
+                                    <form asp-controller="Tags" asp-action="Unwatch" asp-route-id="@watchedTag.TagId" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm p-0 text-danger"><i class="bi bi-x"></i></button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">You're not watching any tags yet!</p>
+                    }
+                    <a asp-controller="Tags" asp-action="Index" class="btn btn-outline-primary btn-sm">Customize your feed</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <!-- Main Content -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Interesting posts for you</h5>
+                    <p class="text-muted small mb-0">Based on your viewing history and watched tags</p>
+                </div>
+                <div class="card-body p-0">
+                    @if (ViewBag.RecentQuestions != null && ViewBag.RecentQuestions.Count > 0)
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var question in ViewBag.RecentQuestions)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex">
+                                        <div class="me-3 text-center" style="min-width: 60px;">
+                                            <div class="votes">0 votes</div>
+                                            <div class="answers @(question.Answers?.Count > 0 ? "" : "zero")">@(question.Answers?.Count ?? 0) answers</div>
+                                            <div class="views">@question.ViewCount views</div>
+                                        </div>
+                                        <div>
+                                            <h5><a asp-controller="Questions" asp-action="Details" asp-route-id="@question.QuestionId" class="text-primary">@question.Title</a></h5>
+                                            <p class="mb-1 text-truncate">@(question.Body?.Substring(0, Math.Min(question.Body.Length, 150)) ?? "")</p>
+                                            <div class="d-flex align-items-center">
+                                                <div class="tags me-auto">
+                                                    @if (question.QuestionTags != null)
+                                                    {
+                                                        @foreach (var tag in question.QuestionTags)
+                                                        {
+                                                            <span class="badge bg-light text-dark me-1">@tag.Tag.TagName</span>
+                                                        }
+                                                    }
+                                                </div>
+                                                <small class="text-muted">asked @(question.CreatedDate?.ToString("MMM dd") ?? "unknown") by @(question.User?.Username ?? "Anonymous")</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center">
+                            <p>No questions found. Be the first to ask!</p>
+                            <a asp-controller="Questions" asp-action="Create" class="btn btn-primary">Ask a Question</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Repositories</h5>
+                    <a asp-controller="Repositories" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (ViewBag.RecentRepositories != null && ViewBag.RecentRepositories.Count > 0)
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var repo in ViewBag.RecentRepositories)
+                            {
+                                <div class="list-group-item">
+                                    <h5><a asp-controller="Repositories" asp-action="Details" asp-route-id="@repo.RepositoryId">@repo.RepositoryName</a></h5>
+                                    <p class="mb-1">@(repo.Description ?? "No description available")</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">By @(repo.Owner?.Username ?? "Anonymous") • Updated @repo.UpdatedDate?.ToString("MMM dd, yyyy")</small>
+                                            <div class="mt-1">
+                                                <small class="text-muted me-2"><i class="bi bi-file-earmark"></i> @repo.RepositoryFiles.Count files</small>
+                                                <small class="text-muted"><i class="bi bi-git"></i> @repo.RepositoryCommits.Count commits</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-secondary">@repo.Visibility</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center">
+                            <p>No repositories found. Create your first repository!</p>
+                            <a asp-controller="Repositories" asp-action="Create" class="btn btn-primary">Create Repository</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Add any JavaScript needed for the Stack Overflow-like interface
+               
+    </script>
+}

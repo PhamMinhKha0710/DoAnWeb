@@ -1,0 +1,63 @@
+@model IEnumerable<DoAnWeb.Models.Repository>
+
+@{
+    ViewData["Title"] = "Repositories";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Repositories</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary">Create Repository</a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <form asp-action="Index" method="get" class="d-flex">
+                <input type="text" name="searchTerm" class="form-control me-2" placeholder="Search repositories..." value="@ViewData["SearchTerm"]" />
+                <button type="submit" class="btn btn-outline-primary">Search</button>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">
+            No repositories found. Be the first to <a asp-action="Create">create a repository</a>!
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a asp-action="Details" asp-route-id="@item.RepositoryId">@item.RepositoryName</a>
+                                @if (item.Visibility == "Private")
+                                {
+                                    <span class="badge bg-secondary">Private</span>
+                                }
+                            </h5>
+                            <p class="card-text">@(item.Description?.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description)</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Created by @item.Owner?.DisplayName</small>
+                                <div>
+                                    <a asp-action="Files" asp-route-id="@item.RepositoryId" class="btn btn-sm btn-outline-primary">Files</a>
+                                    <a asp-action="Commits" asp-route-id="@item.RepositoryId" class="btn btn-sm btn-outline-secondary">Commits</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,67 @@
+@model DoAnWeb.Models.Tag
+
+@{
+    ViewData["Title"] = $"Tag: {Model.TagName}";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="display-4">
+                <span class="badge bg-primary">@Model.TagName</span>
+            </h1>
+            <p class="lead">@Model.Description</p>
+            
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="mb-4">
+                    <form asp-action="Watch" asp-route-id="@Model.TagId" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> Watch Tag
+                        </button>
+                    </form>
+                    <form asp-action="Ignore" asp-route-id="@Model.TagId" method="post" class="d-inline ms-2">
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="bi bi-eye-slash"></i> Ignore Tag
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Questions with this tag</h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Questions != null && ViewBag.Questions.Count > 0)
+                    {
+                        <div class="list-group">
+                            @foreach (var question in ViewBag.Questions)
+                            {
+                                <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">@question.Title</h5>
+                                        <small>@question.CreatedDate.ToString("MMM dd, yyyy")</small>
+                                    </div>
+                                    <p class="mb-1">@(question.Body.Length > 200 ? question.Body.Substring(0, 200) + "..." : question.Body)</p>
+                                    <small>
+                                        <span class="text-muted">@question.ViewCount views</span> |
+                                        <span class="text-muted">@question.Answers?.Count answers</span>
+                                    </small>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-center">No questions found with this tag.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

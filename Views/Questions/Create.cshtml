@@ -1,0 +1,64 @@
+@model DoAnWeb.ViewModels.QuestionViewModel
+
+@{
+    ViewData["Title"] = "Ask a Question";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Questions</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Ask a Question</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">Ask a Question</h1>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Title</label>
+                            <input asp-for="Title" class="form-control" placeholder="What's your question? Be specific." />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                            <div class="form-text">Be specific and imagine you're asking a question to another person.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Body" class="form-label">Body</label>
+                            <textarea asp-for="Body" class="form-control" rows="10" placeholder="Include all the information someone would need to answer your question"></textarea>
+                            <span asp-validation-for="Body" class="text-danger"></span>
+                            <div class="form-text">Include all the information someone would need to answer your question.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Tags" class="form-label">Tags</label>
+                            <input asp-for="Tags" class="form-control" placeholder="e.g. javascript, react, node.js (comma separated)" />
+                            <span asp-validation-for="Tags" class="text-danger"></span>
+                            <div class="form-text">Add up to 5 tags to describe what your question is about. Use comma to separate tags.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Post Your Question</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

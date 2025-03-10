@@ -1,0 +1,41 @@
+@model IEnumerable<DoAnWeb.Models.Tag>
+
+@{
+    ViewData["Title"] = "Tags";
+}
+
+<div class="container mt-4">
+    <h1>Tags</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">All Tags</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var tag in Model)
+                        {
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a asp-action="Details" asp-route-id="@tag.TagId" class="text-decoration-none">
+                                                @tag.TagName
+                                            </a>
+                                        </h5>
+                                        <p class="card-text small text-muted">@tag.Description</p>
+                                    </div>
+                                    <div class="card-footer bg-light">
+                                        <small class="text-muted">Questions: @tag.QuestionTags?.Count() ?? 0</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
