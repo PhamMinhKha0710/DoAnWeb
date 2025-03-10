@@ -2,7 +2,7 @@
 
 ## 💻 Cộng đồng chia sẻ mã nguồn & hỏi đáp lập trình
 
-![DevCommunity](https://via.placeholder.com/800x200?text=DevCommunity)
+![DevCommunity](https://dev.to/mostafaamine/use-placeholder-website-to-generate-images-3jd4)
 
 DevCommunity là nền tảng kết hợp các tính năng của GitHub và Stack Overflow, giúp lập trình viên chia sẻ mã nguồn, đặt câu hỏi, bình luận và bình chọn các nội dung kỹ thuật. Hệ thống được xây dựng trên nền tảng .NET Core theo mô hình MVC.
 
