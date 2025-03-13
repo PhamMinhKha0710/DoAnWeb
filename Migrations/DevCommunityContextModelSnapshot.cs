@@ -561,6 +561,38 @@ namespace DoAnWeb.Migrations
                     b.ToTable("UserIgnoredTags");
                 });
 
+            modelBuilder.Entity("DoAnWeb.Models.UserSavedItem", b =>
+                {
+                    b.Property<int>("SavedItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SavedItemId"));
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("SavedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SavedItemId")
+                        .HasName("PK__UserSave__C7D2D2E3A1B2C3D4");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserSavedItems");
+                });
+
             modelBuilder.Entity("DoAnWeb.Models.UserWatchedTag", b =>
                 {
                     b.Property<int>("Id")
@@ -804,6 +836,18 @@ namespace DoAnWeb.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DoAnWeb.Models.UserSavedItem", b =>
+                {
+                    b.HasOne("DoAnWeb.Models.User", "User")
+                        .WithMany("UserSavedItems")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__UserSaved__UserI__123456789");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DoAnWeb.Models.UserWatchedTag", b =>
                 {
                     b.HasOne("DoAnWeb.Models.Tag", "Tag")
@@ -895,6 +939,8 @@ namespace DoAnWeb.Migrations
                     b.Navigation("Repositories");
 
                     b.Navigation("RepositoryCommits");
+
+                    b.Navigation("UserSavedItems");
 
                     b.Navigation("Votes");
                 });

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnWeb.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class DA_LTW : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -223,6 +223,28 @@ namespace DoAnWeb.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK__UserRoles__UserI__52593CB8",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserSavedItems",
+                columns: table => new
+                {
+                    SavedItemId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ItemType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ItemId = table.Column<int>(type: "int", nullable: false),
+                    SavedDate = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "(getdate())")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__UserSave__C7D2D2E3A1B2C3D4", x => x.SavedItemId);
+                    table.ForeignKey(
+                        name: "FK__UserSaved__UserI__123456789",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
@@ -531,6 +553,11 @@ namespace DoAnWeb.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserSavedItems_UserId",
+                table: "UserSavedItems",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserWatchedTags_TagId",
                 table: "UserWatchedTags",
                 column: "TagId");
@@ -580,6 +607,9 @@ namespace DoAnWeb.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserRoles");
+
+            migrationBuilder.DropTable(
+                name: "UserSavedItems");
 
             migrationBuilder.DropTable(
                 name: "UserWatchedTags");
