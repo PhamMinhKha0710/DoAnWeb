@@ -1,24 +1,19 @@
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
-namespace DoAnWeb.Models
+namespace DoAnWeb.Models;
+
+public partial class UserWatchedTag
 {
-    public class UserWatchedTag
-    {
-        [Key]
-        public int UserWatchedTagId { get; set; }
-        
-        public int UserId { get; set; }
-        
-        public int TagId { get; set; }
-        
-        public DateTime CreatedDate { get; set; }
-        
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
-        
-        [ForeignKey("TagId")]
-        public virtual Tag Tag { get; set; }
-    }
+    public int Id { get; set; }
+
+    public int UserId { get; set; }
+
+    public int TagId { get; set; }
+
+    public DateTime? CreatedDate { get; set; }
+
+    public virtual User User { get; set; } = null!;
+
+    public virtual Tag Tag { get; set; } = null!;
 }

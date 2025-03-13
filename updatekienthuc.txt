@@ -1,0 +1,193 @@
+# CẬP NHẬT KIẾN THỨC VÀ THAY ĐỔI DỰ ÁN
+
+## 1. Tính năng Markdown cho ô text câu hỏi
+
+### Mô tả
+Chúng tôi đã tích hợp tính năng Markdown vào ô nhập liệu câu hỏi, cho phép người dùng định dạng văn bản một cách dễ dàng và chuyên nghiệp.
+
+### Mục đích
+- Giúp người dùng tạo câu hỏi với định dạng phong phú
+- Hỗ trợ hiển thị code, danh sách, bảng biểu, và các định dạng khác
+- Nâng cao trải nghiệm người dùng khi đọc và viết nội dung
+
+### Cách sử dụng
+- **Tiêu đề**: Sử dụng # để tạo tiêu đề (# Tiêu đề 1, ## Tiêu đề 2, ...)
+- **In đậm**: Sử dụng **văn bản** hoặc __văn bản__
+- **In nghiêng**: Sử dụng *văn bản* hoặc _văn bản_
+- **Code**: Sử dụng `code` cho đoạn code ngắn hoặc ```language
+code
+``` cho khối code
+- **Danh sách**: Sử dụng - hoặc * cho danh sách không thứ tự, 1. 2. 3. cho danh sách có thứ tự
+- **Liên kết**: [Văn bản](URL)
+- **Hình ảnh**: ![Alt text](URL)
+
+## 2. Chức năng upload file tài liệu và ảnh
+
+### Mô tả
+Hệ thống đã được tích hợp khả năng tải lên các loại file tài liệu và hình ảnh để đính kèm vào câu hỏi hoặc câu trả lời.
+
+### Mục đích
+- Cho phép người dùng chia sẻ tài liệu liên quan đến vấn đề
+- Hỗ trợ minh họa bằng hình ảnh để làm rõ vấn đề
+- Tăng tính tương tác và hữu ích của nền tảng
+
+### Cách sử dụng
+- Khi tạo câu hỏi hoặc trả lời, nhấn vào nút "Tải lên" hoặc biểu tượng đính kèm
+- Chọn file từ máy tính của bạn
+- Hệ thống sẽ tự động tải lên và tạo liên kết đến file/hình ảnh trong nội dung
+- Các định dạng được hỗ trợ: PNG, JPG, JPEG, GIF, PDF, DOCX, XLSX, TXT
+
+## 3. Khả năng copy ảnh chụp màn hình
+
+### Mô tả
+Người dùng có thể dễ dàng sao chép ảnh chụp màn hình trực tiếp vào ô nhập liệu mà không cần lưu ảnh trước.
+
+### Mục đích
+- Đơn giản hóa quy trình chia sẻ ảnh chụp màn hình
+- Tiết kiệm thời gian khi cần minh họa vấn đề bằng hình ảnh
+- Tăng tính tiện lợi cho người dùng
+
+### Cách sử dụng
+- Chụp màn hình bằng công cụ chụp màn hình của hệ điều hành (ví dụ: Windows: Win+Shift+S)
+- Sau khi chụp, nhấn Ctrl+V trực tiếp vào ô nhập liệu
+- Hệ thống sẽ tự động xử lý và nhúng ảnh vào nội dung
+
+## 4. Công thức tính Reputation
+
+### Mô tả
+Hệ thống sử dụng một công thức tính điểm uy tín (Reputation) dựa trên các hoạt động của người dùng trên nền tảng.
+
+### Mục đích
+- Khuyến khích người dùng tham gia tích cực và đóng góp nội dung chất lượng
+- Tạo cơ chế đánh giá mức độ tin cậy của người dùng
+- Xây dựng cộng đồng lành mạnh và có giá trị
+
+### Cách tính điểm
+- +10 điểm khi câu trả lời được vote up
+- -2 điểm khi câu trả lời bị vote down
+- +15 điểm khi câu trả lời được chấp nhận
+- +2 điểm khi câu hỏi được vote up
+- -1 điểm khi câu hỏi bị vote down
+- +5 điểm khi bình luận được vote up
+
+## 5. Tính năng Top Tags
+
+### Mô tả
+Hệ thống hiển thị các thẻ (tags) phổ biến nhất trên nền tảng, giúp người dùng dễ dàng tìm kiếm và theo dõi các chủ đề quan tâm.
+
+### Mục đích
+- Cung cấp cái nhìn tổng quan về các chủ đề được quan tâm nhất
+- Hỗ trợ người dùng khám phá nội dung liên quan đến lĩnh vực họ quan tâm
+- Tối ưu hóa trải nghiệm tìm kiếm và duyệt nội dung
+
+### Cách sử dụng
+- Truy cập trang chủ hoặc mục Tags để xem danh sách Top Tags
+- Nhấp vào tag bất kỳ để xem tất cả câu hỏi liên quan
+- Theo dõi tag để nhận thông báo khi có câu hỏi mới với tag đó
+
+## 6. Cải tiến hiệu suất server
+
+### Mô tả
+Chúng tôi đã thực hiện nhiều cải tiến để tối ưu hóa hiệu suất server, giảm thời gian phản hồi và tăng khả năng xử lý đồng thời.
+
+### Mục đích
+- Cải thiện tốc độ tải trang và trải nghiệm người dùng
+- Tăng khả năng mở rộng của hệ thống
+- Giảm tải cho server và tối ưu hóa tài nguyên
+
+### Các cải tiến chính
+- Tối ưu hóa truy vấn cơ sở dữ liệu với Entity Framework
+- Sử dụng AsSplitQuery để tối ưu hóa các truy vấn phức tạp
+- Caching dữ liệu thường xuyên truy cập
+- Lazy loading cho các thành phần không cần thiết ngay lập tức
+- Tối ưu hóa kích thước hình ảnh và tài nguyên tĩnh
+
+## 7. Tính năng Repository cho người dùng
+
+### Mô tả
+Người dùng có thể tạo và quản lý các repository để lưu trữ và chia sẻ code, dự án hoặc tài liệu.
+
+### Mục đích
+- Cung cấp không gian lưu trữ và chia sẻ code
+- Tạo điều kiện cho cộng tác và đóng góp từ cộng đồng
+- Xây dựng portfolio cá nhân cho người dùng
+
+### Cách sử dụng
+- Truy cập trang cá nhân và chọn mục "Repositories"
+- Nhấn "Tạo Repository mới" và điền thông tin cần thiết
+- Tải lên code hoặc tài liệu vào repository
+- Quản lý quyền truy cập và chia sẻ với người khác
+
+## 8. Hệ thống phân quyền người dùng
+
+### Mô tả
+Hệ thống đã được tích hợp cơ chế phân quyền người dùng với nhiều vai trò khác nhau.
+
+### Mục đích
+- Bảo mật thông tin và kiểm soát quyền truy cập
+- Phân chia trách nhiệm quản lý nền tảng
+- Tạo trải nghiệm phù hợp với từng nhóm người dùng
+
+### Các vai trò chính
+- **User**: Người dùng thông thường, có thể đặt câu hỏi, trả lời và bình luận
+- **Moderator**: Có thêm quyền kiểm duyệt nội dung, chỉnh sửa và xóa bài viết không phù hợp
+- **Admin**: Có toàn quyền quản lý hệ thống, người dùng và cấu hình
+
+## 9. Tính năng Lưu Câu Hỏi và Câu Trả Lời (SavedItems)
+
+### Mô tả
+Hệ thống đã được tích hợp tính năng cho phép người dùng lưu lại các câu hỏi và câu trả lời quan trọng để dễ dàng truy cập sau này.
+
+### Mục đích
+- Giúp người dùng tạo bộ sưu tập kiến thức cá nhân
+- Dễ dàng truy cập lại các thông tin hữu ích mà không cần tìm kiếm
+- Tăng tính tiện lợi và cá nhân hóa trải nghiệm người dùng
+
+### Cách sử dụng
+- Khi xem một câu hỏi hoặc câu trả lời, nhấn vào nút "Lưu" (biểu tượng bookmark)
+- Truy cập trang cá nhân và chọn mục "Đã Lưu" để xem danh sách các mục đã lưu
+- Có thể bỏ lưu bất kỳ lúc nào bằng cách nhấn lại vào biểu tượng bookmark
+
+### Chi tiết kỹ thuật
+- **Model**: Đã tạo model SavedItem với các trường chính: SavedItemId, UserId, ItemType (Question/Answer), ItemId, SavedDate
+- **Controller**: Tạo SavedItemsController với các action SaveQuestion, SaveAnswer, RemoveSavedItem, và GetSavedItems
+- **View**: Tích hợp nút lưu vào trang chi tiết câu hỏi (Details.cshtml) và tạo trang hiển thị danh sách các mục đã lưu
+- **Repository Pattern**: Áp dụng ISavedItemRepository để quản lý các thao tác CRUD với SavedItems
+- **Validation**: Kiểm tra xem người dùng đã lưu item chưa trước khi thêm mới để tránh trùng lặp
+
+### Code mẫu
+```csharp
+// Controller Action để lưu câu hỏi
+[HttpPost]
+[Authorize]
+public async Task<IActionResult> SaveQuestion(int id)
+{
+    var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+    
+    // Kiểm tra xem đã lưu chưa
+    var existingSave = await _savedItemRepository.GetSavedItemAsync(userId, id, "Question");
+    if (existingSave != null)
+    {
+        TempData["SuccessMessage"] = "Câu hỏi này đã được lưu trước đó";
+        return RedirectToAction("Details", "Questions", new { id });
+    }
+    
+    // Tạo mới SavedItem
+    var savedItem = new SavedItem
+    {
+        UserId = userId,
+        ItemId = id,
+        ItemType = "Question",
+        SavedDate = DateTime.Now
+    };
+    
+    await _savedItemRepository.AddSavedItemAsync(savedItem);
+    TempData["SuccessMessage"] = "Đã lưu câu hỏi thành công";
+    
+    return RedirectToAction("Details", "Questions", new { id });
+}
+```
+
+---
+
+File này sẽ được cập nhật thường xuyên khi có thêm tính năng mới hoặc thay đổi quan trọng trong hệ thống. Nếu bạn có bất kỳ câu hỏi hoặc đề xuất nào, vui lòng liên hệ với đội phát triển.

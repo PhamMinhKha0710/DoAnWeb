@@ -4,31 +4,59 @@
     ViewData["Title"] = "Tags";
 }
 
-<div class="container mt-4">
-    <h1>Tags</h1>
-    
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">All Tags</h5>
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 bg-gradient-primary p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="text-white fw-bold mb-1">Tags</h1>
+                        <p class="text-white opacity-75 mb-0">Browse all available topics</p>
+                    </div>
+                    <div>
+                        <div class="input-group bg-white rounded-pill overflow-hidden">
+                            <input type="text" class="form-control border-0 ps-3" placeholder="Search tags...">
+                            <button class="btn btn-link text-primary px-3" type="button">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row">
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="row g-4">
                         @foreach (var tag in Model)
                         {
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            <a asp-action="Details" asp-route-id="@tag.TagId" class="text-decoration-none">
-                                                @tag.TagName
-                                            </a>
-                                        </h5>
-                                        <p class="card-text small text-muted">@tag.Description</p>
+                            <div class="col-md-3">
+                                <div class="card h-100 border-0 shadow-sm rounded-3 hover-shadow transition">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="mb-0">
+                                                <a asp-action="Details" asp-route-id="@tag.TagId" class="text-decoration-none">
+                                                    <span class="badge bg-gradient-primary text-white px-3 py-2 rounded-pill">@tag.TagName</span>
+                                                </a>
+                                            </h5>
+                                            <span class="badge bg-light text-secondary rounded-pill">
+                                                <i class="bi bi-hash me-1"></i>@(tag.QuestionTags?.Count() ?? 0)
+                                            </span>
+                                        </div>
+                                        <p class="card-text text-secondary mb-0">@tag.Description</p>
                                     </div>
-                                    <div class="card-footer bg-light">
-                                        <small class="text-muted">Questions: @tag.QuestionTags?.Count() ?? 0</small>
+                                    <div class="card-footer border-0 bg-transparent pt-0 pb-3 px-4">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <a asp-action="Details" asp-route-id="@tag.TagId" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                                <i class="bi bi-arrow-right me-1"></i> Browse
+                                            </a>
+                                            <small class="text-muted">
+                                                <i class="bi bi-question-circle me-1"></i>@(tag.QuestionTags?.Count() ?? 0) questions
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -39,3 +67,26 @@
         </div>
     </div>
 </div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(45deg, #3a7bd5, #00d2ff);
+    }
+    
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .transition {
+        transition: all 0.3s ease;
+    }
+    
+    .rounded-4 {
+        border-radius: 0.8rem;
+    }
+    
+    .rounded-3 {
+        border-radius: 0.6rem;
+    }
+</style>

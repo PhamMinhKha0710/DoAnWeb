@@ -195,6 +195,7 @@ namespace DoAnWeb.Services
                     TargetId = questionId,
                     TargetType = "Question",
                     VoteValue = isUpvote ? 1 : -1,
+                    IsUpvote = isUpvote,
                     CreatedDate = DateTime.Now
                 };
 

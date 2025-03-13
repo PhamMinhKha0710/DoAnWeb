@@ -28,6 +28,21 @@ namespace DoAnWeb.Repositories
         {
             return _dbSet.Any(u => u.Email == email);
         }
+        
+        public virtual User GetById(int id)
+        {
+            return _dbSet
+                .Include(u => u.Questions)
+                    .ThenInclude(q => q.Tags)
+                .Include(u => u.Answers)
+                    .ThenInclude(a => a.Question)
+                        .ThenInclude(q => q.Tags)
+                .Include(u => u.Votes)
+                .Include(u => u.Comments)
+                .Include(u => u.Repositories)
+                .AsSplitQuery()
+                .FirstOrDefault(u => u.UserId == id);
+        }
 
         // Get user with roles
         public User GetUserWithRoles(int userId)

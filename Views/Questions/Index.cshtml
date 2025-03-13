@@ -78,7 +78,7 @@
                                                 }
                                             }
                                         </div>
-                                        <small class="text-muted">asked @(item.CreatedDate.ToString("MMM dd")) by @item.User?.DisplayName</small>
+                                        <small class="text-muted">asked @(item.CreatedDate.HasValue ? item.CreatedDate.Value.ToString("MMM dd") : "unknown") by @item.User?.DisplayName</small>
                                     </div>
                                 </div>
                             </div>

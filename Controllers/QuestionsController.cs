@@ -119,7 +119,7 @@ namespace DoAnWeb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult Create(QuestionViewModel model)
+        public async Task<IActionResult> Create(QuestionViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -148,7 +148,54 @@ namespace DoAnWeb.Controllers
                             .ToList();
                     }
 
+                    // Create the question first to get the ID
                     _questionService.CreateQuestion(question, tagList);
+                    
+                    // Process file attachments
+                    if (model.Attachments != null && model.Attachments.Count > 0)
+                    {
+                        foreach (var file in model.Attachments)
+                        {
+                            if (file.Length > 0)
+                            {
+                                // Determine file type (document or image)
+                                bool isImage = file.ContentType.StartsWith("image/");
+                                string uploadDir = isImage ? "images" : "documents";
+                                
+                                // Create file path
+                                var fileName = Path.GetFileName(file.FileName);
+                                var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
+                                var filePath = Path.Combine("uploads", uploadDir, uniqueFileName);
+                                var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath);
+                                
+                                // Create directory if it doesn't exist
+                                Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+                                
+                                // Save file
+                                using (var stream = new FileStream(fullPath, FileMode.Create))
+                                {
+                                    await file.CopyToAsync(stream);
+                                }
+                                
+                                // Create attachment record
+                                var attachment = new QuestionAttachment
+                                {
+                                    QuestionId = question.QuestionId,
+                                    FileName = fileName,
+                                    FilePath = $"/{filePath.Replace("\\", "/")}",
+                                    ContentType = file.ContentType,
+                                    FileSize = file.Length,
+                                    UploadDate = DateTime.UtcNow
+                                };
+                                
+                                // Add attachment to question
+                                question.Attachments.Add(attachment);
+                            }
+                        }
+                        
+                        // Update question with attachments
+                        _questionService.UpdateQuestion(question, null);
+                    }
 
                     return RedirectToAction(nameof(Details), new { id = question.QuestionId });
                 }

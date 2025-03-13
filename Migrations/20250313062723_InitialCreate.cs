@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnWeb.Migrations
 {
     /// <inheritdoc />
-    public partial class AddRepositoryFileProperties : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,7 +21,7 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Roles__8AFACE1A4DB30FEF", x => x.RoleId);
+                    table.PrimaryKey("PK__Roles__8AFACE1A0EBEA49E", x => x.RoleId);
                 });
 
             migrationBuilder.CreateTable(
@@ -35,7 +35,7 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Tags__657CF9AC2A664FD4", x => x.TagId);
+                    table.PrimaryKey("PK__Tags__657CF9ACCCDEB8E9", x => x.TagId);
                 });
 
             migrationBuilder.CreateTable(
@@ -55,7 +55,7 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Users__1788CC4C59199BA3", x => x.UserId);
+                    table.PrimaryKey("PK__Users__1788CC4CE4378A70", x => x.UserId);
                 });
 
             migrationBuilder.CreateTable(
@@ -71,9 +71,9 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Activity__5E548648B9E8B75E", x => x.LogId);
+                    table.PrimaryKey("PK__Activity__5E54864859F09C42", x => x.LogId);
                     table.ForeignKey(
-                        name: "FK__ActivityL__UserI__05D8E0BE",
+                        name: "FK__ActivityL__UserI__0B91BA14",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
@@ -94,9 +94,9 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Comments__C3B4DFCA2B6300D8", x => x.CommentId);
+                    table.PrimaryKey("PK__Comments__C3B4DFCA7DE7D79F", x => x.CommentId);
                     table.ForeignKey(
-                        name: "FK__Comments__UserId__6FE99F9F",
+                        name: "FK__Comments__UserId__75A278F5",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
@@ -118,9 +118,9 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Notifica__20CF2E121630D030", x => x.NotificationId);
+                    table.PrimaryKey("PK__Notifica__20CF2E1291F3BFF1", x => x.NotificationId);
                     table.ForeignKey(
-                        name: "FK__Notificat__UserI__01142BA1",
+                        name: "FK__Notificat__UserI__06CD04F7",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
@@ -144,7 +144,7 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Question__0DC06FACBE11A16C", x => x.QuestionId);
+                    table.PrimaryKey("PK__Question__0DC06FACC2370EE1", x => x.QuestionId);
                     table.ForeignKey(
                         name: "FK__Questions__UserI__6383C8BA",
                         column: x => x.UserId,
@@ -169,10 +169,37 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Reposito__B9BA861124E5378E", x => x.RepositoryId);
+                    table.PrimaryKey("PK__Reposito__B9BA861130E27F9B", x => x.RepositoryId);
                     table.ForeignKey(
                         name: "FK__Repositor__Owner__5629CD9C",
                         column: x => x.OwnerId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserIgnoredTags",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    TagId = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserIgnoredTags", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserIgnoredTags_Tags_TagId",
+                        column: x => x.TagId,
+                        principalTable: "Tags",
+                        principalColumn: "TagId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserIgnoredTags_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
@@ -187,7 +214,7 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__UserRole__AF2760AD26B2AEA4", x => new { x.UserId, x.RoleId });
+                    table.PrimaryKey("PK__UserRole__AF2760AD4D77315A", x => new { x.UserId, x.RoleId });
                     table.ForeignKey(
                         name: "FK__UserRoles__RoleI__534D60F1",
                         column: x => x.RoleId,
@@ -203,26 +230,83 @@ namespace DoAnWeb.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Votes",
+                name: "UserWatchedTags",
                 columns: table => new
                 {
-                    VoteId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: true),
-                    TargetType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    TargetId = table.Column<int>(type: "int", nullable: false),
-                    VoteValue = table.Column<int>(type: "int", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
-                    IsUpvote = table.Column<bool>(type: "bit", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    TagId = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Votes__52F015C2C4A741A0", x => x.VoteId);
+                    table.PrimaryKey("PK_UserWatchedTags", x => x.Id);
                     table.ForeignKey(
-                        name: "FK__Votes__UserId__7B5B524B",
+                        name: "FK_UserWatchedTags_Tags_TagId",
+                        column: x => x.TagId,
+                        principalTable: "Tags",
+                        principalColumn: "TagId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserWatchedTags_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Answers",
+                columns: table => new
+                {
+                    AnswerId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuestionId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    Body = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
+                    Score = table.Column<int>(type: "int", nullable: true, defaultValue: 0),
+                    IsAccepted = table.Column<bool>(type: "bit", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "(getutcdate())"),
+                    IsUpvote = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__Answers__D48250043037DE3B", x => x.AnswerId);
+                    table.ForeignKey(
+                        name: "FK__Answers__Questio__6FE99F9F",
+                        column: x => x.QuestionId,
+                        principalTable: "Questions",
+                        principalColumn: "QuestionId");
+                    table.ForeignKey(
+                        name: "FK__Answers__UserId__70DDC3D8",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuestionAttachments",
+                columns: table => new
+                {
+                    AttachmentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    UploadDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuestionAttachments", x => x.AttachmentId);
+                    table.ForeignKey(
+                        name: "FK_QuestionAttachments_Questions_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Questions",
+                        principalColumn: "QuestionId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -235,15 +319,15 @@ namespace DoAnWeb.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Question__DB97A0365C4E806E", x => new { x.QuestionId, x.TagId });
+                    table.PrimaryKey("PK__Question__DB97A036892C4093", x => new { x.QuestionId, x.TagId });
                     table.ForeignKey(
-                        name: "FK__QuestionT__Quest__778AC167",
+                        name: "FK__QuestionT__Quest__7D439ABD",
                         column: x => x.QuestionId,
                         principalTable: "Questions",
                         principalColumn: "QuestionId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK__QuestionT__TagId__787EE5A0",
+                        name: "FK__QuestionT__TagId__7E37BEF6",
                         column: x => x.TagId,
                         principalTable: "Tags",
                         principalColumn: "TagId",
@@ -261,11 +345,18 @@ namespace DoAnWeb.Migrations
                     CommitMessage = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     CommitDate = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     ParentCommitId = table.Column<int>(type: "int", nullable: true),
-                    CommitHash = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    CommitHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Reposito__73748B725CA9C16C", x => x.CommitId);
+                    table.PrimaryKey("PK__Reposito__73748B72889F7284", x => x.CommitId);
+                    table.ForeignKey(
+                        name: "FK_RepositoryCommits_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId");
                     table.ForeignKey(
                         name: "FK__Repositor__Autho__5CD6CB2B",
                         column: x => x.AuthorId,
@@ -290,11 +381,12 @@ namespace DoAnWeb.Migrations
                     FileContent = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FileHash = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    FileSize = table.Column<int>(type: "int", nullable: false)
+                    FileSize = table.Column<long>(type: "bigint", nullable: true),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Reposito__6F0F98BF9CE85DF4", x => x.FileId);
+                    table.PrimaryKey("PK__Reposito__6F0F98BF7E131276", x => x.FileId);
                     table.ForeignKey(
                         name: "FK__Repositor__Repos__60A75C0F",
                         column: x => x.RepositoryId,
@@ -303,9 +395,50 @@ namespace DoAnWeb.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Votes",
+                columns: table => new
+                {
+                    VoteId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    TargetType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    TargetId = table.Column<int>(type: "int", nullable: false),
+                    AnswerId = table.Column<int>(type: "int", nullable: true),
+                    VoteValue = table.Column<int>(type: "int", nullable: false),
+                    IsUpvote = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__Votes__52F015C2EC70E0B2", x => x.VoteId);
+                    table.ForeignKey(
+                        name: "FK__Votes__AnswerId__01142BA2",
+                        column: x => x.AnswerId,
+                        principalTable: "Answers",
+                        principalColumn: "AnswerId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK__Votes__UserId__01142BA1",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityLogs_UserId",
                 table: "ActivityLogs",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Answers_QuestionId",
+                table: "Answers",
+                column: "QuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Answers_UserId",
+                table: "Answers",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -317,6 +450,11 @@ namespace DoAnWeb.Migrations
                 name: "IX_Notifications_UserId",
                 table: "Notifications",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuestionAttachments_QuestionId",
+                table: "QuestionAttachments",
+                column: "QuestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Questions_UserId",
@@ -344,21 +482,36 @@ namespace DoAnWeb.Migrations
                 column: "RepositoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RepositoryCommits_UserId",
+                table: "RepositoryCommits",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RepositoryFiles_RepositoryId",
                 table: "RepositoryFiles",
                 column: "RepositoryId");
 
             migrationBuilder.CreateIndex(
-                name: "UQ__Roles__8A2B61606CB05E4A",
+                name: "UQ__Roles__8A2B61601DB624C4",
                 table: "Roles",
                 column: "RoleName",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "UQ__Tags__BDE0FD1D4BAE65EF",
+                name: "UQ__Tags__BDE0FD1DE35F6B5A",
                 table: "Tags",
                 column: "TagName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserIgnoredTags_TagId",
+                table: "UserIgnoredTags",
+                column: "TagId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserIgnoredTags_UserId",
+                table: "UserIgnoredTags",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_RoleId",
@@ -366,16 +519,31 @@ namespace DoAnWeb.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "UQ__Users__536C85E49175E97B",
+                name: "UQ__Users__536C85E44593A637",
                 table: "Users",
                 column: "Username",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "UQ__Users__A9D105341F829C62",
+                name: "UQ__Users__A9D105348AA87732",
                 table: "Users",
                 column: "Email",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserWatchedTags_TagId",
+                table: "UserWatchedTags",
+                column: "TagId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserWatchedTags_UserId",
+                table: "UserWatchedTags",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Votes_AnswerId",
+                table: "Votes",
+                column: "AnswerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Votes_UserId",
@@ -396,6 +564,9 @@ namespace DoAnWeb.Migrations
                 name: "Notifications");
 
             migrationBuilder.DropTable(
+                name: "QuestionAttachments");
+
+            migrationBuilder.DropTable(
                 name: "QuestionTags");
 
             migrationBuilder.DropTable(
@@ -405,22 +576,31 @@ namespace DoAnWeb.Migrations
                 name: "RepositoryFiles");
 
             migrationBuilder.DropTable(
+                name: "UserIgnoredTags");
+
+            migrationBuilder.DropTable(
                 name: "UserRoles");
 
             migrationBuilder.DropTable(
+                name: "UserWatchedTags");
+
+            migrationBuilder.DropTable(
                 name: "Votes");
-
-            migrationBuilder.DropTable(
-                name: "Questions");
-
-            migrationBuilder.DropTable(
-                name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "Repositories");
 
             migrationBuilder.DropTable(
                 name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
+
+            migrationBuilder.DropTable(
+                name: "Answers");
+
+            migrationBuilder.DropTable(
+                name: "Questions");
 
             migrationBuilder.DropTable(
                 name: "Users");

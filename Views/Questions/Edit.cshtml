@@ -7,7 +7,7 @@
 <div class="container mt-4">
     <h2>Edit Question</h2>
 
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
         <input type="hidden" asp-for="QuestionId" />
         <input type="hidden" asp-for="UserId" />
         <input type="hidden" asp-for="CreatedDate" />
@@ -20,8 +20,11 @@
 
         <div class="form-group mb-3">
             <label asp-for="Body" class="form-label">Body</label>
-            <textarea asp-for="Body" class="form-control" rows="10"></textarea>
+            <div class="markdown-editor-container">
+                <textarea asp-for="Body" class="form-control" rows="10"></textarea>
+            </div>
             <span asp-validation-for="Body" class="text-danger"></span>
+            <div class="form-text">Supports Markdown formatting. You can also paste screenshots directly into the editor.</div>
         </div>
 
         <div class="form-group mb-3">

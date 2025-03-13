@@ -25,9 +25,12 @@
             border-left: 1px solid #e3e6e8;
             padding-left: 15px;
         }
-        .nav-item .active {
+        .nav-item .active, .nav-link.active {
             font-weight: bold;
-            color: #0c0d0e !important;
+            color: #0d6efd !important;
+        }
+        .sidebar .nav-link:hover {
+            color: #0d6efd !important;
         }
     </style>
 </head>
@@ -67,7 +70,12 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Logout</a></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                                            @Html.AntiForgeryToken()
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="document.getElementById('logoutForm').submit();">Logout</a>
+                                        </form>
+                                    </li>
                                 </ul>
                             </li>
                         }
@@ -89,7 +97,7 @@
         <div class="row">
             @{
                 var currentController = ViewContext.RouteData.Values["Controller"].ToString();
-                var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repositories";
+                var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repositories" || currentController == "Tags" || currentController == "Users";
             }
             
             @if (showSidebar)

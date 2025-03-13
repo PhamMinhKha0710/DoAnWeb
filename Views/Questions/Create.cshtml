@@ -24,7 +24,7 @@
                     <h1 class="card-title">Ask a Question</h1>
                 </div>
                 <div class="card-body">
-                    <form asp-action="Create" method="post">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                         <div class="mb-3">
@@ -36,9 +36,11 @@
 
                         <div class="mb-3">
                             <label asp-for="Body" class="form-label">Body</label>
-                            <textarea asp-for="Body" class="form-control" rows="10" placeholder="Include all the information someone would need to answer your question"></textarea>
+                            <div class="markdown-editor-container">
+                                <textarea asp-for="Body" class="form-control" rows="10" placeholder="Include all the information someone would need to answer your question"></textarea>
+                            </div>
                             <span asp-validation-for="Body" class="text-danger"></span>
-                            <div class="form-text">Include all the information someone would need to answer your question.</div>
+                            <div class="form-text">Supports Markdown formatting. You can also paste screenshots directly into the editor.</div>
                         </div>
 
                         <div class="mb-3">

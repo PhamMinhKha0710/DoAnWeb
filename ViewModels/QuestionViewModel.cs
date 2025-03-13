@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 namespace DoAnWeb.ViewModels
 {
@@ -19,5 +21,12 @@ namespace DoAnWeb.ViewModels
 
         public int UserId { get; set; }
         public DateTime CreatedDate { get; set; }
+        
+        // File upload properties
+        [Display(Name = "Attachments")]
+        public List<IFormFile> Attachments { get; set; } = new List<IFormFile>();
+        
+        // Property to store uploaded image URLs for markdown editor
+        public List<string> UploadedImageUrls { get; set; } = new List<string>();
     }
 }

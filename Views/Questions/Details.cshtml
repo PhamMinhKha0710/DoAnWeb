@@ -38,7 +38,7 @@
                             <span class="badge bg-info">@Model.Status</span>
                         </div>
                         <div>
-                            <small class="text-muted">Asked on @Model.CreatedDate.ToString("MMM dd, yyyy")</small>
+                            <small class="text-muted">Asked on @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")</small>
                             @if (Model.UpdatedDate != Model.CreatedDate)
                             {
                                 <small class="text-muted"> | Updated on @Model.UpdatedDate?.ToString("MMM dd, yyyy")</small>
@@ -94,12 +94,16 @@
                                 <form asp-action="Vote" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
                                     <input type="hidden" name="isUpvote" value="true" />
-                                    <button type="submit" class="btn btn-outline-success btn-sm">Upvote</button>
+                                    <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-arrow-up"></i> Upvote</button>
                                 </form>
                                 <form asp-action="Vote" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
                                     <input type="hidden" name="isUpvote" value="false" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Downvote</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-arrow-down"></i> Downvote</button>
+                                </form>
+                                <form asp-controller="SavedItems" asp-action="SaveQuestion" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.QuestionId" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-bookmark"></i> Save</button>
                                 </form>
                             </div>
                         </div>
@@ -124,7 +128,7 @@
                                             <span class="badge bg-success">Accepted</span>
                                         }
                                     </div>
-                                    <small class="text-muted">Answered on @answer.CreatedDate.ToString("MMM dd, yyyy")</small>
+                                    <small class="text-muted">Answered on @(answer.CreatedDate.HasValue ? answer.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")</small>
                                 </div>
                                 <div class="answer-content mt-3">
                                     @Html.Raw(answer.Body)
@@ -134,6 +138,28 @@
                                         <div class="user-info">
                                             <small class="text-muted">Answered by @answer.User.DisplayName</small>
                                         </div>
+                                        @if (User.Identity.IsAuthenticated)
+                                        {
+                                            <div>
+                                                <form asp-action="VoteAnswer" method="post" class="d-inline">
+                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
+                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                                    <input type="hidden" name="isUpvote" value="true" />
+                                                    <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-arrow-up"></i></button>
+                                                </form>
+                                                <form asp-action="VoteAnswer" method="post" class="d-inline">
+                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
+                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                                    <input type="hidden" name="isUpvote" value="false" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-arrow-down"></i></button>
+                                                </form>
+                                                <form asp-controller="SavedItems" asp-action="SaveAnswer" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@answer.AnswerId" />
+                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-bookmark"></i></button>
+                                                </form>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </div>

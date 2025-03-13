@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using DoAnWeb.Models;
 
-namespace DoAnWeb;
+namespace DoAnWeb.Models;
 
 public partial class DevCommunityContext : DbContext
 {
@@ -22,6 +21,8 @@ public partial class DevCommunityContext : DbContext
 
     public virtual DbSet<Question> Questions { get; set; }
 
+    public virtual DbSet<QuestionAttachment> QuestionAttachments { get; set; }
+
     public virtual DbSet<Repository> Repositories { get; set; }
 
     public virtual DbSet<RepositoryCommit> RepositoryCommits { get; set; }
@@ -34,17 +35,23 @@ public partial class DevCommunityContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<UserWatchedTag> UserWatchedTags { get; set; }
-
     public virtual DbSet<UserIgnoredTag> UserIgnoredTags { get; set; }
 
+    public virtual DbSet<UserSavedItem> UserSavedItems { get; set; }
+
+    public virtual DbSet<UserWatchedTag> UserWatchedTags { get; set; }
+
     public virtual DbSet<Vote> Votes { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=DESKTOP-TQFDM4P\\SQLEXPRESS;Database=DevCommunity;Trusted_Connection=True;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ActivityLog>(entity =>
         {
-            entity.HasKey(e => e.LogId).HasName("PK__Activity__5E548648B9E8B75E");
+            entity.HasKey(e => e.LogId).HasName("PK__Activity__5E54864859F09C42");
 
             entity.Property(e => e.ActivityType).HasMaxLength(50);
             entity.Property(e => e.CreatedDate)
@@ -55,30 +62,33 @@ public partial class DevCommunityContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.ActivityLogs)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__ActivityL__UserI__05D8E0BE");
+                .HasConstraintName("FK__ActivityL__UserI__0B91BA14");
         });
 
         modelBuilder.Entity<Answer>(entity =>
         {
-            entity.HasKey(e => e.AnswerId).HasName("PK__Answers__D482500454278ED7");
+            entity.HasKey(e => e.AnswerId).HasName("PK__Answers__D48250043037DE3B");
 
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.Score).HasDefaultValue(0);
+            entity.Property(e => e.UpdatedDate)
+                .HasDefaultValueSql("(getutcdate())")
+                .HasColumnType("datetime");
 
             entity.HasOne(d => d.Question).WithMany(p => p.Answers)
                 .HasForeignKey(d => d.QuestionId)
-                .HasConstraintName("FK__Answers__Questio__2CF2ADDF");
+                .HasConstraintName("FK__Answers__Questio__6FE99F9F");
 
             entity.HasOne(d => d.User).WithMany(p => p.Answers)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Answers__UserId__2DE6D218");
+                .HasConstraintName("FK__Answers__UserId__70DDC3D8");
         });
 
         modelBuilder.Entity<Comment>(entity =>
         {
-            entity.HasKey(e => e.CommentId).HasName("PK__Comments__C3B4DFCA2B6300D8");
+            entity.HasKey(e => e.CommentId).HasName("PK__Comments__C3B4DFCA7DE7D79F");
 
             entity.Property(e => e.Body).HasMaxLength(500);
             entity.Property(e => e.CreatedDate)
@@ -89,12 +99,12 @@ public partial class DevCommunityContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Comments)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__Comments__UserId__6FE99F9F");
+                .HasConstraintName("FK__Comments__UserId__75A278F5");
         });
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__20CF2E121630D030");
+            entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__20CF2E1291F3BFF1");
 
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
@@ -107,12 +117,12 @@ public partial class DevCommunityContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__Notificat__UserI__01142BA1");
+                .HasConstraintName("FK__Notificat__UserI__06CD04F7");
         });
 
         modelBuilder.Entity<Question>(entity =>
         {
-            entity.HasKey(e => e.QuestionId).HasName("PK__Question__0DC06FACBE11A16C");
+            entity.HasKey(e => e.QuestionId).HasName("PK__Question__0DC06FACC2370EE1");
 
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
@@ -133,24 +143,24 @@ public partial class DevCommunityContext : DbContext
                 .HasConstraintName("FK__Questions__UserI__6383C8BA");
 
             entity.HasMany(d => d.Tags).WithMany(p => p.Questions)
-                .UsingEntity<Dictionary<string, object>>(
-                    "QuestionTag",
-                    r => r.HasOne<Tag>().WithMany()
-                        .HasForeignKey("TagId")
-                        .HasConstraintName("FK__QuestionT__TagId__787EE5A0"),
-                    l => l.HasOne<Question>().WithMany()
-                        .HasForeignKey("QuestionId")
-                        .HasConstraintName("FK__QuestionT__Quest__778AC167"),
+                .UsingEntity<QuestionTag>(
+                    r => r.HasOne(qt => qt.Tag).WithMany(t => t.QuestionTags)
+                        .HasForeignKey(qt => qt.TagId)
+                        .HasConstraintName("FK__QuestionT__TagId__7E37BEF6"),
+                    l => l.HasOne(qt => qt.Question).WithMany(q => q.QuestionTags)
+                        .HasForeignKey(qt => qt.QuestionId)
+                        .HasConstraintName("FK__QuestionT__Quest__7D439ABD"),
                     j =>
                     {
-                        j.HasKey("QuestionId", "TagId").HasName("PK__Question__DB97A0365C4E806E");
+                        j.HasKey(qt => new { qt.QuestionId, qt.TagId }).HasName("PK__Question__DB97A036892C4093");
                         j.ToTable("QuestionTags");
                     });
+        
         });
 
         modelBuilder.Entity<Repository>(entity =>
         {
-            entity.HasKey(e => e.RepositoryId).HasName("PK__Reposito__B9BA861124E5378E");
+            entity.HasKey(e => e.RepositoryId).HasName("PK__Reposito__B9BA861130E27F9B");
 
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
@@ -171,7 +181,7 @@ public partial class DevCommunityContext : DbContext
 
         modelBuilder.Entity<RepositoryCommit>(entity =>
         {
-            entity.HasKey(e => e.CommitId).HasName("PK__Reposito__73748B725CA9C16C");
+            entity.HasKey(e => e.CommitId).HasName("PK__Reposito__73748B72889F7284");
 
             entity.Property(e => e.CommitDate)
                 .HasDefaultValueSql("(getdate())")
@@ -190,7 +200,7 @@ public partial class DevCommunityContext : DbContext
 
         modelBuilder.Entity<RepositoryFile>(entity =>
         {
-            entity.HasKey(e => e.FileId).HasName("PK__Reposito__6F0F98BF9CE85DF4");
+            entity.HasKey(e => e.FileId).HasName("PK__Reposito__6F0F98BF7E131276");
 
             entity.Property(e => e.FileHash).HasMaxLength(64);
             entity.Property(e => e.FilePath).HasMaxLength(255);
@@ -203,18 +213,18 @@ public partial class DevCommunityContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Roles__8AFACE1A4DB30FEF");
+            entity.HasKey(e => e.RoleId).HasName("PK__Roles__8AFACE1A0EBEA49E");
 
-            entity.HasIndex(e => e.RoleName, "UQ__Roles__8A2B61606CB05E4A").IsUnique();
+            entity.HasIndex(e => e.RoleName, "UQ__Roles__8A2B61601DB624C4").IsUnique();
 
             entity.Property(e => e.RoleName).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Tag>(entity =>
         {
-            entity.HasKey(e => e.TagId).HasName("PK__Tags__657CF9AC2A664FD4");
+            entity.HasKey(e => e.TagId).HasName("PK__Tags__657CF9ACCCDEB8E9");
 
-            entity.HasIndex(e => e.TagName, "UQ__Tags__BDE0FD1D4BAE65EF").IsUnique();
+            entity.HasIndex(e => e.TagName, "UQ__Tags__BDE0FD1DE35F6B5A").IsUnique();
 
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.TagName).HasMaxLength(50);
@@ -222,11 +232,11 @@ public partial class DevCommunityContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4C59199BA3");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4CE4378A70");
 
-            entity.HasIndex(e => e.Username, "UQ__Users__536C85E49175E97B").IsUnique();
+            entity.HasIndex(e => e.Username, "UQ__Users__536C85E44593A637").IsUnique();
 
-            entity.HasIndex(e => e.Email, "UQ__Users__A9D105341F829C62").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__Users__A9D105348AA87732").IsUnique();
 
             entity.Property(e => e.AvatarUrl).HasMaxLength(255);
             entity.Property(e => e.Bio).HasMaxLength(500);
@@ -252,14 +262,14 @@ public partial class DevCommunityContext : DbContext
                         .HasConstraintName("FK__UserRoles__UserI__52593CB8"),
                     j =>
                     {
-                        j.HasKey("UserId", "RoleId").HasName("PK__UserRole__AF2760AD26B2AEA4");
+                        j.HasKey("UserId", "RoleId").HasName("PK__UserRole__AF2760AD4D77315A");
                         j.ToTable("UserRoles");
                     });
         });
 
         modelBuilder.Entity<Vote>(entity =>
         {
-            entity.HasKey(e => e.VoteId).HasName("PK__Votes__52F015C2C4A741A0");
+            entity.HasKey(e => e.VoteId).HasName("PK__Votes__52F015C2EC70E0B2");
 
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
@@ -269,7 +279,27 @@ public partial class DevCommunityContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Votes)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__Votes__UserId__7B5B524B");
+                .HasConstraintName("FK__Votes__UserId__01142BA1");
+        
+            entity.HasOne(d => d.Answer).WithMany()
+                .HasForeignKey(d => d.AnswerId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__Votes__AnswerId__01142BA2");
+        });
+
+        modelBuilder.Entity<UserSavedItem>(entity =>
+        {
+            entity.HasKey(e => e.SavedItemId).HasName("PK__UserSave__C7D2D2E3A1B2C3D4");
+
+            entity.Property(e => e.ItemType).HasMaxLength(20);
+            entity.Property(e => e.SavedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserSavedItems)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__UserSaved__UserI__123456789");
         });
 
         OnModelCreatingPartial(modelBuilder);
