@@ -1,0 +1,72 @@
+/*
+Template Name: Repair Electo
+File: Layout CSS
+Author: TemplatesOnWeb
+Author URI: https://www.templateonweb.com/
+Licence: <a href="https://www.templateonweb.com/license">Website Template Licence</a>
+*/
+/*********************blog****************/
+.blog_1l1:hover .box_1i2i1{
+display:block; 
+ }
+.blog_1l1il h6{
+width:80px;
+height:80px;
+padding-top:15px; 
+ }
+
+.blog_1r1 .tag li a{
+font-size: 14px;
+padding: 5px 10px 5px 10px; 
+display:block;
+margin: 0 5px 10px 0;
+ }
+.blog_1r1 .tag li a:hover{
+background:#43c3ea;
+border-color:#43c3ea;
+color:#fff;
+ }
+.blog_1dt3ir ul li{
+padding-left:5px;
+padding-right:5px; 
+ }
+/*********************blog_end****************/
+
+
+
+@media screen and (max-width : 767px){
+.blog_1r{
+margin-top:15px;
+ }
+.blog_1dt2ir{
+margin-top:15px; 
+ }
+.blog_1dt3ir{
+text-align:left!important;
+margin-top:15px; 
+ }
+.blog_1dt3ir ul li {
+padding-left: 2px;
+padding-right: 2px;
+}
+ }
+
+@media (min-width:576px) and (max-width:767px) {
+
+
+ }
+@media (min-width:768px) and (max-width:991px) {
+.blog_1dt3ir ul li {
+padding-left: 2px;
+padding-right: 2px;
+}
+ }
+
+@media (min-width:992px) and (max-width:1200px) {
+
+ }
+@media (min-width:1201px) and (max-width:1300px) {
+
+ }
+
+

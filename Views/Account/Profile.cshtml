@@ -1,77 +1,125 @@
 @model DoAnWeb.ViewModels.ProfileViewModel
-
 @{
     ViewData["Title"] = "Profile";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4>Your Profile</h4>
-            </div>
-            <div class="card-body">
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success">
-                        @TempData["SuccessMessage"]
+<link rel="stylesheet" href="~/Content/CSS_Account/login_register.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+
+<section class="profile-section py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card border-0 shadow-lg rounded-3">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h3 class="text-center mb-0"><i class="bi bi-person-circle me-2"></i>Your Profile</h3>
                     </div>
-                }
-                
-                <form asp-action="Profile" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <input type="hidden" asp-for="UserId" />
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="text-center mb-3">
-                                <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)" 
-                                     class="img-fluid rounded-circle" style="max-width: 150px;" alt="Profile Picture" />
+                    <div class="card-body p-4">
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success alert-dismissible fade show">
+                                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label asp-for="Username" class="form-label"></label>
-                                <input asp-for="Username" class="form-control" readonly />
-                                <span asp-validation-for="Username" class="text-danger"></span>
+                        }
+
+                        <form asp-action="Profile" method="post">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input type="hidden" asp-for="UserId" />
+
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <div class="text-center mb-4">
+                                        <div class="profile-image-container mb-4 position-relative mx-auto" style="width: 200px; height: 200px;">
+                                            <!-- Enhanced circular avatar with blue border -->
+                                            <div class="rounded-circle p-2 bg-primary" style="width: 200px; height: 200px;">
+                                                <div class="rounded-circle bg-white p-2 h-100 w-100 d-flex align-items-center justify-content-center">
+                                                    <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)"
+                                                         class="img-fluid rounded-circle shadow" style="width: 100%; height: 100%; object-fit: cover;" alt="Profile Picture" />
+                                                </div>
+                                            </div>
+                                            <!-- Avatar edit icon overlay -->
+                                            <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2 shadow">
+                                                <i class="bi bi-pencil-fill text-white"></i>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label asp-for="AvatarUrl" class="form-label fw-bold">
+                                                <i class="bi bi-image me-1 text-primary"></i> Profile Picture URL
+                                            </label>
+                                            <input asp-for="AvatarUrl" class="form-control border-primary" placeholder="https://example.com/avatar.jpg" />
+                                            <span asp-validation-for="AvatarUrl" class="text-danger"></span>
+                                            <small class="form-text text-muted">Enter a URL to your profile picture</small>
+                                        </div>
+
+                                        <div class="mb-3 bg-light p-3 rounded-3 shadow-sm">
+                                            <label asp-for="Username" class="form-label fw-bold">
+                                                <i class="bi bi-person me-1 text-primary"></i> Username
+                                            </label>
+                                            <input asp-for="Username" class="form-control bg-light" readonly />
+                                            <span asp-validation-for="Username" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-8">
+                                    <div class="ps-lg-4">
+                                        <h4 class="border-bottom border-primary pb-2 mb-4">
+                                            <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                                            <span class="text-primary fw-bold">Personal Information</span>
+                                        </h4>
+
+                                        <div class="mb-4 card border-0 shadow-sm p-3">
+                                            <label asp-for="DisplayName" class="form-label fw-bold">
+                                                <i class="bi bi-person-badge text-primary me-1"></i> Display Name
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-primary text-white"><i class="bi bi-person-badge"></i></span>
+                                                <input asp-for="DisplayName" class="form-control border-primary" />
+                                            </div>
+                                            <span asp-validation-for="DisplayName" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="mb-4 card border-0 shadow-sm p-3">
+                                            <label asp-for="Email" class="form-label fw-bold">
+                                                <i class="bi bi-envelope text-primary me-1"></i> Email Address
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-primary text-white"><i class="bi bi-envelope"></i></span>
+                                                <input asp-for="Email" class="form-control border-primary" />
+                                            </div>
+                                            <span asp-validation-for="Email" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="mb-4 card border-0 shadow-sm p-3">
+                                            <label asp-for="Bio" class="form-label fw-bold">
+                                                <i class="bi bi-journal-text text-primary me-1"></i> Bio
+                                            </label>
+                                            <textarea asp-for="Bio" class="form-control border-primary" rows="5" placeholder="Tell us about yourself..."></textarea>
+                                            <span asp-validation-for="Bio" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="d-grid gap-2 mt-4">
+                                            <button type="submit" class="btn btn-primary py-3 fw-bold rounded-pill shadow">
+                                                <i class="bi bi-check-circle me-2"></i> Save Changes
+                                            </button>
+                                            <a asp-controller="Account" asp-action="Logout" class="btn btn-danger py-3 fw-bold rounded-pill shadow mt-3">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Logout </a>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label asp-for="Email" class="form-label"></label>
-                                <input asp-for="Email" class="form-control" />
-                                <span asp-validation-for="Email" class="text-danger"></span>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label asp-for="DisplayName" class="form-label"></label>
-                                <input asp-for="DisplayName" class="form-control" />
-                                <span asp-validation-for="DisplayName" class="text-danger"></span>
-                            </div>
-                        </div>
+                        </form>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="AvatarUrl" class="form-label"></label>
-                        <input asp-for="AvatarUrl" class="form-control" placeholder="https://example.com/avatar.jpg" />
-                        <span asp-validation-for="AvatarUrl" class="text-danger"></span>
-                        <small class="form-text text-muted">Enter a URL to your profile picture</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="Bio" class="form-label"></label>
-                        <textarea asp-for="Bio" class="form-control" rows="4"></textarea>
-                        <span asp-validation-for="Bio" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

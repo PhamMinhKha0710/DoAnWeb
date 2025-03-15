@@ -1,0 +1,48 @@
+﻿/* styles.css */
+
+/* General container styling */
+.container {
+    background-color: #1a1a2e; /* Màu nền xanh đen */
+    color: #eaeaea; /* Màu chữ sáng */
+}
+
+/* Card styling */
+.custom-card {
+    background-color: #162447; /* Màu nền card */
+    border: none; /* Không có viền */
+    border-radius: 8px; /* Bo góc card */
+}
+
+/* Header styling */
+.card-header {
+    background-color: #1f4068; /* Màu nền header */
+    color: #ffffff; /* Màu chữ trắng */
+}
+
+/* Welcome text styling */
+.welcome-text {
+    color: #00adb5; /* Màu chữ xanh sáng */
+}
+
+/* Button styling */
+.btn-primary {
+    background-color: #00adb5; /* Màu nền nút chính */
+    border: none; /* Không có viền */
+}
+
+    .btn-primary:hover {
+        background-color: #009c9a; /* Màu nền khi hover */
+    }
+
+/* Badge styling */
+.badge {
+    background-color: #393e46; /* Màu nền badge */
+    color: #ffffff; /* Màu chữ badge */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .custom-card {
+        margin-bottom: 1rem; /* Giảm khoảng cách giữa các card */
+    }
+}

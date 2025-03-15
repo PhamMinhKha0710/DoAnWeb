@@ -1,0 +1,87 @@
+/*
+Template Name: Repair Electo
+File: Layout CSS
+Author: TemplatesOnWeb
+Author URI: https://www.templateonweb.com/
+Licence: <a href="https://www.templateonweb.com/license">Website Template Licence</a>
+*/
+/*********************cart****************/
+.cart_1 table .span_1{
+width:50px;
+height:50px;
+line-height:50px; 
+ }
+ 
+.checkout_1 h6{
+border-left:3px solid #43c3ea; 
+ }
+/*********************cart_end****************/
+
+
+
+@media screen and (max-width : 767px){
+.cart_2l .button{
+ padding-left:10px;
+ padding-right:10px;
+ }
+.cart_2l .form-control{
+width:40%!important;
+ }
+.cart_2r {
+text-align:center!important;
+margin-top:15px; 
+ }
+.cart_3l h4{
+text-align:center; 
+ }
+.cart_3lil .form-control{
+margin-top:10px; 
+ }
+.cart_3lil h6{
+text-align:center;
+ }
+.cart_3r h4{
+text-align:center;
+margin-top:15px; 
+ }
+.cart_3r h6{
+text-align:center;
+ }
+.checkout_2l h4{
+text-align:center; 
+ }
+.checkout_2l{
+margin-top:8px;
+margin-bottom:8px;
+ }
+.checkout_2lil{
+margin-top:10px;  
+ }
+.checkout_3l h4{
+text-align:center; 
+ }
+.checkout_3r h4{
+text-align:center;
+margin-top:15px; 
+ }
+ }
+
+@media (min-width:576px) and (max-width:767px) {
+
+
+ }
+@media (min-width:768px) and (max-width:991px) {
+.cart_2l .button{
+padding-left:20px;
+padding-right:20px;
+ }
+ }
+
+@media (min-width:992px) and (max-width:1200px) {
+
+ }
+@media (min-width:1201px) and (max-width:1300px) {
+
+ }
+
+

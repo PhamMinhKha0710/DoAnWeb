@@ -1,0 +1,271 @@
+/*
+Template Name: Repair Electo
+File: Layout CSS
+Author: TemplatesOnWeb
+Author URI: https://www.templateonweb.com/
+Licence: <a href="https://www.templateonweb.com/license">Website Template Licence</a>
+*/
+/*********************center_home****************/
+.carousel-caption {
+background: #0000009c;
+width: 100%;
+height: 100%;
+bottom: 0;
+left: 0;
+padding: 130px 150px 0px 150px;
+text-align: left;
+}
+/*********************center_home_end****************/
+
+
+/*********************categ****************/
+#categ {
+background-image: url(../img/1.jpg);
+background-position: center;
+}
+.categ_m{
+background: #000000e0; 
+ }
+.categ_2i1r{
+min-height:150px; 
+ }
+.categ_2i1l{
+min-height:150px;
+padding-top:50px; 
+ }
+.categ_2i:hover .categ_2i1r{
+background:#152545!important;
+color:#fff;
+transition: 0.3s;
+ }
+/*********************categ_end****************/
+
+/*********************spec****************/
+#spec {
+background-image: url(../img/2.jpg);
+background-position: center;
+}
+.spec_1i {
+background: #00000085;
+padding:15px; 
+ }
+.appoint_1ri1l .input-group{
+height:50px;
+ }
+.appoint_1ri1l .input-group .btn{
+padding-top:13px;
+ }
+/*********************spec_end****************/
+
+/*********************news****************/
+#news .box_1i2i1{
+padding-top:29%;
+ }
+.news_2i:hover .box_1i2i1{
+display:block; 
+ }
+.news_2i:hover .news_2i1{
+background:#fff; 
+ } 
+.news_2i:hover .news_2i1 h6 a{
+color:#333!important;
+ }
+.news_2i{
+border: 1px solid #1f3155;
+ }
+/*********************news_end****************/
+
+/*********************testim****************/
+#testim .carousel-indicators {
+bottom: -60px;
+}
+#testim{
+padding-bottom:70px; 
+ }
+.testim_1i1i  img{
+border:5px solid #43c3ea; 
+ }
+.testim_1i1:hover  .testim_1i1i img{
+border:5px solid #152545;
+transition: 0.3s;
+ }
+.testim_1i1:hover  .testim_1i1i2{
+background:#152545;
+color:#fff;
+transition: 0.3s;
+ }
+/*********************testim_end****************/
+
+
+@media screen and (max-width : 767px){
+.center_home img{
+min-height:300px; 
+ }
+.carousel-caption {
+padding:10px;
+text-align:center;
+}
+.carousel-caption .font_60{
+font-size:22px;
+}
+.carousel-caption p{
+width:100%!important;
+text-align:left;
+font-size:14px;
+}
+.carousel-caption .button{
+padding:10px 15px;
+}
+.carousel-caption .button_1{
+padding:10px 15px;
+}
+.box_1i{
+margin-top:8px;
+margin-bottom:8px; 
+ }
+.box_1i p{
+text-align:left;
+ }
+.categ_2i1l{
+min-height:auto;
+padding-top:20px;
+padding-bottom:20px; 
+ }
+.categ_2i1r{
+min-height:auto; 
+ }
+.categ_2i1r h6{
+text-align:center;
+ }
+.categ_2i{
+margin-top:8px;
+margin-bottom:8px;  
+ }
+.about_1l h2{
+text-align:center; 
+ }
+.about_1r h2{
+text-align:center;
+margin-top:15px; 
+ }
+.about_1ri {
+text-align:center; 
+ }
+.about_1ri p{
+text-align:left; 
+ }
+.spec_1i {
+margin-top:8px;
+margin-bottom:8px;   
+ }
+.appoint_1l h2{
+text-align:center;  
+ }
+.appoint_1r h2{
+margin-top:15px; 
+text-align:center;  
+ }
+.appoint_1ri1l{
+margin-top:5px;
+margin-bottom:5px; 
+ }
+.appoint_1ri1l h6{
+text-align:center;
+ }
+.news_1l{
+text-align:center; 
+ }
+.news_1r{
+text-align:center!important; 
+ }
+.news_2i {
+margin-top:8px;
+margin-bottom:8px;  
+ }
+.testim_1i1 p{
+text-align:left; 
+ }
+.testim_1i1{
+margin-top:8px;
+margin-bottom:8px;
+ }
+ }
+
+@media (min-width:576px) and (max-width:767px) {
+.carousel-caption {
+padding:20px;
+}
+.carousel-caption .font_60{
+font-size:32px;
+}
+.carousel-caption p{
+font-size:16px;
+}
+.carousel-caption .button{
+padding:10px 20px;
+}
+.carousel-caption .button_1{
+padding:10px 20px;
+}
+.categ_2i1r{
+min-height:150px; 
+ }
+.categ_2i1l{
+min-height:150px;
+padding-top:50px; 
+ }
+.categ_2i1r h6{
+text-align:left;
+ }
+ }
+@media (min-width:768px) and (max-width:991px) {
+.center_home img{
+min-height:600px; 
+ }
+.carousel-caption .font_60{
+font-size:32px;
+}
+.carousel-caption p{
+width:100%!important;
+}
+.categ_2i1r  p{
+font-size:12px; 
+ }
+.categ_2i1r  h6{
+font-size:14px; 
+ }
+.about_1ril .font_60{
+font-size:40px; 
+ }
+.spec_1i  h6{
+font-size:12px; 
+ }
+.news_2i1  h6{
+font-size:12px; 
+ }
+.testim_1i1i1  h6{
+font-size:12px;  
+ }
+.testim_1i1i2ir h6{
+font-size:12px; 
+ }
+ }
+
+@media (min-width:992px) and (max-width:1200px) {
+.center_home img{
+min-height:600px; 
+ }
+.carousel-caption .font_60{
+font-size:40px;
+}
+.categ_2i1r  p{
+font-size:14px; 
+ }
+ }
+@media (min-width:1201px) and (max-width:1250px) {
+.center_home img{
+min-height:600px; 
+ }
+ }
+
+

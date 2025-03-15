@@ -1,0 +1,39 @@
+﻿/* styles.css - File CSS tùy chỉnh cho các trang đăng nhập và đăng ký */
+
+/* Màu xanh cho tiêu đề và nút */
+.text-blue {
+    color: #007bff !important;
+}
+
+/* Hiệu ứng focus cho input */
+.input-group:focus-within {
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Style cho button */
+.button.blue {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+    .button.blue:hover {
+        background-color: #0069d9;
+    }
+
+/* Màu liên kết */
+.link-blue {
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+    .link-blue:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }

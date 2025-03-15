@@ -1,0 +1,137 @@
+﻿/* question-form.css */
+:root {
+    --navy-dark: #001f3f; /* Darker navy */
+    --navy-medium: #003366; /* Medium navy */
+    --navy-light: #0066cc; /* Light navy */
+    --navy-pale: #e6f0ff; /* Pale blue for highlights */
+    --navy-border: #99ccff; /* Light blue for borders */
+    --accent-color: #0056b3;
+}
+
+.question-container {
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+}
+
+body {
+    background-color: #f8f9fa;
+}
+
+.breadcrumb {
+    background-color: transparent;
+    padding: 0.75rem 0;
+}
+
+.breadcrumb-item a {
+    color: var(--navy-medium);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+    .breadcrumb-item a:hover {
+        color: var(--navy-light);
+    }
+
+.breadcrumb-item.active {
+    color: var(--navy-dark);
+    font-weight: 500;
+}
+
+.custom-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.custom-card-header {
+    background-color: var(--navy-dark);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.custom-card-title {
+    font-weight: 600;
+    margin-bottom: 0;
+    font-size: 1.8rem;
+}
+
+.custom-card-body {
+    padding: 2rem;
+    background-color: white;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--navy-dark);
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+    .form-control:focus {
+        border-color: var(--navy-border); /* Light blue border on focus */
+        box-shadow: 0 0 0 0.25rem rgba(153, 204, 255, 0.3); /* Light blue glow */
+        outline: none;
+    }
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.markdown-editor-container {
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.custom-primary-btn {
+    background-color: var(--navy-medium);
+    border-color: var(--navy-medium);
+    transition: all 0.2s ease;
+}
+
+    .custom-primary-btn:hover {
+        background-color: var(--navy-dark);
+        border-color: var(--navy-dark);
+    }
+
+.btn-outline-secondary {
+    color: var(--navy-medium);
+    border-color: var(--navy-medium);
+    transition: all 0.2s ease;
+}
+
+    .btn-outline-secondary:hover {
+        background-color: var(--navy-pale);
+        color: var(--navy-dark);
+        border-color: var(--navy-medium);
+    }
+
+.text-danger {
+    color: #dc3545 !important;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Additional styling for textarea to ensure consistent focus effect */
+textarea.form-control:focus {
+    border-color: var(--navy-border);
+    box-shadow: 0 0 0 0.25rem rgba(153, 204, 255, 0.3);
+}
+
+/* Style for inputs */
+input.form-control, textarea.form-control {
+    border: 2px solid #e9ecef;
+}
+
+    input.form-control:focus, textarea.form-control:focus {
+        border: 2px solid var(--navy-border);
+    }

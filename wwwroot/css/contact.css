@@ -1,0 +1,45 @@
+/*
+Template Name: Repair Electo
+File: Layout CSS
+Author: TemplatesOnWeb
+Author URI: https://www.templateonweb.com/
+Licence: <a href="https://www.templateonweb.com/license">Website Template Licence</a>
+*/
+/*********************contact****************/
+
+/*********************contact_end****************/
+
+
+
+@media screen and (max-width : 767px){
+.contact_1l1 h3{
+text-align:center; 
+ }
+.contact_1r{
+margin-top:15px; 
+ }
+.contact_1r h3{
+text-align:center;
+ }
+.contact_1ril .form-control{
+margin-bottom:10px; 
+ }
+
+ }
+
+@media (min-width:576px) and (max-width:767px) {
+
+
+ }
+@media (min-width:768px) and (max-width:991px) {
+
+ }
+
+@media (min-width:992px) and (max-width:1200px) {
+
+ }
+@media (min-width:1201px) and (max-width:1300px) {
+
+ }
+
+

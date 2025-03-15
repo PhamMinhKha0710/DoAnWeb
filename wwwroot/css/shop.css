@@ -1,0 +1,127 @@
+/*
+Template Name: Repair Electo
+File: Layout CSS
+Author: TemplatesOnWeb
+Author URI: https://www.templateonweb.com/
+Licence: <a href="https://www.templateonweb.com/license">Website Template Licence</a>
+*/
+/*********************shop****************/
+.shop_1l2im1i1{
+padding-top:40%;
+background:#152545e6;
+display:none;
+transition: 0.3s; 
+ }
+.shop_1l2im:hover .shop_1l2im1i1{
+display:block; 
+transition: 0.3s; 
+ }
+.shop_1l2im2{
+border-top:1px solid #e8f2f5; 
+ }
+.shop_1dt1r .btn{
+border-color: #152545;
+padding:10px 20px; 
+ }
+.shop_1dt1r .btn:hover{
+background:#152545; 
+border-color: #152545; 
+ }
+.shop_1dt2 .nav-tabs{
+border-color:#e8f2f5; 
+ }
+.shop_1dt2 .nav-tabs .nav-link {
+font-weight:bold;
+padding:15px 30px;
+color:#333;
+border-color: #e8f2f5 #e8f2f5 #fff;
+}
+.shop_1dt2 .nav-tabs .nav-link:hover {
+color:#43c3ea;
+}
+.shop_1dt2 .nav-tabs .nav-link.active {
+border-color: #e8f2f5 #e8f2f5 #fff;
+color:#fff;
+background:#43c3ea;
+}
+
+/*********************shop_end****************/
+
+
+
+@media screen and (max-width : 767px){
+.shop_1r1l {
+padding-top:0!important;
+text-align:center;
+margin-bottom:15px;
+ }
+.shop_1l2im {
+margin-top:8px;
+margin-bottom:8px; 
+ }
+.shop_1r{
+margin-top:15px; 
+ }
+.shop_1r1 h5{
+text-align:center; 
+ }
+.shop_1r1ir h5{
+text-align:left; 
+ }
+.shop_1dt1r{
+margin-top:15px;  
+ }
+.shop_1dt1r .button{
+padding-left:20px;
+padding-right:20px;
+ }
+.shop_1dt2 .nav-tabs .nav-link{
+padding:15px 10px; 
+ }
+.blog_1dt5 h4{
+text-align:center; 
+ }
+.blog_1dt6  h4{
+text-align:center;  
+ }
+
+.shop_1dt4 h4{
+text-align:center;  
+ }
+.shop_1dt .shop_1l2{
+padding-right:0!important;
+padding-left:24px!important;
+ }
+ }
+
+@media (min-width:576px) and (max-width:767px) {
+.shop_1dt2 .nav-tabs .nav-link{
+padding:15px 30px; 
+ }
+
+ }
+@media (min-width:768px) and (max-width:991px) {
+.shop_1l2im1i1 .button_2{
+padding-left:15px;
+padding-right:15px;
+ }
+.shop_1l2im2  h6{
+font-size:10px; 
+ }
+.shop_1l2im2  h6 span{
+font-size:10px; 
+ }
+.shop_1dt1r .button{
+padding-left:20px;
+padding-right:20px;
+ }
+ }
+
+@media (min-width:992px) and (max-width:1200px) {
+
+ }
+@media (min-width:1201px) and (max-width:1300px) {
+
+ }
+
+

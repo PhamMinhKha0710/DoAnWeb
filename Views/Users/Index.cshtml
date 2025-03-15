@@ -7,7 +7,7 @@
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow border-primary">
                 <div class="card-body bg-light">
                     <h1 class="mb-0 text-primary">Users</h1>
                 </div>
@@ -17,7 +17,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card shadow border-0">
+            <div class="card shadow border-primary">
                 <div class="card-header d-flex justify-content-between align-items-center bg-white">
                     <h5 class="mb-0 fw-bold">All Users</h5>
                     <div class="d-flex">
@@ -49,7 +49,7 @@
                             <a class="nav-link" href="#">Votes</a>
                         </li>
                     </ul>
-                    
+
                     @if (!Model.Any())
                     {
                         <div class="alert alert-info shadow-sm">
@@ -58,11 +58,11 @@
                     }
                     else
                     {
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                             @foreach (var user in Model)
                             {
                                 <div class="col">
-                                    <div class="card h-100 border-0 shadow-sm hover-card">
+                                    <div class="card h-100 border border-primary shadow-sm hover-card">
                                         <div class="card-body p-3">
                                             <div class="d-flex align-items-center mb-3">
                                                 @{
@@ -70,18 +70,20 @@
                                                     var randomColor = colors[user.UserId % colors.Length];
                                                     var initials = !string.IsNullOrEmpty(user.DisplayName) ? string.Join("", user.DisplayName.Split(' ').Where(x => !string.IsNullOrEmpty(x)).Select(x => x[0])) : "U";
                                                 }
-                                                
-                                                @if (string.IsNullOrEmpty(user.AvatarUrl))
-                                                {
-                                                    <div class="rounded-circle bg-@randomColor text-white d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 56px; height: 56px; font-weight: bold; font-size: 1.2rem;">
-                                                        @initials
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <img src="@user.AvatarUrl" class="rounded-circle me-3 shadow-sm" width="56" height="56" alt="@user.DisplayName">
-                                                }
-                                                
+
+                                                <div class="avatar-container border border-primary rounded-circle p-1 me-3" style="border-width: 2px !important;">
+                                                    @if (string.IsNullOrEmpty(user.AvatarUrl))
+                                                    {
+                                                        <div class="rounded-circle bg-@randomColor text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px; font-weight: bold; font-size: 1.2rem;">
+                                                            @initials
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <img src="@user.AvatarUrl" class="rounded-circle shadow-sm" width="56" height="56" alt="@user.DisplayName">
+                                                    }
+                                                </div>
+
                                                 <div>
                                                     <h5 class="mb-0">
                                                         <a asp-controller="Users" asp-action="Details" asp-route-id="@user.UserId" class="text-decoration-none text-primary fw-bold">@user.DisplayName</a>
@@ -89,41 +91,49 @@
                                                     <small class="text-muted"><i class="bi bi-person-badge me-1"></i>@user.Username</small>
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="row text-center g-2 mb-3">
                                                 <div class="col-4">
-                                                    <div class="p-2 border rounded bg-light hover-stat">
+                                                    <div class="p-2 border border-primary rounded bg-light hover-stat h-100 d-flex flex-column justify-content-center">
                                                         <div class="fw-bold text-primary">1</div>
-                                                        <small class="text-muted">reputation</small>
+                                                        <div class="text-muted small">
+                                                            <i class="bi bi-award me-1"></i>reputation
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
-                                                    <div class="p-2 border rounded bg-light hover-stat">
+                                                    <div class="p-2 border border-success rounded bg-light hover-stat h-100 d-flex flex-column justify-content-center">
                                                         <div class="fw-bold text-success">@user.Questions.Count</div>
-                                                        <small class="text-muted">questions</small>
+                                                        <div class="text-muted small">
+                                                            <i class="bi bi-question-circle me-1"></i>questions
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
-                                                    <div class="p-2 border rounded bg-light hover-stat">
+                                                    <div class="p-2 border border-info rounded bg-light hover-stat h-100 d-flex flex-column justify-content-center">
                                                         <div class="fw-bold text-info">@user.Answers.Count</div>
-                                                        <small class="text-muted">answers</small>
+                                                        <div class="text-muted small">
+                                                            <i class="bi bi-chat-dots me-1"></i>answers
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             @if (!string.IsNullOrEmpty(user.Bio))
                                             {
-                                                <p class="small text-muted mb-0"><i class="bi bi-quote me-1"></i>@(user.Bio.Length > 80 ? user.Bio.Substring(0, 80) + "..." : user.Bio)</p>
+                                                <div class="border-top pt-2 mt-2">
+                                                    <p class="small text-muted mb-0"><i class="bi bi-quote me-1"></i>@(user.Bio.Length > 80 ? user.Bio.Substring(0, 80) + "..." : user.Bio)</p>
+                                                </div>
                                             }
                                         </div>
-                                        <div class="card-footer bg-transparent border-top-0 text-end">
+                                        <div class="card-footer bg-transparent border-top text-end">
                                             <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>Member since @(user.CreatedDate?.ToString("MMM yyyy") ?? "unknown")</small>
                                         </div>
                                     </div>
                                 </div>
                             }
                         </div>
-                        
+
                         <div class="d-flex justify-content-center mt-4">
                             <nav aria-label="Page navigation">
                                 <ul class="pagination">
@@ -157,13 +167,15 @@
                     this.classList.add('shadow');
                     this.style.transform = 'translateY(-5px)';
                     this.style.transition = 'all 0.3s ease';
+                    this.style.borderWidth = '2px';
                 });
                 card.addEventListener('mouseleave', function() {
                     this.classList.remove('shadow');
                     this.style.transform = 'translateY(0)';
+                    this.style.borderWidth = '1px';
                 });
             });
-            
+
             // Add hover effect for stat boxes
             const hoverStats = document.querySelectorAll('.hover-stat');
             hoverStats.forEach(stat => {
@@ -171,10 +183,12 @@
                     this.classList.add('shadow-sm');
                     this.style.backgroundColor = '#f8f9fa';
                     this.style.transition = 'all 0.2s ease';
+                    this.style.borderWidth = '2px';
                 });
                 stat.addEventListener('mouseleave', function() {
                     this.classList.remove('shadow-sm');
                     this.style.backgroundColor = '';
+                    this.style.borderWidth = '1px';
                 });
             });
         });

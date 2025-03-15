@@ -73,6 +73,7 @@ namespace DoAnWeb.Controllers
 
                 if (user != null)
                 {
+           
                     // Create claims
                     var claims = new List<Claim>
                     {
@@ -100,9 +101,31 @@ namespace DoAnWeb.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            var model = new LogoutViewModel
+            {
+                ReturnUrl = Url.Action("Index", "Home")
+            };
+            return View(model);
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(LogoutViewModel model)
+        {
+            // Sign out the user
+            await HttpContext.SignOutAsync("CookieAuth");
+
+            // Redirect to home page or specified return URL
+            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+                return Redirect(model.ReturnUrl);
+            else
+                return RedirectToAction("Index", "Home");
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LogoutConfirm(LogoutViewModel model)
         {
             await HttpContext.SignOutAsync("CookieAuth");
             return RedirectToAction("Index", "Home", new { area = string.Empty });

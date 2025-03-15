@@ -9,6 +9,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DoAnWeb.styles.css" asp-append-version="true" />
+
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/css/font-awesome.min.css" rel="stylesheet">
+    <link href="~/css/global.css" rel="stylesheet">
+    <link href="~/css/index.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <script src="~/js/bootstrap.bundle.min.js"></script>
     <style>
         .navbar-brand {
             font-weight: bold;
@@ -35,45 +43,179 @@
     </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <section id="top" class="pt-2 pb-2 bg_blue">
+        <div class="container-xl">
+            <div class="row top_1">
+                <div class="col-md-5">
+                    <div class="top_1l">
+                        <p class="mb-0 text-white fw-bold font_14">Welcome to Repairplus Experts, Theme for Repair Shops</p>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="top_1r text-end">
+                        <ul class="mb-0">
+                            <li class="nav-item dropdown d-inline-block">
+                                <a class="dropdown-toggle text-white font_14 nav-link pt-0 pb-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Extras
+                                </a>
+                                <ul class="dropdown-menu drop_top p-0" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" href="#"> Extras</a></li>
+                                    <li><a class="dropdown-item" href="#"> Extras 1</a></li>
+                                    <li><a class="dropdown-item" href="#"> Extras 2</a></li>
+                                    <li><a class="dropdown-item border-0" href="#"> Extras 3</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown d-inline-block">
+                                <a class="dropdown-toggle text-white font_14 nav-link pt-0 pb-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Informations
+                                </a>
+                                <ul class="dropdown-menu drop_top p-0" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" href="#"> Informations</a></li>
+                                    <li><a class="dropdown-item" href="#"> Informations 1</a></li>
+                                    <li><a class="dropdown-item" href="#"> Informations 2</a></li>
+                                    <li><a class="dropdown-item border-0" href="#"> Informations 3</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item d-inline-block text-white font_14 pt-0 pb-0 nav-link">
+                                Repair Rates
+                            </li>
+                            <li class="nav-item d-inline-block text-white font_14 pt-0 pb-0 nav-link">
+                                <a class="text-white mx-2" href="#"><i class="fa fa-facebook"></i></a>
+                                <a class="text-white mx-2" href="#"><i class="fa fa-twitter"></i></a>
+                                <a class="text-white mx-2" href="#"><i class="fa fa-linkedin"></i></a>
+                                <a class="text-white mx-2" href="#"><i class="fa fa-pinterest"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="header_t" class="bg-white pt-3 pb-3">
+        <div class="container-xl">
+            <div class="row header_t1">
+                <div class="col-md-4">
+                    <div class="header_t1l">
+                        <h3 class="mb-0"><a class="text-black" href="index.html"><i class="fa fa-gear align-middle me-1"></i> <span class="col_blue">DEV</span> Community <br> <span class="font_14 span_1 text-muted fw-normal">We  fix all electric device</span></a></h3>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="header_t1r">
+                        <div class="header_t1ri row">
+                            <div class="col-md-4">
+                                <div class="header_t1ri1">
+                                    <span class="text-center float-start"><i class="fa fa-home d-inline-block rounded-circle me-3"></i></span>
+                                    <h6 class="font_14 mb-0 lh-base">
+                                        <span class="fw-bold fs-6">231, Semper Street</span><br>
+                                        Oldyork ,USA 12042
+                                    </h6>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="header_t1ri1">
+                                    <span class="text-center float-start"><i class="fa fa-clock-o d-inline-block rounded-circle me-3"></i></span>
+                                    <h6 class="font_14 mb-0 lh-base">
+                                        <span class="fw-bold fs-6">Opening Time</span><br>
+                                        Mon - Sat: 09.00 to 18.00
+                                    </h6>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="header_t1ri1">
+                                    <span class="text-center float-start"><i class="fa fa-envelope d-inline-block rounded-circle me-3"></i></span>
+                                    <h6 class="font_14 mb-0 lh-base">
+                                        <span class="fw-bold fs-6">Mail Us</span><br>
+                                        info@gmail.com
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <br />
+    <section id="header">
+        <nav class="navbar navbar-expand-md navbar-light bg_dark p-0" id="navbar_sticky">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-code-square"></i> DevCommunity
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="text-light navbar-brand pt-2" href="index.html"><i class="fa fa-gear align-middle me-1"></i> <span class="col_blue">DEV</span> Community</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav">
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mb-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Repositories" asp-action="Index">Repositories</a>
+                            <a class="nav-link active" aria-current="page"  asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Questions" asp-action="Index">Question</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Tags" asp-action="Index">Tag</a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Blog
+                            </a>
+                            <ul class="dropdown-menu drop_1" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="blog.html">Blog</a></li>
+                                <li><a class="dropdown-item border-0" href="blog_detail.html">Blog Detail</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Pages
+                            </a>
+                            <ul class="dropdown-menu drop_1" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="cart.html">Shopping Cart</a></li>
+                                <li><a class="dropdown-item" href="checkout.html">Checkout</a></li>
+                                <li><a class="dropdown-item border-0" href="account.html">My Account</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Repositories" asp-action="Index">Repositories</a>
                         </li>
                     </ul>
-                    
-                    <div class="search-container mx-2">
+
+                    <!-- Thanh tìm kiếm mở rộng -->
+                    <div class="search-container mx-4">
                         <form class="d-flex" asp-controller="Home" asp-action="Search" method="get">
                             <div class="input-group">
-                                <input class="form-control" type="search" name="q" placeholder="Search..." aria-label="Search">
-                                <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i></button>
+                                <input class="form-control" type="search" name="q" placeholder="Search..." aria-label="Search" style="width: 250px;">
+                                <button class="btn btn-outline-primary" type="submit"><i class="fa fa-search"></i></button>
                             </div>
                         </form>
                     </div>
-                    
+
+           
+
+                    <!-- Login & Sign up nằm ngoài cùng bên phải -->
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link text-light me-2" asp-controller="Account" asp-action="Profile">
                                     <i class="bi bi-person-circle"></i>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                @* <a class="nav-link dropdown-toggle text-light d-inline-block" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">  *@
+                                @*     <span class="visually-hidden">User menu</span>  *@
+                                @* </a> *@
+                                <ul class="dropdown-menu dropdown-menu-end drop_1" aria-labelledby="navbarUserDropdown">
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Saves">Saves</a></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
                                             @Html.AntiForgeryToken()
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick="document.getElementById('logoutForm').submit();">Logout</a>
+                                            <a class="dropdown-item border-0" href="javascript:void(0);" onclick="document.getElementById('logoutForm').submit();">Logout</a>
+
                                         </form>
                                     </li>
                                 </ul>
@@ -82,50 +224,135 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="nav-link text-light me-2" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Sign up</a>
+                                <a class="nav-link text-light me-2" asp-controller="Account" asp-action="Register">Sign up</a>
                             </li>
                         }
                     </ul>
                 </div>
             </div>
         </nav>
-    </header>
-    <div class="container">
-        <div class="row">
+    </section>
+
+  
+
+    <style>
+        /* Enhanced styles for navigation */
+        #navbar_sticky {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-nav .nav-link {
+            padding: 1rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+            .navbar-nav .nav-link:hover {
+                color: #0d6efd !important;
+            }
+
+            .navbar-nav .nav-link.active {
+                color: #0d6efd !important;
+                font-weight: bold;
+            }
+
+        .dropdown-menu {
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Search box enhancements */
+        .search-container .form-control {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            transition: all 0.3s ease;
+        }
+
+            .search-container .form-control:focus {
+                box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+                border-color: #86b7fe;
+            }
+
+        .search-container .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        /* Sidebar styles */
+        .sidebar-container {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+            .sidebar-container .nav-link {
+                padding: 0.8rem 1.5rem;
+                border-left: 3px solid transparent;
+                transition: all 0.3s ease;
+            }
+
+                .sidebar-container .nav-link:hover {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    border-left: 3px solid #0d6efd;
+                }
+
+                .sidebar-container .nav-link.active {
+                    border-left: 3px solid #0d6efd;
+                    background-color: rgba(13, 110, 253, 0.1);
+                    font-weight: bold;
+                }
+
+                    .sidebar-container .nav-link.active i {
+                        color: #0d6efd;
+                    }
+
+        /* Login/Signup button styles */
+        .bg_blue {
+            background-color: #0d6efd;
+            transition: all 0.3s ease;
+        }
+
+            .bg_blue:hover {
+                background-color: #0b5ed7;
+            }
+
+       
+    </style>
+    <br />
+    <div class="container-fluid px-0">
+        <div class="row g-0">
             @{
                 var currentController = ViewContext.RouteData.Values["Controller"].ToString();
                 var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repositories" || currentController == "Tags" || currentController == "Users";
             }
-            
+
             @if (showSidebar)
             {
-                <div class="col-md-2 sidebar">
-                    <nav class="nav flex-column">
-                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">
-                            <i class="bi bi-house-door me-2"></i> Home
+                <div class="col-md-2 bg_dark sidebar-container" style="min-height: calc(100vh - 150px);">
+                    <nav class="nav flex-column py-4">
+                        <a class="nav-link d-flex align-items-center text-light @(currentController == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="fa fa-home me-2"></i> Home
                         </a>
-                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Questions" ? "active" : "")" asp-area="" asp-controller="Questions" asp-action="Index">
-                            <i class="bi bi-question-circle me-2"></i> Question
+                        <a class="nav-link d-flex align-items-center text-light @(currentController == "Questions" ? "active" : "")" asp-area="" asp-controller="Questions" asp-action="Index">
+                            <i class="fa fa-question-circle me-2"></i> Question
                         </a>
-                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Tags" ? "active" : "")" asp-area="" asp-controller="Tags" asp-action="Index">
-                            <i class="bi bi-tags me-2"></i> Tag
+                        <a class="nav-link d-flex align-items-center text-light @(currentController == "Tags" ? "active" : "")" asp-area="" asp-controller="Tags" asp-action="Index">
+                            <i class="fa fa-tags me-2"></i> Tag
                         </a>
-                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Users" ? "active" : "")" asp-area="" asp-controller="Users" asp-action="Index">
-                            <i class="bi bi-people me-2"></i> User
+                        <a class="nav-link d-flex align-items-center text-light @(currentController == "Users" ? "active" : "")" asp-area="" asp-controller="Users" asp-action="Index">
+                            <i class="fa fa-users me-2"></i> User
                         </a>
-                         <a class="nav-link text-dark d-flex align-items-center @(currentController == "Repositories" ? "active" : "")" asp-area="" asp-controller="Repositories" asp-action="Index">
-                            <i class="bi-display"></i>  Repositories
+                        <a class="nav-link d-flex align-items-center text-light @(currentController == "Repositories" ? "active" : "")" asp-area="" asp-controller="Repositories" asp-action="Index">
+                            <i class="fa fa-desktop me-2"></i> Repositories
                         </a>
-                        <a class="nav-link text-dark d-flex align-items-center" asp-area="" asp-controller="Account" asp-action="Saves">
-                            <i class="bi bi-bookmark me-2"></i> Save
+                        <a class="nav-link d-flex align-items-center text-light" asp-area="" asp-controller="Account" asp-action="Saves">
+                            <i class="fa fa-bookmark me-2"></i> Save
                         </a>
                     </nav>
                 </div>
                 <div class="col-md-10">
-                    <main role="main" class="pb-3">
+                    <main role="main" class="pb-3 px-4">
                         @RenderBody()
                     </main>
                 </div>
@@ -141,11 +368,176 @@
         </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - DevCommunity - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <style>
+        .sidebar-container {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+            .sidebar-container .nav-link {
+                padding: 0.8rem 1.5rem;
+                border-left: 3px solid transparent;
+                transition: all 0.3s ease;
+            }
+
+                .sidebar-container .nav-link:hover {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    border-left: 3px solid #0d6efd;
+                }
+
+                .sidebar-container .nav-link.active {
+                    border-left: 3px solid #0d6efd;
+                    background-color: rgba(13, 110, 253, 0.1);
+                    font-weight: bold;
+                }
+
+                    .sidebar-container .nav-link.active i {
+                        color: #0d6efd;
+                    }
+    </style>
+     </br>
+
+    <section id="footer" class="p_3 bg_dark">
+        <div class="container-xl">
+            <div class="footer_1 row">
+                <div class="col-md-4">
+                    <div class="footer_1l">
+                        <div class="header_t1l">
+                            <h3 class="mb-0"><a class="text-white" href="index.html"><i class="fa fa-gear align-middle me-1"></i> <span class="col_blue">Repair</span> Electo <br> <span class="font_14 span_1 col_light fw-normal">We  fix all electric device</span></a></h3>
+                            <p class="col_light mt-4">Repairplus brings 41 years of Digital Repairs experience right to your Device. Our Texhnicians are equipped to help you that work best.</p>
+                            <p class="col_light">Our commitment to bring professionalism, good service & trust to the Phone repair service & maintenance business.</p>
+                            <h6 class="mb-0 mt-4"><a class="button_2" href="#">PURCHASE THEME</a></h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="footer_1r p-4 shadow_box">
+                        <div class="footer_1ri row">
+                            <div class="col-md-4">
+                                <div class="footer_1ril">
+                                    <h5 class="text-white mb-4">OUR SERVICES</h5>
+                                    <div class="row footer_1rilsm">
+                                        <h6 class="col-md-12 col-6 font_14"><a class="col_light" href="#"><i class="fa fa-caret-right me-1"></i> Smart Phone Repair</a></h6>
+                                        <h6 class="mt-2 col-md-12 col-6 font_14"><a class="col_light" href="#"><i class="fa fa-caret-right me-1"></i> Tablets & iPad Repair</a></h6>
+                                        <h6 class="mt-2 col-md-12 col-6 font_14"><a class="col_light" href="#"><i class="fa fa-caret-right me-1"></i> Desktop & Laptop</a></h6>
+                                        <h6 class="mt-2 col-md-12 col-6 font_14"><a class="col_light" href="#"><i class="fa fa-caret-right me-1"></i> Game System Repair</a></h6>
+                                        <h6 class="mt-2 col-md-12 col-6 font_14"><a class="col_light" href="#"><i class="fa fa-caret-right me-1"></i> LCD & LED TV Repair</a></h6>
+                                        <h6 class="mt-2 col-md-12 col-6 mb-0 font_14"><a class="col_light" href="#"><i class="fa fa-caret-right me-1"></i> MP3 & MP4 Player</a></h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="footer_1ril">
+                                    <h5 class="text-white mb-4">SUBSCRIBE US</h5>
+                                    <p class="col_light">Subscribe to our newsletter!</p>
+                                    <div class="input-group bg_dark p-2">
+                                        <input type="text" class="form-control border-0 font_14 bg-transparent text-light" placeholder="Enter Email">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary bg-transparent  rounded-0 border-0" type="button">
+                                                <i class="fa fa-paper-plane col_blue"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                    <p class="col_light mt-3 fst-italic">We don’t do mail to spam and your mail id is confidential.</p>
+                                    <hr>
+                                    <ul class="mb-0">
+                                        <li class="d-inline-block me-2"><a class="col_light" href="#"><i class="fa fa-facebook"></i></a></li>
+                                        <li class="d-inline-block me-2"><a class="col_light" href="#"><i class="fa fa-twitter"></i></a></li>
+                                        <li class="d-inline-block me-2"><a class="col_light" href="#"><i class="fa fa-google-plus"></i></a></li>
+                                        <li class="d-inline-block me-2"><a class="col_light" href="#"><i class="fa fa-pinterest"></i></a></li>
+                                        <li class="d-inline-block me-2"><a class="col_light" href="#"><i class="fa fa-instagram"></i></a></li>
+                                        <li class="d-inline-block"><a class="col_light" href="#"><i class="fa fa-linkedin"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="footer_1ril">
+                                    <h5 class="text-white mb-4">CONTACT INFO</h5>
+                                    <div class="footer_1rili row">
+                                        <div class="col-md-2 col-2">
+                                            <div class="footer_1rilil">
+                                                <span class="col_blue"><i class="fa fa-home"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10 col-10">
+                                            <div class="footer_1rilir">
+                                                <p class="col_light">
+                                                    42, LOREM STREET,
+                                                    3rd <br> aros,  Oldyork ,USA 11003
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer_1rili row">
+                                        <div class="col-md-2 col-2">
+                                            <div class="footer_1rilil">
+                                                <span class="col_blue"><i class="fa fa-phone"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10 col-10">
+                                            <div class="footer_1rilir">
+                                                <p class="col_light">
+                                                    CALL US<br>
+                                                    +(123) 456-7890
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer_1rili row">
+                                        <div class="col-md-2 col-2">
+                                            <div class="footer_1rilil">
+                                                <span class="col_blue"><i class="fa fa-envelope"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10 col-10">
+                                            <div class="footer_1rilir">
+                                                <p class="col_light">
+                                                    MAIL US<br>
+                                                    info@gmail.com
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer_1rili row">
+                                        <div class="col-md-2 col-2">
+                                            <div class="footer_1rilil">
+                                                <span class="col_blue"><i class="fa fa-clock-o"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10 col-10">
+                                            <div class="footer_1rilir">
+                                                <p class="col_light mb-0">
+                                                    OPENING TIME<br>
+                                                    Mon - Sat: 09.00am to 18.00pm
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer_2 row mt-4">
+                <div class="col-md-8">
+                    <div class="footer_2l">
+                        <p class="mb-0 col_light fs-6">© 2013 Your Website Name. All Rights Reserved | Design by <a class="col_blue fw-bold" href="http://www.templateonweb.com">TemplateOnWeb</a></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="footer_2r text-end">
+                        <ul class="mb-0">
+                            <li class="d-inline"><a class="col_light" href="#">About </a></li>
+                            <li class="d-inline mx-3"><a class="col_light" href="#">Support </a></li>
+                            <li class="d-inline"><a class="col_light" href="#">Contact Us </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-    </footer>
+        </div>
+    </section>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

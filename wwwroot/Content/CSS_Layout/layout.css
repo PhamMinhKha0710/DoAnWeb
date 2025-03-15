@@ -1,0 +1,207 @@
+﻿/* ========================================
+   LAYOUT CSS - MAIN THEME FILE
+   ========================================
+   
+   Color palette:
+   - Primary Dark: #1a2634 (xanh đen chính)
+   - Secondary Dark: #263545 (xanh đen nhạt hơn)
+   - Text Light: #e9ecef (màu chữ sáng)
+   - Text Muted: #adb5bd (màu chữ nhạt)
+   - Accent: #3a86ff (màu nhấn)
+   - Accent Hover: #2979ff (màu nhấn khi hover)
+   - Border: #2d3846 (viền)
+   - Content BG: #1e2a3a (nền khu vực nội dung)
+*/
+
+/* ==== GENERAL STYLES ==== */
+body {
+    background-color: #1a2634;
+    color: #e9ecef;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+a {
+    color: #3a86ff;
+    text-decoration: none;
+}
+
+    a:hover {
+        color: #2979ff;
+        text-decoration: underline;
+    }
+
+//Avt
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* ==== NAVBAR STYLES ==== */
+.navbar {
+    padding: 0.8rem 1rem;
+}
+
+.bg-primary-dark {
+    background-color: #263545 !important;
+}
+
+.navbar-dark .navbar-brand {
+    color: #e9ecef;
+    font-weight: bold;
+    font-size: 1.4rem;
+    letter-spacing: 0.5px;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #adb5bd;
+    padding: 0.5rem 1rem;
+    transition: color 0.2s ease-in-out;
+}
+
+    .navbar-dark .navbar-nav .nav-link:hover,
+    .navbar-dark .navbar-nav .nav-link:focus {
+        color: #e9ecef;
+    }
+
+/* Navbar Search */
+.search-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-input {
+    background-color: #1a2634;
+    border: 1px solid #2d3846;
+    color: #e9ecef;
+}
+
+    .search-input:focus {
+        background-color: #1a2634;
+        border-color: #3a86ff;
+        box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25);
+        color: #e9ecef;
+    }
+
+    .search-input::placeholder {
+        color: #adb5bd;
+    }
+
+.btn-outline-accent {
+    color: #3a86ff;
+    border-color: #3a86ff;
+    background-color: transparent;
+}
+
+    .btn-outline-accent:hover {
+        color: #fff;
+        background-color: #3a86ff;
+        border-color: #3a86ff;
+    }
+
+.btn-accent {
+    color: #fff;
+    background-color: #3a86ff;
+    border-color: #3a86ff;
+}
+
+    .btn-accent:hover {
+        background-color: #2979ff;
+        border-color: #2979ff;
+    }
+
+/* Dropdown menu */
+.dropdown-dark {
+    background-color: #263545;
+    border: 1px solid #2d3846;
+}
+
+    .dropdown-dark .dropdown-item {
+        color: #e9ecef;
+    }
+
+        .dropdown-dark .dropdown-item:hover,
+        .dropdown-dark .dropdown-item:focus {
+            color: #ffffff;
+            background-color: #1a2634;
+        }
+
+/* ==== SIDEBAR STYLES ==== */
+.main-container {
+    margin-top: 1rem;
+}
+
+.sidebar {
+    border-right: 1px solid #2d3846;
+    padding-right: 15px;
+    margin-bottom: 20px;
+}
+
+    .sidebar .nav-link {
+        color: #adb5bd;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        margin-bottom: 0.25rem;
+    }
+
+        .sidebar .nav-link:hover {
+            background-color: #263545;
+            color: #e9ecef !important;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #263545;
+            color: #3a86ff !important;
+            font-weight: bold;
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+        }
+
+/* ==== CONTENT AREA ==== */
+.content-area {
+    background-color: #1e2a3a;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* ==== FOOTER STYLES ==== */
+.footer {
+    background-color: #263545;
+    color: #adb5bd;
+    padding: 1rem 0;
+    border-top: 1px solid #2d3846;
+    margin-top: 2rem;
+}
+
+    .footer a {
+        color: #3a86ff;
+    }
+
+        .footer a:hover {
+            color: #2979ff;
+        }
+
+/* ==== RESPONSIVE ADJUSTMENTS ==== */
+@media (max-width: 767.98px) {
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid #2d3846;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+
+    .content-area {
+        padding: 15px;
+    }
+}

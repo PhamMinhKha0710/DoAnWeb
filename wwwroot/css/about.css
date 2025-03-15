@@ -1,0 +1,107 @@
+/*
+Template Name: Repair Electo
+File: Layout CSS
+Author: TemplatesOnWeb
+Author URI: https://www.templateonweb.com/
+Licence: <a href="https://www.templateonweb.com/license">Website Template Licence</a>
+*/
+/*********************about****************/
+.work_1im1i {
+border:2px dashed #465b85;
+ }
+.work_1im1i1 h6{
+width:50px;
+height:50px;
+line-height:50px; 
+ }
+.work_1im:hover .work_1im1i{
+border:2px dashed #43c3ea; 
+ }
+.team_1im1i1 ul li a{
+width:45px;
+height:45px;
+line-height:45px;
+border:1px solid #fff; 
+ }
+.team_1im1i1 ul li a:hover{
+background:#152545;
+border-color:#152545;
+ }
+.team_1im1i1{
+padding-top:65%;
+background: #43c3ead1;
+display:none; 
+ }
+.team_1im:hover .team_1im1i1{
+display:block; 
+ }
+/*********************about_end****************/
+
+
+
+@media screen and (max-width : 767px){
+
+.about_pg1l  h6{
+text-align:center;
+ }
+.about_pg1r{
+margin-top:15px;
+ }
+.value_1r{
+margin-top:15px; 
+ }
+.value_1r h2{
+text-align:center;
+ }
+.value_1rili {
+margin-top:10px; 
+ }
+.work_1im{
+margin-top:8px;
+margin-bottom:8px; 
+ }
+.work_1im p{
+text-align:left;
+ }
+.team_1im{
+margin-top:8px;
+margin-bottom:8px; 
+ }
+.team_1im2 {
+text-align:center; 
+ }
+.team_1im2 p{
+text-align:left; 
+ }
+
+ }
+
+@media (min-width:576px) and (max-width:767px) {
+
+
+ }
+@media (min-width:768px) and (max-width:991px) {
+.about_pg1r img{
+min-height:370px; 
+ }
+.value_1l img{
+min-height:380px;  
+ }
+.value_1r p{
+font-size:14px;
+ }
+ }
+
+@media (min-width:992px) and (max-width:1200px) {
+.about_pg1r img{
+min-height:370px; 
+ }
+.value_1l img{
+min-height:380px;  
+ }
+ }
+@media (min-width:1201px) and (max-width:1300px) {
+
+ }
+
+
