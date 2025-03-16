@@ -11,10 +11,10 @@ namespace DoAnWeb.ViewModels
         [Required(ErrorMessage = "File path is required")]
         [StringLength(255, ErrorMessage = "File path must be between 1 and 255 characters", MinimumLength = 1)]
         [Display(Name = "File Path")]
-        public string FilePath { get; set; }
+        public required string FilePath { get; set; }
 
         [Required(ErrorMessage = "File content is required")]
         [Display(Name = "File Content")]
-        public string FileContent { get; set; }
+        public required string FileContent { get; set; }
     }
 }

@@ -15,5 +15,11 @@ namespace DoAnWeb.Repositories
         
         // Check if email exists
         bool EmailExists(string email);
+        
+        // Get user with roles
+        User GetUserWithRoles(int userId);
+        
+        // Override GetAll to include related collections
+        new IEnumerable<User> GetAll();
     }
 }

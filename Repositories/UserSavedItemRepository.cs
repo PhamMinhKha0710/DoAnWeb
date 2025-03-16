@@ -5,7 +5,7 @@ namespace DoAnWeb.Repositories
 {
     public class UserSavedItemRepository : Repository<UserSavedItem>, IUserSavedItemRepository
     {
-        private readonly DevCommunityContext _context;
+        private new readonly DevCommunityContext _context;
         
         public UserSavedItemRepository(DevCommunityContext context) : base(context)
         {

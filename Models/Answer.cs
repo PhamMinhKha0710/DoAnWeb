@@ -18,6 +18,8 @@ public partial class Answer
     public int? Score { get; set; }
 
     public bool IsAccepted { get; set; }
+    
+    public bool IsSaved {get; set;}
 
     public DateTime UpdatedDate { get; set; }
 
@@ -26,4 +28,6 @@ public partial class Answer
     public virtual Question? Question { get; set; }
 
     public virtual User? User { get; set; }
+    
+    public virtual ICollection<AnswerAttachment>? Attachments { get; set; }
 }

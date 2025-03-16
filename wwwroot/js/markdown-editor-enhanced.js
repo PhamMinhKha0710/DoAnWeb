@@ -109,6 +109,24 @@ function setupMarkdownEditor(textarea) {
         if (typeof Prism !== 'undefined') {
             Prism.highlightAllUnder(previewContainer);
         }
+        
+        // Preserve code formatting for all code blocks
+        const codeBlocks = previewContainer.querySelectorAll('pre code, code');
+        codeBlocks.forEach(block => {
+            // Ensure code blocks maintain their original formatting
+            block.style.whiteSpace = 'pre';
+            block.style.tabSize = '4';
+            block.style.MozTabSize = '4';
+            
+            // Apply theme-specific styling
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                block.style.backgroundColor = '#334155';
+                block.style.color = '#e2e8f0';
+            } else {
+                block.style.backgroundColor = '#f1f5f9';
+                block.style.color = '#334155';
+            }
+        });
     }
     
     // Function to insert code block with language selection
@@ -483,8 +501,11 @@ function convertMarkdownToHtml(markdown) {
     // Convert images
     html = html.replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" class="img-fluid">');
     
-    // Convert code blocks
-    html = html.replace(/```([\s\S]+?)```/g, '<pre><code>$1</code></pre>');
+    // Convert code blocks with language support
+    html = html.replace(/```([a-z]*)?\n([\s\S]+?)```/g, function(match, lang, code) {
+        const language = lang || 'plaintext';
+        return '<pre data-language="' + language + '"><code class="language-' + language + '">' + code + '</code></pre>';
+    });
     
     // Convert inline code
     html = html.replace(/`(.+?)`/g, '<code>$1</code>');

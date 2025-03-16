@@ -34,6 +34,7 @@
     border-radius: 4px;
     padding: 1rem;
     overflow-x: auto;
+    margin-bottom: 1rem;
 }
 
 .markdown-preview code {
@@ -42,11 +43,60 @@
     background-color: #f8f9fa;
     padding: 0.2rem 0.4rem;
     border-radius: 3px;
+    font-size: 0.9em;
 }
 
 .markdown-preview pre code {
     padding: 0;
     background-color: transparent;
+    display: block;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+    line-height: 1.5;
+    tab-size: 4;
+}
+
+/* Syntax highlighting for code blocks */
+.markdown-preview .language-javascript, 
+.markdown-preview .language-js { color: #8a6d3b; }
+.markdown-preview .language-html { color: #2e6da4; }
+.markdown-preview .language-css { color: #20c997; }
+.markdown-preview .language-csharp, 
+.markdown-preview .language-cs { color: #5f4bb6; }
+.markdown-preview .language-sql { color: #d44950; }
+.markdown-preview .language-python, 
+.markdown-preview .language-py { color: #3572A5; }
+.markdown-preview .language-java { color: #b07219; }
+
+/* Content area code blocks */
+.content-area pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.content-area code {
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    color: #212529;
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.content-area pre code {
+    padding: 0;
+    background-color: transparent;
+    display: block;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+    line-height: 1.5;
+    tab-size: 4;
 }
 
 /* Attachment section styling */

@@ -9,6 +9,7 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
 
+
     public HomeController(ILogger<HomeController> logger)
     {
         _logger = logger;
@@ -29,6 +30,7 @@ public class HomeController : Controller
                 Body = q.Body,
                 CreatedDate = q.CreatedDate,
                 ViewCount = q.ViewCount,
+                Score = q.Score,
                 User = q.User,
                 QuestionTags = q.QuestionTags,
                 Answers = q.Answers
@@ -64,4 +66,6 @@ public class HomeController : Controller
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+
+
 }

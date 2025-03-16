@@ -29,7 +29,7 @@ namespace DoAnWeb.Repositories
             return _dbSet.Any(u => u.Email == email);
         }
         
-        public virtual User GetById(int id)
+        public new virtual User GetById(int id)
         {
             return _dbSet
                 .Include(u => u.Questions)
@@ -50,6 +50,16 @@ namespace DoAnWeb.Repositories
             return _dbSet
                 .Include(u => u.Roles)
                 .FirstOrDefault(u => u.UserId == userId);
+        }
+        
+        // Override GetAll to include related collections for user statistics
+        public new IEnumerable<User> GetAll()
+        {
+            return _dbSet
+                .Include(u => u.Questions)
+                .Include(u => u.Answers)
+                .AsSplitQuery()
+                .ToList();
         }
     }
 }

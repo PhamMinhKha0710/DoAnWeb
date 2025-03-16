@@ -4,13 +4,15 @@
     ViewData["Title"] = "Ask a Question";
 }
 
+<!-- Main container for the question creation page -->
 <div class="container">
+    <!-- Breadcrumb navigation for better user orientation -->
     <div class="row mb-4">
         <div class="col">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li class="breadcrumb-item"><a asp-action="Index">Questions</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Questions</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Ask a Question</li>
                 </ol>
             </nav>
@@ -18,49 +20,224 @@
     </div>
 
     <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h1 class="card-title">Ask a Question</h1>
+        <!-- Main content area (8 columns on medium screens and up) -->
+        <div class="col-md-8">
+            <div class="card create-question-card">
+                <div class="card-header bg-transparent py-3">
+                    <h1 class="card-title fs-4 fw-bold mb-0">Ask a Question</h1>
                 </div>
                 <div class="card-body">
-                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    <!-- Question creation form with file upload support -->
+                    <form asp-action="Create" method="post" enctype="multipart/form-data" id="question-form">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                        <div class="mb-3">
-                            <label asp-for="Title" class="form-label">Title</label>
-                            <input asp-for="Title" class="form-control" placeholder="What's your question? Be specific." />
+                        <!-- Question title input field -->
+                        <div class="mb-4">
+                            <label asp-for="Title" class="form-label fw-medium">Title</label>
+                            <input asp-for="Title" class="form-control form-control-lg" placeholder="What's your question? Be specific." />
                             <span asp-validation-for="Title" class="text-danger"></span>
-                            <div class="form-text">Be specific and imagine you're asking a question to another person.</div>
+                            <!-- Helpful guidance for users -->
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i> Be specific and imagine you're asking a question to another person.
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Body" class="form-label">Body</label>
-                            <div class="markdown-editor-container">
-                                <textarea asp-for="Body" class="form-control" rows="10" placeholder="Include all the information someone would need to answer your question"></textarea>
+                        <!-- Question body with Markdown editor -->
+                        <div class="mb-4">
+                            <label asp-for="Body" class="form-label fw-medium">Body</label>
+                            <!-- Custom Markdown editor container -->
+                            <div class="markdown-editor-container border rounded">
+                                <textarea asp-for="Body" class="form-control border-0 markdown-editor" rows="12" placeholder="Include all the information someone would need to answer your question"></textarea>
                             </div>
                             <span asp-validation-for="Body" class="text-danger"></span>
-                            <div class="form-text">Supports Markdown formatting. You can also paste screenshots directly into the editor.</div>
+                            <!-- Markdown support information -->
+                            <div class="form-text">
+                                <i class="bi bi-markdown me-1"></i> Supports Markdown formatting. You can also paste screenshots directly into the editor.
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Tags" class="form-label">Tags</label>
-                            <input asp-for="Tags" class="form-control" placeholder="e.g. javascript, react, node.js (comma separated)" />
+                        <!-- Tags input with icon -->
+                        <div class="mb-4">
+                            <label asp-for="Tags" class="form-label fw-medium">Tags</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-tags"></i>
+                                </span>
+                                <input asp-for="Tags" class="form-control border-start-0" placeholder="e.g. javascript, react, node.js (comma separated)" />
+                            </div>
                             <span asp-validation-for="Tags" class="text-danger"></span>
-                            <div class="form-text">Add up to 5 tags to describe what your question is about. Use comma to separate tags.</div>
+                            <!-- Tag guidance -->
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i> Add up to 5 tags to describe what your question is about. Use comma to separate tags.
+                            </div>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Post Your Question</button>
+                        <!-- File upload section -->
+                        <div class="mb-4">
+                            <label asp-for="Attachments" class="form-label fw-medium">Attachments</label>
+                            <input type="file" asp-for="Attachments" class="form-control" multiple />
+                            <div class="form-text">
+                                <i class="bi bi-paperclip me-1"></i> Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR (Max 10MB per file)
+                            </div>
+                        </div>
+
+                        <!-- Form action buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
+                                <i class="bi bi-send me-1"></i> Post Your Question
+                            </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar with helpful information (4 columns) -->
+        <div class="col-md-4">
+            <!-- Tips card with guidance on asking good questions -->
+            <div class="card mb-4 tips-card">
+                <div class="card-header bg-transparent py-3">
+                    <h5 class="mb-0 fw-bold">How to Ask</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tip 1: Search first -->
+                    <div class="tip-item mb-3">
+                        <div class="d-flex">
+                            <div class="tip-icon me-2 text-primary">
+                                <i class="bi bi-search"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Search first</h6>
+                                <p class="text-muted small mb-0">Check if your question has been asked before.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tip 2: Be specific -->
+                    <div class="tip-item mb-3">
+                        <div class="d-flex">
+                            <div class="tip-icon me-2 text-primary">
+                                <i class="bi bi-chat-quote"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Be specific</h6>
+                                <p class="text-muted small mb-0">Include details about your goal, problem, and what you've tried.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tip 3: Add code -->
+                    <div class="tip-item mb-3">
+                        <div class="d-flex">
+                            <div class="tip-icon me-2 text-primary">
+                                <i class="bi bi-code-square"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Add code</h6>
+                                <p class="text-muted small mb-0">When appropriate, share code that demonstrates your problem.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tip 4: Add relevant tags -->
+                    <div class="tip-item">
+                        <div class="d-flex">
+                            <div class="tip-icon me-2 text-primary">
+                                <i class="bi bi-tags"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Add relevant tags</h6>
+                                <p class="text-muted small mb-0">Tags help your question reach the right experts.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Markdown formatting help card -->
+            <div class="card formatting-help-card">
+                <div class="card-header bg-transparent py-3">
+                    <h5 class="mb-0 fw-bold">Markdown Formatting</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Heading example -->
+                    <div class="format-example mb-2">
+                        <code class="d-block mb-1"># Heading</code>
+                        <div class="example-result small text-muted">Creates a heading</div>
+                    </div>
+                    <!-- Bold text example -->
+                    <div class="format-example mb-2">
+                        <code class="d-block mb-1">**bold text**</code>
+                        <div class="example-result small text-muted">Creates <strong>bold text</strong></div>
+                    </div>
+                    <!-- Italic text example -->
+                    <div class="format-example mb-2">
+                        <code class="d-block mb-1">*italic text*</code>
+                        <div class="example-result small text-muted">Creates <em>italic text</em></div>
+                    </div>
+                    <!-- Link example -->
+                    <div class="format-example mb-2">
+                        <code class="d-block mb-1">[link](https://example.com)</code>
+                        <div class="example-result small text-muted">Creates a hyperlink</div>
+                    </div>
+                    <!-- Code block example -->
+                    <div class="format-example">
+                        <code class="d-block mb-1">```code block```</code>
+                        <div class="example-result small text-muted">Creates a code block</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Include custom CSS for questions -->
+@section Styles {
+    <link rel="stylesheet" href="~/css/questions.css" />
+    <link rel="stylesheet" href="~/css/questions-fix.css" />
+    <link rel="stylesheet" href="~/css/code-blocks.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <style>
+        /* Additional styles to ensure submit button is visible */
+        #submit-button {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        
+        /* Fix for form layout */
+        .d-grid.gap-2.d-md-flex {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Ensure the button container is visible */
+        .justify-content-md-end {
+            display: flex !important;
+            visibility: visible !important;
+        }
+    </style>
+}
+
+<!-- Include scripts for validation and Markdown editor -->
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <!-- Markdown parser library -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Syntax highlighting library -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <!-- HTML Sanitizer script (must be loaded before markdown editor) -->
+    <script src="~/js/html-sanitizer.js"></script>
+    <!-- Custom Markdown editor implementation -->
+    <script src="~/js/markdown-editor.js"></script>
+    <!-- Enhanced file attachment handling -->
+    <script src="~/js/question-attachments.js"></script>
+    <!-- Form fix script -->
+    <script src="~/js/form-fix.js"></script>
 }

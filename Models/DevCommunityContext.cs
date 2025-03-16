@@ -14,8 +14,16 @@ public partial class DevCommunityContext : DbContext
     public virtual DbSet<ActivityLog> ActivityLogs { get; set; }
 
     public virtual DbSet<Answer> Answers { get; set; }
+    
+    public virtual DbSet<AnswerAttachment> AnswerAttachments { get; set; }
 
     public virtual DbSet<Comment> Comments { get; set; }
+
+    public virtual DbSet<Conversation> Conversations { get; set; }
+
+    public virtual DbSet<ConversationParticipant> ConversationParticipants { get; set; }
+
+    public virtual DbSet<Message> Messages { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -44,8 +52,15 @@ public partial class DevCommunityContext : DbContext
     public virtual DbSet<Vote> Votes { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=DESKTOP-TQFDM4P\\SQLEXPRESS;Database=DevCommunity;Trusted_Connection=True;TrustServerCertificate=True;");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+            // Connection string is now configured through Dependency Injection in Program.cs
+            // This is only used as a fallback if DI doesn't configure the context
+            optionsBuilder.UseSqlServer("Server=DESKTOP-TQFDM4P\\SQLEXPRESS;Database=DevCommunity;Trusted_Connection=True;TrustServerCertificate=True;");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -250,6 +265,10 @@ public partial class DevCommunityContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.Username).HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.LastLoginDate)
+                .HasColumnType("datetime")
+                .IsRequired(false);
 
             entity.HasMany(d => d.Roles).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(
@@ -300,6 +319,49 @@ public partial class DevCommunityContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__UserSaved__UserI__123456789");
+        });
+
+        // Chat Models Configuration
+        modelBuilder.Entity<Conversation>(entity =>
+        {
+            entity.HasKey(e => e.ConversationId);
+            
+            entity.Property(e => e.Title).IsRequired();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.LastActivityAt).HasDefaultValueSql("(getdate())");
+        });
+        
+        modelBuilder.Entity<ConversationParticipant>(entity =>
+        {
+            entity.HasKey(e => e.ParticipantId);
+            
+            entity.HasOne(d => d.Conversation)
+                .WithMany(p => p.Participants)
+                .HasForeignKey(d => d.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasKey(e => e.MessageId);
+            
+            entity.Property(e => e.Content).IsRequired();
+            entity.Property(e => e.SentAt).HasDefaultValueSql("(getdate())");
+            
+            entity.HasOne(d => d.Conversation)
+                .WithMany(p => p.Messages)
+                .HasForeignKey(d => d.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(d => d.Sender)
+                .WithMany()
+                .HasForeignKey(d => d.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -18,11 +18,19 @@ public partial class User
 
     public string? AvatarUrl { get; set; }
 
+    public string? ProfilePicture { get; set; }
+
     public string? Bio { get; set; }
 
     public DateTime? CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
+    
+    public bool IsActive { get; set; } = true;
+    
+    public DateTime? LastLoginDate { get; set; }
+    
+    public string? ConnectionId { get; set; }
     
     public int Reputation
     {

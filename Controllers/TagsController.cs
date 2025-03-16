@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using DoAnWeb.Models;
 using DoAnWeb.Services;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace DoAnWeb.Controllers
 {
@@ -20,7 +21,7 @@ namespace DoAnWeb.Controllers
         // GET: Tags
         public IActionResult Index()
         {
-            var tags = _context.Tags.ToList();
+            var tags = _context.Tags.Include(t => t.QuestionTags).ToList();
             return View(tags);
         }
 

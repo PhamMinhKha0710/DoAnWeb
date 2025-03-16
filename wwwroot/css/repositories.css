@@ -1,0 +1,9 @@
+.repo-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+}
+
+.repository-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}

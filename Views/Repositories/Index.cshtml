@@ -6,50 +6,70 @@
 }
 
 <div class="container">
-    <div class="row mb-4">
+    <div class="row mb-4 align-items-center">
         <div class="col-md-8">
             @if (isPersonalRepositories)
             {
-                <h1>My Repositories</h1>
+                <h1 class="fw-bold mb-2">My Repositories</h1>
+                <p class="text-muted mb-0">Manage and organize your code repositories</p>
             }
             else
             {
-                <h1>Public Repositories</h1>
-                <p class="text-muted">Showing popular public repositories. <a asp-controller="Account" asp-action="Login">Log in</a> to see your personal repositories.</p>
+                <h1 class="fw-bold mb-2">Public Repositories</h1>
+                <p class="text-muted mb-0">Explore public repositories from the community. <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Log in</a> to see your personal repositories.</p>
             }
         </div>
         <div class="col-md-4 text-end">
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <a asp-action="Create" class="btn btn-primary">Create Repository</a>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Create Repository
+                </a>
             }
             else
             {
-                <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Log in to create</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Log in to create
+                </a>
             }
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col">
+    <div class="card mb-4 search-card">
+        <div class="card-body p-3">
             <form asp-action="Index" method="get" class="d-flex">
-                <input type="text" name="searchTerm" class="form-control me-2" placeholder="Search repositories..." value="@ViewData["SearchTerm"]" />
-                <button type="submit" class="btn btn-outline-primary">Search</button>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="searchTerm" class="form-control border-start-0" placeholder="Search repositories..." value="@ViewData["SearchTerm"]" />
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
             </form>
         </div>
     </div>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-warning">
-            @if (isPersonalRepositories)
-            {
-                <span>You don't have any repositories yet. <a asp-action="Create">Create a repository</a> to get started!</span>
-            }
-            else
-            {
-                <span>No public repositories found. <a asp-controller="Account" asp-action="Login">Log in</a> to see your personal repositories or create new ones.</span>
-            }
+        <div class="card">
+            <div class="card-body p-5 text-center empty-state">
+                <i class="bi bi-git fs-1 text-muted mb-3"></i>
+                <h4>No repositories found</h4>
+                @if (isPersonalRepositories)
+                {
+                    <p class="text-muted mb-4">You don't have any repositories yet. Create your first repository to get started!</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Create Repository
+                    </a>
+                }
+                else
+                {
+                    <p class="text-muted mb-4">No public repositories found. Log in to see your personal repositories or create new ones.</p>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Log in
+                    </a>
+                }
+            </div>
         </div>
     }
     else
@@ -58,23 +78,61 @@
             @foreach (var item in Model)
             {
                 <div class="col-md-6 mb-4">
-                    <div class="card h-100">
+                    <div class="card h-100 repository-card">
                         <div class="card-body">
-                            <h5 class="card-title">
-                                <a asp-action="Details" asp-route-id="@item.RepositoryId">@item.RepositoryName</a>
-                                @if (item.Visibility == "Private")
-                                {
-                                    <span class="badge bg-secondary">Private</span>
-                                }
-                            </h5>
-                            <p class="card-text">@(item.Description?.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description)</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="repo-icon me-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle">
+                                    <i class="bi bi-git"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0">
+                                        <a asp-action="Details" asp-route-id="@item.RepositoryId" class="text-decoration-none repo-title">@item.RepositoryName</a>
+                                    </h5>
+                                    <div class="mt-1">
+                                        @if (item.Visibility == "Private")
+                                        {
+                                            <span class="badge bg-secondary rounded-pill">
+                                                <i class="bi bi-lock-fill me-1"></i> Private
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success rounded-pill">
+                                                <i class="bi bi-globe me-1"></i> Public
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p class="card-text text-muted mb-3">@(item.Description?.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description ?? "No description available")</p>
+                            
+                            <div class="repo-stats d-flex mb-3">
+                                <div class="me-3">
+                                    <i class="bi bi-file-earmark me-1"></i>
+                                    <small>@(item.RepositoryFiles?.Count ?? 0) files</small>
+                                </div>
+                                <div>
+                                    <i class="bi bi-git me-1"></i>
+                                    <small>@(item.RepositoryCommits?.Count ?? 0) commits</small>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer bg-transparent">
                             <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">Created by @item.Owner?.DisplayName</small>
-                                <div>
-                                    <a asp-action="Files" asp-route-id="@item.RepositoryId" class="btn btn-sm btn-outline-primary">Files</a>
-                                    <a asp-action="Commits" asp-route-id="@item.RepositoryId" class="btn btn-sm btn-outline-secondary">Commits</a>
+                                <div class="user-info d-flex align-items-center">
+                                    <div class="avatar me-2">
+                                        <i class="bi bi-person-circle"></i>
+                                    </div>
+                                    <small class="text-muted">By <a href="#" class="text-decoration-none">@(item.Owner?.DisplayName ?? "Unknown")</a></small>
+                                </div>
+                                <div class="action-buttons">
+                                    <a asp-action="Files" asp-route-id="@item.RepositoryId" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-folder2-open me-1"></i> Files
+                                    </a>
+                                    <a asp-action="Commits" asp-route-id="@item.RepositoryId" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-clock-history me-1"></i> Commits
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -84,3 +142,66 @@
         </div>
     }
 </div>
+
+@section Styles {
+    <style>
+        .repository-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .repository-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .search-card {
+            margin-bottom: 2rem;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+        
+        /* Dark mode adjustments */
+        [data-theme="dark"] .repository-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+        
+        [data-theme="dark"] .repo-icon {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .card-footer {
+            border-top-color: #334155 !important;
+        }
+        
+        [data-theme="dark"] .badge.bg-secondary {
+            background-color: #475569 !important;
+        }
+        
+        [data-theme="dark"] .badge.bg-success {
+            background-color: #059669 !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation to repository cards
+            const cards = document.querySelectorAll('.repository-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 + (index * 50));
+            });
+        });
+    </script>
+}

@@ -104,7 +104,11 @@ namespace DoAnWeb.Controllers
         [Authorize]
         public IActionResult Create()
         {
-            return View(new RepositoryViewModel());
+            return View(new RepositoryViewModel
+            {
+                RepositoryName = "",
+                Description = ""
+            });
         }
 
         // POST: Repositories/Create
@@ -273,7 +277,6 @@ namespace DoAnWeb.Controllers
                 return NotFound();
             }
 
-            // Check if user is the owner of the repository
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId) || repository.OwnerId != userId)
             {
@@ -282,7 +285,9 @@ namespace DoAnWeb.Controllers
 
             var model = new RepositoryFileViewModel
             {
-                RepositoryId = id
+                RepositoryId = id,
+                FilePath = "",
+                FileContent = ""
             };
 
             return View(model);

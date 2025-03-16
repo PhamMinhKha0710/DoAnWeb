@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace DoAnWeb.Repositories
 {
@@ -27,5 +28,11 @@ namespace DoAnWeb.Repositories
         
         // Save changes
         void Save();
+        
+        /// <summary>
+        /// Gets the database context
+        /// </summary>
+        /// <returns>The database context</returns>
+        DbContext GetContext();
     }
 }

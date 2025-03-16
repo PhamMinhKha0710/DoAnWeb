@@ -4,55 +4,90 @@
     ViewData["Title"] = "Register";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4>Create a new account</h4>
-            </div>
-            <div class="card-body">
+<div class="row justify-content-center my-5">
+    <div class="col-md-5">
+        <div class="text-center mb-4">
+            <i class="bi bi-code-square fs-1 text-primary mb-2"></i>
+            <h2 class="fw-bold">Join the community</h2>
+            <p class="text-muted">Create your DevCommunity account</p>
+        </div>
+        
+        <div class="card auth-card">
+            <div class="card-body p-4">
                 <form asp-action="Register" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     
                     <div class="mb-3">
-                        <label asp-for="Username" class="form-label"></label>
-                        <input asp-for="Username" class="form-control" />
+                        <label asp-for="Username" class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input asp-for="Username" class="form-control border-start-0" placeholder="Choose a username" />
+                        </div>
                         <span asp-validation-for="Username" class="text-danger"></span>
                     </div>
                     
                     <div class="mb-3">
-                        <label asp-for="Email" class="form-label"></label>
-                        <input asp-for="Email" class="form-control" />
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <input asp-for="Email" class="form-control border-start-0" placeholder="Enter your email" />
+                        </div>
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     
                     <div class="mb-3">
-                        <label asp-for="DisplayName" class="form-label"></label>
-                        <input asp-for="DisplayName" class="form-control" />
+                        <label asp-for="DisplayName" class="form-label">Display Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-person-badge"></i>
+                            </span>
+                            <input asp-for="DisplayName" class="form-control border-start-0" placeholder="How you'll appear to others" />
+                        </div>
                         <span asp-validation-for="DisplayName" class="text-danger"></span>
                     </div>
                     
                     <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
-                        <input asp-for="Password" class="form-control" />
+                        <label asp-for="Password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input asp-for="Password" class="form-control border-start-0" placeholder="Create a password" />
+                        </div>
                         <span asp-validation-for="Password" class="text-danger"></span>
+                        <small class="text-muted">Must be at least 8 characters with letters, numbers and symbols</small>
                     </div>
                     
-                    <div class="mb-3">
-                        <label asp-for="ConfirmPassword" class="form-label"></label>
-                        <input asp-for="ConfirmPassword" class="form-control" />
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock-fill"></i>
+                            </span>
+                            <input asp-for="ConfirmPassword" class="form-control border-start-0" placeholder="Confirm your password" />
+                        </div>
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
                     
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Register</button>
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="termsCheck" required />
+                        <label class="form-check-label" for="termsCheck">
+                            I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mb-4">
+                        <button type="submit" class="btn btn-primary py-2">Create account</button>
+                    </div>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? <a asp-action="Login" class="text-decoration-none fw-medium">Sign in</a></p>
                     </div>
                 </form>
-            </div>
-            <div class="card-footer">
-                <div class="text-center">
-                    Already have an account? <a asp-action="Login">Log in</a>
-                </div>
             </div>
         </div>
     </div>

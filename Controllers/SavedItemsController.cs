@@ -80,6 +80,7 @@ namespace DoAnWeb.Controllers
         
         // AJAX: SavedItems/ToggleSaveQuestion/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ToggleSaveQuestion(int id)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -94,11 +95,12 @@ namespace DoAnWeb.Controllers
                 _savedItemRepository.SaveItem(userId, "Question", id);
             }
             
-            return Json(new { isSaved = !isSaved });
+            return Json(new { success = true, isSaved = !isSaved });
         }
         
         // AJAX: SavedItems/ToggleSaveAnswer/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ToggleSaveAnswer(int id)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -113,7 +115,7 @@ namespace DoAnWeb.Controllers
                 _savedItemRepository.SaveItem(userId, "Answer", id);
             }
             
-            return Json(new { isSaved = !isSaved });
+            return Json(new { success = true, isSaved = !isSaved });
         }
     }
 }

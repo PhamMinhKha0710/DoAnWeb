@@ -8,15 +8,21 @@ namespace DoAnWeb.Services
         private readonly IRepository<Answer> _answerRepository;
         private readonly IRepository<Vote> _voteRepository;
         private readonly IQuestionRepository _questionRepository;
+        private readonly IQuestionRealTimeService _realTimeService;
+        private readonly INotificationService _notificationService;
 
         public AnswerService(
             IRepository<Answer> answerRepository,
             IRepository<Vote> voteRepository,
-            IQuestionRepository questionRepository)
+            IQuestionRepository questionRepository,
+            IQuestionRealTimeService realTimeService,
+            INotificationService notificationService)
         {
             _answerRepository = answerRepository;
             _voteRepository = voteRepository;
             _questionRepository = questionRepository;
+            _realTimeService = realTimeService;
+            _notificationService = notificationService;
         }
 
         public Answer GetAnswerById(int id)
@@ -54,6 +60,15 @@ namespace DoAnWeb.Services
 
             _answerRepository.Add(answer);
             _answerRepository.Save();
+
+            // Notify clients about the new answer
+            _realTimeService.NotifyNewAnswer(answer);
+            
+            // Send notification to question owner about the new answer
+            if (answer.QuestionId.HasValue && answer.UserId.HasValue)
+            {
+                _notificationService.NotifyNewAnswerAsync(answer.QuestionId.Value, answer.AnswerId, answer.UserId.Value);
+            }
         }
 
         public void UpdateAnswer(Answer answer)
@@ -63,13 +78,16 @@ namespace DoAnWeb.Services
 
             var existingAnswer = _answerRepository.GetById(answer.AnswerId);
             if (existingAnswer == null)
-                throw new ArgumentException("Answer not found");
+                throw new ArgumentException($"Answer with ID {answer.AnswerId} not found");
 
             existingAnswer.Body = answer.Body;
             existingAnswer.UpdatedDate = DateTime.Now;
 
             _answerRepository.Update(existingAnswer);
             _answerRepository.Save();
+
+            // Notify clients about the answer update
+            _realTimeService.NotifyNewAnswer(existingAnswer);
         }
 
         public void DeleteAnswer(int id)
@@ -140,40 +158,48 @@ namespace DoAnWeb.Services
             _answerRepository.Update(answer);
             _voteRepository.Save();
             _answerRepository.Save();
+            
+            // Send notification about the vote if it's a new vote or changed direction
+            if (existingVote == null || (existingVote != null && existingVote.VoteValue != (isUpvote ? 1 : -1)))
+            {
+                _notificationService.NotifyVoteAsync("Answer", answerId, userId);
+            }
         }
 
         public void AcceptAnswer(int answerId, int questionId, int userId)
         {
-            // Get answer
             var answer = _answerRepository.GetById(answerId);
             if (answer == null)
-                throw new ArgumentException("Answer not found");
+                throw new ArgumentException($"Answer with ID {answerId} not found");
 
-            // Get question
+            // Get question to update the accepted answer ID
             var question = _questionRepository.GetById(questionId);
             if (question == null)
-                throw new ArgumentException("Question not found");
+                throw new ArgumentException($"Question with ID {questionId} not found");
 
-            // Check if user is the author of the question
+            // Verify the user is the question owner
             if (question.UserId != userId)
-                throw new UnauthorizedAccessException("Only the question author can accept an answer");
+                throw new UnauthorizedAccessException("Only the question owner can accept an answer");
 
-            // Check if answer belongs to the question
-            if (answer.QuestionId != questionId)
-                throw new ArgumentException("Answer does not belong to the specified question");
-
-            // Reset any previously accepted answers for this question
-            var acceptedAnswers = _answerRepository.Find(a => a.QuestionId == questionId && a.IsAccepted);
-            foreach (var acceptedAnswer in acceptedAnswers)
-            {
-                acceptedAnswer.IsAccepted = false;
-                _answerRepository.Update(acceptedAnswer);
-            }
-
-            // Accept the new answer
+            // Set this answer as accepted
             answer.IsAccepted = true;
             _answerRepository.Update(answer);
+
+            // Update question with the accepted answer ID
+            question.Status = "Resolved";
+            _questionRepository.Update(question);
+
             _answerRepository.Save();
+            _questionRepository.Save();
+
+            // Notify about the question update (status change to resolved)
+            _realTimeService.NotifyQuestionUpdated(question);
+            
+            // Notify about the answer update (accepted status)
+            _realTimeService.NotifyNewAnswer(answer);
+            
+            // Send notification to answer owner that their answer was accepted
+            _notificationService.NotifyAnswerAcceptedAsync(questionId, answerId);
         }
     }
 }
