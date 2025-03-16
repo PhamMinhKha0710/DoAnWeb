@@ -1,0 +1,359 @@
+# CẬP NHẬT KIẾN THỨC VÀ THAY ĐỔI DỰ ÁN
+
+## 1. Tính năng Markdown cho ô text câu hỏi
+
+### Mô tả
+Chúng tôi đã tích hợp tính năng Markdown vào ô nhập liệu câu hỏi, cho phép người dùng định dạng văn bản một cách dễ dàng và chuyên nghiệp.
+
+### Mục đích
+- Giúp người dùng tạo câu hỏi với định dạng phong phú
+- Hỗ trợ hiển thị code, danh sách, bảng biểu, và các định dạng khác
+- Nâng cao trải nghiệm người dùng khi đọc và viết nội dung
+
+### Cách sử dụng
+- **Tiêu đề**: Sử dụng # để tạo tiêu đề (# Tiêu đề 1, ## Tiêu đề 2, ...)
+- **In đậm**: Sử dụng **văn bản** hoặc __văn bản__
+- **In nghiêng**: Sử dụng *văn bản* hoặc _văn bản_
+- **Code**: Sử dụng `code` cho đoạn code ngắn hoặc ```language
+code
+``` cho khối code
+- **Danh sách**: Sử dụng - hoặc * cho danh sách không thứ tự, 1. 2. 3. cho danh sách có thứ tự
+- **Liên kết**: [Văn bản](URL)
+- **Hình ảnh**: ![Alt text](URL)
+
+### Phím tắt và tính năng nâng cao
+- **Ctrl+B**: Định dạng in đậm
+- **Ctrl+I**: Định dạng in nghiêng
+- **Ctrl+K**: Chèn code inline
+- **Ctrl+L**: Chèn liên kết
+- **Chế độ xem trước**: Nhấn nút "Preview" để xem trước kết quả định dạng
+- **Chọn ngôn ngữ cho code block**: Khi chèn code block, có thể chọn ngôn ngữ lập trình để hiển thị syntax highlighting
+- **Hỗ trợ bảng biểu**: Chèn bảng với định dạng markdown
+- **Tự động xử lý HTML và Razor**: Tự động chuyển đổi HTML và Razor syntax thành code block
+- **Hỗ trợ chế độ tối**: Tự động điều chỉnh giao diện editor theo chế độ tối/sáng của trang
+
+## 2. Chức năng upload file tài liệu và ảnh
+
+### Mô tả
+Hệ thống đã được tích hợp khả năng tải lên các loại file tài liệu và hình ảnh để đính kèm vào câu hỏi hoặc câu trả lời.
+
+### Mục đích
+- Cho phép người dùng chia sẻ tài liệu liên quan đến vấn đề
+- Hỗ trợ minh họa bằng hình ảnh để làm rõ vấn đề
+- Tăng tính tương tác và hữu ích của nền tảng
+
+### Cách sử dụng
+- Khi tạo câu hỏi hoặc trả lời, nhấn vào nút "Tải lên" hoặc biểu tượng đính kèm
+- Chọn file từ máy tính của bạn
+- Hệ thống sẽ tự động tải lên và tạo liên kết đến file/hình ảnh trong nội dung
+- Các định dạng được hỗ trợ: PNG, JPG, JPEG, GIF, PDF, DOCX, XLSX, TXT
+
+### Tính năng nâng cao
+- **Kéo và thả file**: Kéo file trực tiếp vào vùng editor để tải lên
+- **Hiển thị tiến trình**: Hiển thị thanh tiến trình khi đang tải file lên
+- **Xem trước hình ảnh**: Hiển thị hình ảnh thu nhỏ trước khi hoàn tất quá trình tải lên
+- **Quản lý tệp đính kèm**: Giao diện quản lý các tệp đã đính kèm với khả năng xóa tệp
+- **Hỗ trợ nhiều định dạng**: Tự động nhận diện và xử lý các định dạng file khác nhau
+
+## 3. Khả năng copy ảnh chụp màn hình
+
+### Mô tả
+Người dùng có thể dễ dàng sao chép ảnh chụp màn hình trực tiếp vào ô nhập liệu mà không cần lưu ảnh trước.
+
+### Mục đích
+- Đơn giản hóa quy trình chia sẻ ảnh chụp màn hình
+- Tiết kiệm thời gian khi cần minh họa vấn đề bằng hình ảnh
+- Tăng tính tiện lợi cho người dùng
+
+### Cách sử dụng
+- Chụp màn hình bằng công cụ chụp màn hình của hệ điều hành (ví dụ: Windows: Win+Shift+S)
+- Sau khi chụp, nhấn Ctrl+V trực tiếp vào ô nhập liệu
+- Hệ thống sẽ tự động xử lý và nhúng ảnh vào nội dung
+
+### Tính năng bổ sung
+- **Hiển thị trạng thái tải lên**: Hiển thị thông báo "Đang tải lên..." trong khi xử lý ảnh
+- **Xem trước tức thì**: Hiển thị ảnh đã chụp ngay lập tức trước khi hoàn tất quá trình tải lên
+- **Thông báo kết quả**: Hiển thị thông báo thành công hoặc lỗi sau khi tải lên
+- **Tự động chèn Markdown**: Tự động chèn cú pháp markdown cho hình ảnh vào vị trí con trỏ
+
+## 4. Công thức tính Reputation
+
+### Mô tả
+Hệ thống sử dụng một công thức tính điểm uy tín (Reputation) dựa trên các hoạt động của người dùng trên nền tảng.
+
+### Mục đích
+- Khuyến khích người dùng tham gia tích cực và đóng góp nội dung chất lượng
+- Tạo cơ chế đánh giá mức độ tin cậy của người dùng
+- Xây dựng cộng đồng lành mạnh và có giá trị
+
+### Cách tính điểm
+- +10 điểm khi câu trả lời được vote up
+- -2 điểm khi câu trả lời bị vote down
+- +15 điểm khi câu trả lời được chấp nhận
+- +2 điểm khi câu hỏi được vote up
+- -1 điểm khi câu hỏi bị vote down
+- +5 điểm khi bình luận được vote up
+
+## 5. Tính năng Top Tags
+
+### Mô tả
+Hệ thống hiển thị các thẻ (tags) phổ biến nhất trên nền tảng, giúp người dùng dễ dàng tìm kiếm và theo dõi các chủ đề quan tâm.
+
+### Mục đích
+- Cung cấp cái nhìn tổng quan về các chủ đề được quan tâm nhất
+- Hỗ trợ người dùng khám phá nội dung liên quan đến lĩnh vực họ quan tâm
+- Tối ưu hóa trải nghiệm tìm kiếm và duyệt nội dung
+
+### Cách sử dụng
+- Truy cập trang chủ hoặc mục Tags để xem danh sách Top Tags
+- Nhấp vào tag bất kỳ để xem tất cả câu hỏi liên quan
+- Theo dõi tag để nhận thông báo khi có câu hỏi mới với tag đó
+
+## 6. Cải tiến hiệu suất server
+
+### Mô tả
+Chúng tôi đã thực hiện nhiều cải tiến để tối ưu hóa hiệu suất server, giảm thời gian phản hồi và tăng khả năng xử lý đồng thời.
+
+### Mục đích
+- Cải thiện tốc độ tải trang và trải nghiệm người dùng
+- Tăng khả năng mở rộng của hệ thống
+- Giảm tải cho server và tối ưu hóa tài nguyên
+
+### Các cải tiến chính
+- Tối ưu hóa truy vấn cơ sở dữ liệu với Entity Framework
+- Sử dụng AsSplitQuery để tối ưu hóa các truy vấn phức tạp
+- Caching dữ liệu thường xuyên truy cập
+- Lazy loading cho các thành phần không cần thiết ngay lập tức
+- Tối ưu hóa kích thước hình ảnh và tài nguyên tĩnh
+
+## 7. Tính năng Repository cho người dùng
+
+### Mô tả
+Người dùng có thể tạo và quản lý các repository để lưu trữ và chia sẻ code, dự án hoặc tài liệu.
+
+### Mục đích
+- Cung cấp không gian lưu trữ và chia sẻ code
+- Tạo điều kiện cho cộng tác và đóng góp từ cộng đồng
+- Xây dựng portfolio cá nhân cho người dùng
+
+### Cách sử dụng
+- Truy cập trang cá nhân và chọn mục "Repositories"
+- Nhấn "Tạo Repository mới" và điền thông tin cần thiết
+- Tải lên code hoặc tài liệu vào repository
+- Quản lý quyền truy cập và chia sẻ với người khác
+
+## 8. Hệ thống phân quyền người dùng
+
+### Mô tả
+Hệ thống đã được tích hợp cơ chế phân quyền người dùng với nhiều vai trò khác nhau.
+
+### Mục đích
+- Bảo mật thông tin và kiểm soát quyền truy cập
+- Phân chia trách nhiệm quản lý nền tảng
+- Tạo trải nghiệm phù hợp với từng nhóm người dùng
+
+### Các vai trò chính
+- **User**: Người dùng thông thường, có thể đặt câu hỏi, trả lời và bình luận
+- **Moderator**: Có thêm quyền kiểm duyệt nội dung, chỉnh sửa và xóa bài viết không phù hợp
+- **Admin**: Có toàn quyền quản lý hệ thống, người dùng và cấu hình
+
+## 9. Tính năng Lưu Câu Hỏi và Câu Trả Lời (SavedItems)
+
+### Mô tả
+Hệ thống đã được tích hợp tính năng cho phép người dùng lưu lại các câu hỏi và câu trả lời quan trọng để dễ dàng truy cập sau này.
+
+### Mục đích
+- Giúp người dùng tạo bộ sưu tập kiến thức cá nhân
+- Dễ dàng truy cập lại các thông tin hữu ích mà không cần tìm kiếm
+- Tăng tính tiện lợi và cá nhân hóa trải nghiệm người dùng
+
+### Cách sử dụng
+- Khi xem một câu hỏi hoặc câu trả lời, nhấn vào nút "Lưu" (biểu tượng bookmark)
+- Truy cập trang cá nhân và chọn mục "Đã Lưu" để xem danh sách các mục đã lưu
+- Có thể bỏ lưu bất kỳ lúc nào bằng cách nhấn lại vào biểu tượng bookmark
+
+### Chi tiết kỹ thuật
+- **Model**: Đã tạo model SavedItem với các trường chính: SavedItemId, UserId, ItemType (Question/Answer), ItemId, SavedDate
+- **Controller**: Tạo SavedItemsController với các action SaveQuestion, SaveAnswer, RemoveSavedItem, và GetSavedItems
+- **View**: Tích hợp nút lưu vào trang chi tiết câu hỏi (Details.cshtml) và tạo trang hiển thị danh sách các mục đã lưu
+- **Repository Pattern**: Áp dụng ISavedItemRepository để quản lý các thao tác CRUD với SavedItems
+- **Validation**: Kiểm tra xem người dùng đã lưu item chưa trước khi thêm mới để tránh trùng lặp
+
+## 10. Cải tiến hiển thị Code trong Markdown Editor
+
+### Mô tả
+Chúng tôi đã nâng cấp khả năng hiển thị code trong Markdown Editor với nhiều tính năng mới giúp người dùng dễ dàng chia sẻ và đọc code.
+
+### Mục đích
+- Cải thiện trải nghiệm đọc và viết code trên nền tảng
+- Tăng tính chuyên nghiệp của nội dung kỹ thuật
+- Hỗ trợ nhiều ngôn ngữ lập trình phổ biến
+
+### Tính năng mới
+- **Syntax highlighting nâng cao**: Hỗ trợ hơn 40 ngôn ngữ lập trình với màu sắc tương phản cao
+- **Đánh số dòng tự động**: Hiển thị số dòng bên cạnh code block để dễ dàng tham chiếu
+- **Chức năng sao chép code**: Nút sao chép (copy) xuất hiện khi di chuột qua code block
+- **Tự động định dạng code**: Căn chỉnh và thụt lề code theo chuẩn của từng ngôn ngữ
+- **Chế độ xem toàn màn hình**: Mở rộng code block để xem dễ dàng hơn với code dài
+
+### Chi tiết kỹ thuật
+- Tích hợp thư viện Prism.js với các plugin mở rộng
+- Tùy chỉnh CSS để hiển thị code phù hợp với cả chế độ sáng và tối
+- Tối ưu hóa hiệu suất render cho code block lớn
+
+## 11. Đồng bộ hóa Vote giữa trang Home và trang Question
+
+### Mô tả
+Hệ thống đã được cải tiến để đồng bộ hóa trạng thái vote giữa trang chủ (Home) và trang chi tiết câu hỏi (Question), giúp người dùng có trải nghiệm nhất quán.
+
+### Mục đích
+- Đảm bảo tính nhất quán của dữ liệu hiển thị
+- Cải thiện trải nghiệm người dùng khi điều hướng giữa các trang
+- Giảm thiểu việc tải lại dữ liệu không cần thiết
+
+### Cách hoạt động
+- Khi người dùng vote (up/down) trên trang chủ, trạng thái sẽ được lưu vào localStorage
+- Khi chuyển sang trang chi tiết câu hỏi, hệ thống sẽ kiểm tra và hiển thị trạng thái vote đã lưu
+- Ngược lại, khi vote trên trang chi tiết và quay lại trang chủ, trạng thái cũng được cập nhật
+
+### Chi tiết kỹ thuật
+- Sử dụng JavaScript để lưu trữ và đồng bộ trạng thái vote
+- Áp dụng AJAX để cập nhật dữ liệu mà không cần tải lại trang
+- Tối ưu hóa hiệu suất bằng cách chỉ đồng bộ dữ liệu khi cần thiết
+
+## 12. Hiển thị số lượng câu hỏi cho mỗi Tag
+
+### Mô tả
+Hệ thống đã được cập nhật để hiển thị số lượng câu hỏi liên quan đến mỗi tag, giúp người dùng dễ dàng đánh giá mức độ phổ biến của các chủ đề.
+
+### Mục đích
+- Cung cấp thông tin hữu ích về mức độ hoạt động của từng chủ đề
+- Hỗ trợ người dùng trong việc lựa chọn tag để theo dõi
+- Tăng tính minh bạch về dữ liệu nền tảng
+
+### Cách hiển thị
+- Số lượng câu hỏi được hiển thị bên cạnh tên tag trong danh sách tags
+- Sử dụng badge với màu sắc tương phản để dễ nhận biết
+- Cập nhật số lượng real-time khi có câu hỏi mới được tạo
+
+### Chi tiết kỹ thuật
+- Tối ưu hóa truy vấn cơ sở dữ liệu để đếm số lượng câu hỏi cho mỗi tag
+- Sử dụng caching để giảm tải cho database với các tag phổ biến
+- Áp dụng lazy loading để tải dữ liệu khi cần thiết
+
+## 13. Chức năng Upload và Xem trước tệp đính kèm cho Câu trả lời
+
+### Mô tả
+Chúng tôi đã mở rộng tính năng upload và đính kèm file cho cả câu trả lời, tương tự như đã có cho câu hỏi, kèm theo khả năng xem trước tệp đính kèm.
+
+### Mục đích
+- Cho phép người dùng minh họa câu trả lời bằng hình ảnh hoặc tài liệu
+- Tăng tính hữu ích và chi tiết của câu trả lời
+- Cải thiện trải nghiệm người dùng khi tương tác với tệp đính kèm
+
+### Tính năng chính
+- Upload nhiều file cùng lúc cho câu trả lời
+- Xem trước hình ảnh ngay trong trang
+- Quản lý danh sách tệp đã đính kèm
+- Hỗ trợ nhiều định dạng file phổ biến
+
+### Chi tiết kỹ thuật
+- Tạo model AnswerAttachment để lưu trữ thông tin tệp đính kèm
+- Phát triển JavaScript để xử lý upload và hiển thị xem trước
+- Tối ưu hóa lưu trữ và truy xuất tệp đính kèm
+- Kiểm tra bảo mật và giới hạn kích thước file
+
+## 14. Khả năng xem trực tiếp tệp đính kèm
+
+### Mô tả
+Hệ thống đã được nâng cấp để cho phép người dùng xem trực tiếp các tệp đính kèm như hình ảnh, PDF và các định dạng văn bản ngay trên trang web mà không cần tải xuống.
+
+### Mục đích
+- Cải thiện trải nghiệm người dùng khi tương tác với tệp đính kèm
+- Giảm thời gian và công sức để truy cập nội dung
+- Tăng tính tiện lợi khi đọc tài liệu kỹ thuật
+
+### Tính năng chính
+- **Xem hình ảnh**: Hiển thị hình ảnh với khả năng phóng to, thu nhỏ
+- **Đọc PDF**: Tích hợp trình đọc PDF trực tiếp trên trang
+- **Xem code**: Hiển thị file code với syntax highlighting
+- **Xem văn bản**: Hiển thị nội dung các file văn bản thông thường
+
+### Chi tiết kỹ thuật
+- Sử dụng thư viện PDF.js để hiển thị file PDF
+- Tích hợp lightbox cho xem hình ảnh
+- Áp dụng lazy loading để tối ưu hiệu suất
+- Phát triển attachment-viewer.js để xử lý việc hiển thị các loại file khác nhau
+
+## 15. Hệ thống thông báo thời gian thực
+
+### Mô tả
+Hệ thống đã được tích hợp tính năng thông báo thời gian thực, cho phép người dùng nhận các thông báo tức thì khi có hoạt động liên quan đến họ trên nền tảng.
+
+### Mục đích
+- Cải thiện tương tác người dùng với thông báo kịp thời về các hoạt động
+- Tăng mức độ gắn kết với nền tảng qua các cập nhật real-time
+- Cung cấp trải nghiệm mượt mà hơn với thông báo không cần tải lại trang
+
+### Tính năng chính
+- **Phân loại thông báo**: Hỗ trợ nhiều loại thông báo (Answer, Vote, Comment, Accept) với biểu tượng và màu sắc riêng biệt
+- **Thông báo thời gian thực**: Hiển thị thông báo dạng Toast ngay khi có hoạt động mới
+- **Đánh dấu đã đọc qua AJAX**: Cập nhật trạng thái "đã đọc" mà không cần tải lại trang
+- **Trang quản lý thông báo**: Giao diện để xem và quản lý tất cả thông báo
+- **Đánh dấu tất cả đã đọc**: Tính năng đánh dấu tất cả thông báo là đã đọc với một thao tác
+
+### Chi tiết kỹ thuật
+- **Hàng đợi thông báo**: Sử dụng BackgroundService để xử lý thông báo bất đồng bộ, tránh ảnh hưởng hiệu suất
+- **SignalR Hub**: Tạo NotificationHub để gửi thông báo real-time đến các nhóm người dùng cụ thể
+- **Phân nhóm người dùng**: Gửi thông báo đến nhóm người dùng quan tâm đến câu hỏi/chủ đề cụ thể
+- **Kiểm tra quyền**: Xác minh quyền người dùng trước khi gửi hoặc đánh dấu đã đọc thông báo
+- **Tích hợp Bootstrap Toast**: Sử dụng Bootstrap Toast cho thông báo pop-up trong giao diện
+- **Lọc và hiển thị**: Hiển thị thông báo theo loại với màu sắc và biểu tượng phù hợp
+
+## 16. Cập nhật Real-time với SignalR cho Câu hỏi và Câu trả lời
+
+### Mô tả
+Dự án đã được tích hợp tính năng real-time cho câu hỏi và câu trả lời, cho phép người dùng nhìn thấy cập nhật mới ngay lập tức mà không cần tải lại trang.
+
+### Mục đích
+- Cải thiện trải nghiệm người dùng với cập nhật dữ liệu tức thì
+- Tạo môi trường tương tác thời gian thực giữa người dùng trên nhiều thiết bị khác nhau
+- Xây dựng cộng đồng năng động với phản hồi ngay lập tức
+
+### Tính năng chính
+- **Cập nhật câu hỏi mới**: Câu hỏi mới được hiển thị ngay lập tức trên trang danh sách câu hỏi của tất cả người dùng đang trực tuyến
+- **Cập nhật câu trả lời**: Câu trả lời mới sẽ xuất hiện ngay lập tức trên trang chi tiết câu hỏi mà không cần tải lại trang
+- **Hiệu ứng trực quan**: Nội dung mới được thêm vào có hiệu ứng làm nổi bật để dễ dàng nhận biết
+- **Đồng bộ trạng thái**: Trạng thái câu hỏi (đã giải quyết, số lượt vote) được cập nhật đồng thời trên tất cả thiết bị
+- **Kết nối đa thiết bị**: Cho phép kết nối từ các thiết bị khác nhau trong cùng mạng LAN
+
+### Cách sử dụng
+- **Khởi động server**:
+  - Chạy file `run-server.bat` để khởi động server với cấu hình cho phép kết nối từ các thiết bị khác
+  - File sẽ hiển thị địa chỉ IP và cổng để kết nối từ các thiết bị khác
+
+- **Truy cập từ thiết bị khác**:
+  - Mở trình duyệt trên thiết bị khác (điện thoại, máy tính khác) trong cùng mạng LAN
+  - Nhập địa chỉ IP của server và cổng 7133
+  - Ví dụ: `https://192.168.1.5:7133`
+  - Chấp nhận cảnh báo chứng chỉ bảo mật (normal trong môi trường phát triển)
+
+- **Tương tác real-time**:
+  - Đăng câu hỏi từ một thiết bị và xem nó xuất hiện ngay lập tức trên thiết bị khác
+  - Trả lời câu hỏi và xem câu trả lời hiển thị tức thì trên tất cả thiết bị đang xem câu hỏi
+  - Chỉnh sửa câu hỏi và thấy nội dung được cập nhật ngay lập tức trên các thiết bị khác
+
+### Chi tiết kỹ thuật
+- **SignalR Hub**: Tạo `QuestionHub` để xử lý kết nối và truyền dữ liệu real-time
+- **Real-time Service**: Phát triển `QuestionRealTimeService` để xử lý logic gửi thông báo khi có thay đổi
+- **Client-side JavaScript**: Sử dụng JavaScript để kết nối với hub và cập nhật giao diện người dùng
+- **CSS Animation**: Tạo hiệu ứng làm nổi bật nội dung mới bằng keyframe animation
+- **CORS Configuration**: Cấu hình CORS để cho phép kết nối từ các nguồn khác nhau
+- **Group Management**: Quản lý kết nối theo nhóm để gửi thông báo đến đúng người dùng
+- **Connection State Management**: Xử lý trạng thái kết nối và tự động kết nối lại khi bị ngắt
+
+### Lưu ý khi triển khai production
+- **Chứng chỉ SSL/TLS**: Cài đặt chứng chỉ hợp lệ thay vì chứng chỉ tự ký để tránh cảnh báo bảo mật
+- **Cấu hình CORS**: Hạn chế chỉ cho phép các origin cụ thể thay vì mở rộng cho tất cả
+- **Kiểm tra tải**: Đảm bảo hệ thống hoạt động tốt dưới tải cao với nhiều kết nối đồng thời
+- **Cấu hình tường lửa**: Đảm bảo mở cổng cần thiết (7133 và 5225) nếu cần thiết

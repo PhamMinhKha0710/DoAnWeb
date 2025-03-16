@@ -22,6 +22,7 @@ namespace DoAnWeb.Repositories
             return _dbSet
                 .Include(q => q.User)
                 .Include(q => q.Tags)
+                .Include(q => q.Attachments)
                 .Include(q => q.Answers)
                     .ThenInclude(a => a.User)
                 .FirstOrDefault(q => q.QuestionId == questionId);

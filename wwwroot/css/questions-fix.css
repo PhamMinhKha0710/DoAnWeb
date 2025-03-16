@@ -1,0 +1,126 @@
+/* Fix for submit button display issues */
+.btn-primary, button[type="submit"] {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Ensure form elements are visible */
+form .d-grid, .d-md-flex {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+}
+
+/* Fix for markdown editor */
+.markdown-toolbar {
+    z-index: 10;
+    position: relative;
+}
+
+.markdown-toolbar-btn, .markdown-preview-btn {
+    pointer-events: auto !important;
+}
+
+/* Ensure preview doesn't hide form elements */
+.markdown-preview {
+    position: relative;
+    z-index: 5;
+}
+
+/* Fix for dark mode */
+[data-theme="dark"] .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Fix for button hover states */
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* Fix for form layout */
+.form-control, .input-group {
+    z-index: 1;
+    position: relative;
+}
+
+/* Fix for markdown editor container */
+.markdown-editor-container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure buttons are clickable */
+button[type="submit"] {
+    position: relative;
+    z-index: 100;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix for form submission */
+#question-form {
+    position: relative;
+    z-index: 1;
+}
+
+/* Fix for button container */
+.justify-content-md-end {
+    position: relative;
+    z-index: 9999 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Fix for button text */
+.btn-primary i, .btn-primary span {
+    position: relative;
+    z-index: 10000;
+}
+
+/* Fix for button click area */
+.btn-primary::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9998;
+}
+
+/* Additional fixes for submit button */
+#submit-button {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix for preview mode */
+.markdown-preview-active #submit-button,
+.markdown-preview-active .justify-content-md-end {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure the button container is always visible */
+.d-grid.gap-2.d-md-flex {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+}

@@ -1,103 +1,141 @@
 @model DoAnWeb.Models.User
 
 @{
-    ViewData["Title"] = $"User: {Model.DisplayName}";
+    ViewData["Title"] = $"User: {Model.DisplayName ?? "Unknown"}";
 }
 
-<div class="container mt-4">
+<div class="container py-5">
     <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="d-flex">
-                        <div class="me-4">
-                            <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)" 
-                                 class="rounded-circle" width="128" height="128" alt="@Model.DisplayName">
-                        </div>
-                        <div>
-                            <h1 class="mb-1">@Model.DisplayName</h1>
-                            <p class="text-muted mb-2">@Model.Username</p>
-                            <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-primary me-2">1 reputation</span>
-                                <span class="badge bg-secondary me-2">Member since @(Model.CreatedDate?.ToString("MMM yyyy") ?? "unknown")</span>
+        <!-- Hồ sơ người dùng -->
+        <div class="col-md-12 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="bg-gradient-primary text-white p-5">
+                        <div class="d-flex flex-column flex-md-row align-items-center">
+                            <!-- Avatar -->
+                            <div class="position-relative me-md-4 mb-4 mb-md-0">
+                                <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)" 
+                                     class="rounded-circle border border-4 border-white shadow" width="150" height="150" alt="@Model.DisplayName">
+                                <div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-1 border border-3 border-white" 
+                                     style="width: 25px; height: 25px;">
+                                    <i class="bi bi-check-lg"></i>
+                                </div>
                             </div>
-                            @if (!string.IsNullOrEmpty(Model.Bio))
-                            {
-                                <p>@Model.Bio</p>
-                            }
+                            <!-- Thông tin cá nhân -->
+                            <div class="text-center text-md-start">
+                                <h1 class="display-5 fw-bold mb-1">@Model.DisplayName</h1>
+                                <p class="text-white-50 fs-5 mb-3">@($"@{Model.Username}")</p>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <span class="badge bg-white text-primary px-3 py-2 rounded-pill fs-6">
+                                        <i class="bi bi-star-fill me-2"></i> @Model.Reputation reputation
+                                    </span>
+                                    <span class="badge bg-white bg-opacity-25 text-white px-3 py-2 rounded-pill fs-6">
+                                        <i class="bi bi-calendar-check me-2"></i> Member since @(Model.CreatedDate?.ToString("MMM yyyy") ?? "unknown")
+                                    </span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.Bio))
+                                {
+                                    <p class="text-white-50 mb-0">@Model.Bio</p>
+                                }
+                            </div>
+                            <!-- Hành động -->
+                            <div class="ms-auto mt-4 mt-md-0 d-none d-md-block">
+                                <button class="btn btn-light rounded-pill px-4 shadow-sm">
+                                    <i class="bi bi-person-plus me-2"></i> Follow
+                                </button>
+                                <button class="btn btn-outline-light rounded-pill px-4 ms-2">
+                                    <i class="bi bi-envelope me-2"></i> Message
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Stats</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <div class="fw-bold">@Model.Questions.Count</div>
-                                    <div class="text-muted">Questions</div>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <div class="fw-bold">@Model.Answers.Count</div>
-                                    <div class="text-muted">Answers</div>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <div class="fw-bold">@Model.Repositories.Count</div>
-                                    <div class="text-muted">Repositories</div>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <div class="fw-bold">@Model.Comments.Count</div>
-                                    <div class="text-muted">Comments</div>
+        <!-- Thống kê -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-primary"></i> Statistics</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        @foreach (var stat in new[]
+                        {
+                            new { Label = "Questions", Count = Model.Questions?.Count ?? 0 },
+                            new { Label = "Answers", Count = Model.Answers?.Count ?? 0 },
+                            new { Label = "Repos", Count = Model.Repositories?.Count ?? 0 },
+                            new { Label = "Comments", Count = Model.Comments?.Count ?? 0 }
+                        })
+                        {
+                            <div class="col-6">
+                                <div class="card bg-light border-0 rounded-3">
+                                    <div class="card-body text-center py-3">
+                                        <div class="display-6 fw-bold text-primary mb-1">@stat.Count</div>
+                                        <div class="text-secondary">@stat.Label</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        }
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-8">
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Recent Activity</h5>
-                        </div>
-                        <div class="card-body">
-                            @if (Model.Questions.Any() || Model.Answers.Any())
+            <!-- Tags -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-tags me-2 text-primary"></i> Top Tags</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var tagPair in Model.TopTags())
+                        {
+                            <span class="badge bg-light text-primary px-3 py-2 rounded-pill">@tagPair.Key <small class="text-secondary">×@tagPair.Value</small></span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hoạt động gần đây -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if ((Model.Questions?.Any() ?? false) || (Model.Answers?.Any() ?? false))
+                    {
+                        <div class="activity-list">
+                            @foreach (var question in Model.Questions?.OrderByDescending(q => q.CreatedDate).Take(5) ?? new List<Question>())
                             {
-                                <div class="list-group">
-                                    @foreach (var question in Model.Questions.OrderByDescending(q => q.CreatedDate).Take(5))
-                                    {
-                                        <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })" class="list-group-item list-group-item-action">
-                                            <div class="d-flex w-100 justify-content-between">
-                                                <h5 class="mb-1">@question.Title</h5>
-                                                <small>@(question.CreatedDate != default ? question.CreatedDate.ToString("MMM dd, yyyy") : "unknown")</small>
-                                            </div>
-                                            <p class="mb-1 text-truncate">@(question.Body?.Substring(0, Math.Min(question.Body.Length, 100)) ?? "")...</p>
-                                            <small>Asked a question</small>
-                                        </a>
-                                    }
-                                    @foreach (var answer in Model.Answers.OrderByDescending(a => a.CreatedDate).Take(5))
-                                    {
-                                        <a href="@Url.Action("Details", "Questions", new { id = answer.QuestionId })" class="list-group-item list-group-item-action">
-                                            <div class="d-flex w-100 justify-content-between">
-                                                <h5 class="mb-1">@answer.Question?.Title</h5>
-                                                <small>@(answer.CreatedDate != default ? answer.CreatedDate.ToString("MMM dd, yyyy") : "unknown")</small>
-                                            </div>
-                                            <p class="mb-1 text-truncate">@(answer.Body?.Substring(0, Math.Min(answer.Body.Length, 100)) ?? "")...</p>
-                                            <small>Posted an answer</small>
-                                        </a>
-                                    }
+                                <div class="activity-item p-4 border-bottom">
+                                    <div class="d-flex">
+                                        <div class="activity-icon bg-light-primary text-primary rounded-circle p-2 me-3">
+                                            <i class="bi bi-question-lg"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-bold mb-0">
+                                                <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })" 
+                                                   class="text-decoration-none text-dark hover-primary">
+                                                    @question.Title
+                                                </a>
+                                            </h6>
+                                            <small class="text-muted">@(question.CreatedDate?.ToString("MMM dd, yyyy") ?? "unknown")</small>
+                                        </div>
+                                    </div>
                                 </div>
                             }
-                            else
-                            {
-                                <p class="text-muted">No recent activity found.</p>
-                            }
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                            <i class="bi bi-inbox text-secondary" style="font-size: 3rem;"></i>
+                            <p class="text-secondary mt-3 mb-0">No recent activity found.</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

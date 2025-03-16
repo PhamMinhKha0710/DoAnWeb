@@ -1,0 +1,173 @@
+/* Markdown Editor Styles */
+
+/* Editor container */
+.markdown-editor-container {
+    position: relative;
+}
+
+/* Toolbar styling */
+.markdown-toolbar {
+    border-bottom: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+/* Input area styling */
+.markdown-input {
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    min-height: 200px;
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    line-height: 1.5;
+}
+
+/* Preview styling */
+.markdown-preview {
+    background-color: #fff;
+    overflow-y: auto;
+}
+
+/* Code blocks in preview */
+.markdown-preview pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.markdown-preview code {
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    color: #212529;
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.markdown-preview pre code {
+    padding: 0;
+    background-color: transparent;
+    display: block;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+    line-height: 1.5;
+    tab-size: 4;
+}
+
+/* Syntax highlighting for code blocks */
+.markdown-preview .language-javascript, 
+.markdown-preview .language-js { color: #8a6d3b; }
+.markdown-preview .language-html { color: #2e6da4; }
+.markdown-preview .language-css { color: #20c997; }
+.markdown-preview .language-csharp, 
+.markdown-preview .language-cs { color: #5f4bb6; }
+.markdown-preview .language-sql { color: #d44950; }
+.markdown-preview .language-python, 
+.markdown-preview .language-py { color: #3572A5; }
+.markdown-preview .language-java { color: #b07219; }
+
+/* Content area code blocks */
+.content-area pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.content-area code {
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    color: #212529;
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.content-area pre code {
+    padding: 0;
+    background-color: transparent;
+    display: block;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+    line-height: 1.5;
+    tab-size: 4;
+}
+
+/* Attachment section styling */
+.attachment-section {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 1rem;
+    background-color: #f8f9fa;
+}
+
+/* Attachment items */
+.attachment-item {
+    background-color: #fff;
+    transition: background-color 0.2s;
+}
+
+.attachment-item:hover {
+    background-color: #f1f3f5;
+}
+
+/* Drop zone styling */
+.drop-zone {
+    border-style: dashed !important;
+    border-width: 2px !important;
+    border-color: #6c757d !important;
+    background-color: #f8f9fa;
+    transition: all 0.3s;
+}
+
+.drop-zone.dragover {
+    background-color: #e9ecef;
+    border-color: #0d6efd !important;
+}
+
+/* Code language dropdown */
+.code-language-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.code-language-dropdown .dropdown-item {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.2s;
+}
+
+.code-language-dropdown .dropdown-item:hover {
+    background-color: #f1f3f5;
+}
+
+/* Syntax highlighting indicator */
+.syntax-indicator, .paste-indicator {
+    color: #6c757d;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Notification styling */
+.notification {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1050;
+    max-width: 300px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .markdown-toolbar button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+}

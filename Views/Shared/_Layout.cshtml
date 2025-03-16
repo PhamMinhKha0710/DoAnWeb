@@ -8,28 +8,260 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/questions.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/repositories.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tags.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/signalr-styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DoAnWeb.styles.css" asp-append-version="true" />
     <style>
+        :root {
+            --primary-color: #0d6efd;
+            --hover-color: #0b5ed7;
+            --border-color: #e3e6e8;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         .navbar-brand {
             font-weight: bold;
+            color: var(--primary-color) !important;
         }
+
         .search-container {
             width: 100%;
             max-width: 400px;
         }
+
         .sidebar {
-            border-right: 1px solid #e3e6e8;
+            border-right: 1px solid var(--border-color);
             padding-right: 15px;
+            min-height: calc(100vh - 180px);
         }
+
         .right-sidebar {
-            border-left: 1px solid #e3e6e8;
+            border-left: 1px solid var(--border-color);
             padding-left: 15px;
         }
-        .nav-item .active {
+
+        .nav-item .active, .nav-link.active {
             font-weight: bold;
-            color: #0c0d0e !important;
+            color: var(--primary-color) !important;
+            background-color: rgba(13, 110, 253, 0.1);
+            border-radius: 5px;
+        }
+
+        .sidebar .nav-link {
+            padding: 8px 16px;
+            margin: 4px 0;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            color: var(--hover-color) !important;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-color);
+            border-color: var(--hover-color);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .footer {
+            margin-top: auto;
+            background-color: #f8f9fa;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .dropdown-item:active {
+            background-color: var(--primary-color);
+        }
+
+        .navbar {
+            padding: 0.5rem 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Notification Styles */
+        .notification-dropdown {
+            padding: 0;
+        }
+
+        .notification-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s;
+        }
+
+        .notification-item:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+        .notification-item.unread {
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        .notification-item .notification-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .notification-item .notification-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .notification-badge {
+            font-size: 0.6rem;
+            transform: translate(-50%, -50%) !important;
+        }
+
+        .mark-all-read {
+            color: var(--primary-color);
+            font-size: 0.8rem;
+        }
+
+        .mark-all-read:hover {
+            color: var(--hover-color);
+        }
+
+        #notificationDropdown::after {
+            display: none;
+        }
+
+        .notification-icon {
+            width: 20px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        /* Save Items Styles */
+        .saved-items-count {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .save-button {
+            border: none;
+            background: none;
+            padding: 0;
+            color: #6c757d;
+            transition: color 0.3s ease;
+        }
+
+        .save-button:hover {
+            color: var(--primary-color);
+        }
+
+        .save-button.saved {
+            color: var(--primary-color);
+        }
+
+        .save-button i {
+            font-size: 1.2rem;
+        }
+
+        /* Chat & Notification Styles */
+        .chat-dropdown,
+        .notification-dropdown {
+            padding: 0;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .chat-list,
+        .notification-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chat-item,
+        .notification-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s;
+        }
+
+        .chat-item:hover,
+        .notification-item:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+            cursor: pointer;
+        }
+
+        .chat-item.unread,
+        .notification-item.unread {
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        .chat-item .chat-title,
+        .notification-item .notification-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: var(--bs-body-color);
+        }
+
+        .chat-item .chat-message,
+        .notification-item .notification-message {
+            font-size: 0.875rem;
+            color: var(--bs-secondary);
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item .chat-time,
+        .notification-item .notification-time {
+            font-size: 0.75rem;
+            color: var(--bs-secondary);
+        }
+
+        .chat-badge,
+        .notification-badge {
+            font-size: 0.6rem;
+            transform: translate(-50%, -50%) !important;
+        }
+
+        .mark-all-read:hover {
+            text-decoration: underline !important;
+        }
+
+        #chatDropdown::after,
+        #notificationDropdown::after {
+            display: none;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
         }
     </style>
+    @await RenderSectionAsync("Styles", required: false)
+    @RenderSection("Stylesheets", required: false)
 </head>
 <body>
     <header>
@@ -61,13 +293,61 @@
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <!-- Chat Dropdown -->
+                            <li class="nav-item dropdown me-2">
+                                <a class="nav-link position-relative" href="#" id="chatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger chat-badge" style="display: none;">
+                                        0
+                                        <span class="visually-hidden">unread messages</span>
+                                    </span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end chat-dropdown" aria-labelledby="chatDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                        <h6 class="mb-0">Messages</h6>
+                                        <a class="btn btn-link btn-sm text-decoration-none" asp-controller="Chat" asp-action="Index">View All</a>
+                                    </div>
+                                    <div class="chat-list">
+                                        <!-- Chat items will be dynamically added here -->
+                                    </div>
+                                </div>
+                            </li>
+
+                            <!-- Notifications Dropdown -->
+                            <li class="nav-item dropdown me-3">
+                                <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell"></i>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style="display: none;">
+                                        0
+                                        <span class="visually-hidden">unread notifications</span>
+                                    </span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                        <h6 class="mb-0">Notifications</h6>
+                                        <div>
+                                            <button class="btn btn-link btn-sm text-decoration-none mark-all-read me-2">Mark all as read</button>
+                                            <a class="btn btn-link btn-sm text-decoration-none" asp-controller="Notifications" asp-action="Index">View All</a>
+                                        </div>
+                                    </div>
+                                    <div class="notification-list">
+                                        <!-- Notifications will be dynamically added here -->
+                                    </div>
+                                </div>
+                            </li>
+
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-person-circle"></i>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Logout</a></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                                            @Html.AntiForgeryToken()
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="document.getElementById('logoutForm').submit();">Logout</a>
+                                        </form>
+                                    </li>
                                 </ul>
                             </li>
                         }
@@ -85,11 +365,26 @@
             </div>
         </nav>
     </header>
+    
+    <!-- Notification Area -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1500;">
+        <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i id="notificationIcon" class="bi me-2"></i>
+                <strong id="notificationTitle" class="me-auto">Notification</strong>
+                <small id="notificationTime">just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div id="notificationBody" class="toast-body">
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="row">
             @{
                 var currentController = ViewContext.RouteData.Values["Controller"].ToString();
-                var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repositories";
+                var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repositories" || currentController == "Tags" || currentController == "Users";
             }
             
             @if (showSidebar)
@@ -111,8 +406,9 @@
                          <a class="nav-link text-dark d-flex align-items-center @(currentController == "Repositories" ? "active" : "")" asp-area="" asp-controller="Repositories" asp-action="Index">
                             <i class="bi-display"></i>  Repositories
                         </a>
-                        <a class="nav-link text-dark d-flex align-items-center" asp-area="" asp-controller="Account" asp-action="Saves">
+                        <a class="nav-link text-dark d-flex align-items-center @(currentController == "Account" && ViewContext.RouteData.Values["Action"].ToString() == "Saves" ? "active" : "")" asp-area="" asp-controller="Account" asp-action="Saves">
                             <i class="bi bi-bookmark me-2"></i> Save
+                            <span class="badge bg-primary rounded-pill ms-auto saved-items-count" style="display: none;">0</span>
                         </a>
                     </nav>
                 </div>
@@ -140,7 +436,12 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/saved-items.js" asp-append-version="true"></script>
+    <script src="~/js/signalr-client.js" asp-append-version="true"></script>
+    <!-- Notification Handler -->
+    <script src="~/js/notification-handler.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

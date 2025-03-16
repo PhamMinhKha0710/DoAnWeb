@@ -1,0 +1,25 @@
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #3a7bd5, #00d2ff);
+}
+
+.hover-bg-light:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    transition: background-color 0.2s ease;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fs-7 {
+    font-size: 0.85rem;
+}
+
+.bg-light-primary {
+    background-color: rgba(58, 123, 213, 0.1);
+}
+
+.hover-primary:hover {
+    color: #3a7bd5 !important;
+}

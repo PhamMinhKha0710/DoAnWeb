@@ -1,0 +1,99 @@
+/* Enhanced styling for code blocks */
+
+/* Code block container */
+pre {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow: auto;
+    position: relative;
+    border: 1px solid #e0e0e0;
+}
+
+/* Code inside pre */
+pre code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre !important;
+    tab-size: 4 !important;
+    -moz-tab-size: 4 !important;
+    display: block;
+    overflow-x: auto;
+    color: #333;
+}
+
+/* Inline code */
+code:not(pre code) {
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #d63384;
+}
+
+/* Dark theme support */
+[data-theme="dark"] pre {
+    background-color: #2d3748;
+    border-color: #4a5568;
+}
+
+[data-theme="dark"] pre code {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] code:not(pre code) {
+    background-color: #4a5568;
+    color: #f8b4d9;
+}
+
+/* Language label */
+pre::before {
+    content: attr(data-language);
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    background-color: #e0e0e0;
+    color: #333;
+    border-bottom-left-radius: 4px;
+    font-family: sans-serif;
+    opacity: 0.8;
+}
+
+[data-theme="dark"] pre::before {
+    background-color: #4a5568;
+    color: #e2e8f0;
+}
+
+/* Add language attribute to pre elements */
+.markdown-preview pre code.language-javascript + pre {
+    data-language: "javascript";
+}
+
+.markdown-preview pre code.language-html + pre {
+    data-language: "html";
+}
+
+.markdown-preview pre code.language-css + pre {
+    data-language: "css";
+}
+
+.markdown-preview pre code.language-csharp + pre {
+    data-language: "csharp";
+}
+
+.markdown-preview pre code.language-sql + pre {
+    data-language: "sql";
+}
+
+.markdown-preview pre code.language-python + pre {
+    data-language: "python";
+}
+
+.markdown-preview pre code.language-java + pre {
+    data-language: "java";
+}

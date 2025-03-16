@@ -27,7 +27,7 @@ namespace DoAnWeb.Repositories
 
         public T GetById(int id)
         {
-            return _dbSet.Find(id);
+            return _dbSet.Find(id); 
         }
 
         public void Add(T entity)
@@ -62,6 +62,15 @@ namespace DoAnWeb.Repositories
         public void Save()
         {
             _context.SaveChanges();
+        }
+        
+        /// <summary>
+        /// Gets the database context
+        /// </summary>
+        /// <returns>The database context</returns>
+        public DbContext GetContext()
+        {
+            return _context;
         }
     }
 }

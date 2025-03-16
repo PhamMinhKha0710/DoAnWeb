@@ -9,81 +9,109 @@
         <!-- Main Content -->
         <div class="col-md-9">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Newest Questions</h1>
+                <div>
+                    <h1 class="fw-bold mb-1">Newest Questions</h1>
+                    <p class="text-muted mb-0">@Model.Count() questions</p>
+                </div>
                 <a asp-action="Create" class="btn btn-primary">Ask Question</a>
             </div>
             
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <span class="text-muted">@Model.Count() questions</span>
-                </div>
-                <div class="btn-group">
-                    <a asp-action="Index" asp-route-sort="newest" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "newest" || ViewData["CurrentSort"] == null ? "active" : "")">Newest</a>
-                    <a asp-action="Index" asp-route-sort="active" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "active" ? "active" : "")">Active</a>
-                    <a asp-action="Index" asp-route-sort="bountied" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "bountied" ? "active" : "")">Bountied</a>
-                    <a asp-action="Index" asp-route-sort="unanswered" class="btn btn-outline-secondary btn-sm @(ViewData["CurrentSort"]?.ToString() == "unanswered" ? "active" : "")">Unanswered</a>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                            More
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-action="Index" asp-route-sort="frequent">Frequent</a></li>
-                            <li><a class="dropdown-item" asp-action="Index" asp-route-sort="score">Score</a></li>
-                        </ul>
+            <div class="card mb-4">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <a asp-action="Index" asp-route-sort="newest" class="btn btn-outline-primary btn-sm @(ViewData["CurrentSort"]?.ToString() == "newest" || ViewData["CurrentSort"] == null ? "active" : "")">Newest</a>
+                            <a asp-action="Index" asp-route-sort="active" class="btn btn-outline-primary btn-sm @(ViewData["CurrentSort"]?.ToString() == "active" ? "active" : "")">Active</a>
+                            <a asp-action="Index" asp-route-sort="bountied" class="btn btn-outline-primary btn-sm @(ViewData["CurrentSort"]?.ToString() == "bountied" ? "active" : "")">Bountied</a>
+                            <a asp-action="Index" asp-route-sort="unanswered" class="btn btn-outline-primary btn-sm @(ViewData["CurrentSort"]?.ToString() == "unanswered" ? "active" : "")">Unanswered</a>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                    More
+                                </button>
+                                <ul class="dropdown-menu shadow-sm">
+                                    <li><a class="dropdown-item" asp-action="Index" asp-route-sort="frequent">Frequent</a></li>
+                                    <li><a class="dropdown-item" asp-action="Index" asp-route-sort="score">Score</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm"><i class="bi bi-funnel"></i> Filter</button>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-funnel"></i> Filter</button>
                 </div>
             </div>
 
             @if (ViewData["Tag"] != null)
             {
-                <div class="alert alert-info">
-                    Showing questions tagged with: <strong>@ViewData["Tag"]</strong>
-                    <a asp-action="Index" class="float-end">Clear filter</a>
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-tag me-2"></i>
+                        Showing questions tagged with: <strong>@ViewData["Tag"]</strong>
+                    </div>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-info">Clear filter</a>
                 </div>
             }
 
             @if (!Model.Any())
             {
-                <div class="alert alert-warning">
-                    No questions found. Be the first to <a asp-action="Create">ask a question</a>!
+                <div class="card">
+                    <div class="card-body p-5 text-center empty-state">
+                        <i class="bi bi-chat-square-text fs-1 text-muted mb-3"></i>
+                        <h4>No questions found</h4>
+                        <p class="text-muted mb-4">Be the first to ask a question and start the conversation!</p>
+                        <a asp-action="Create" class="btn btn-primary">Ask a Question</a>
+                    </div>
                 </div>
             }
             else
             {
-                <div class="list-group">
-                    @foreach (var item in Model)
-                    {
-                        <div class="list-group-item">
-                            <div class="d-flex">
-                                <div class="me-3 text-center" style="min-width: 60px;">
-                                    <div class="votes">@item.Score votes</div>
-                                    <div class="answers @(item.Answers?.Any() != true ? "zero" : "")">@(item.Answers?.Count ?? 0) answers</div>
-                                    <div class="views">@item.ViewCount views</div>
-                                </div>
-                                <div>
-                                    <h5 class="mb-1">
-                                        <a asp-action="Details" asp-route-id="@item.QuestionId">@item.Title</a>
-                                    </h5>
-                                    <p class="mb-1">@(item.Body?.Length > 200 ? item.Body.Substring(0, 200) + "..." : item.Body)</p>
-                                    <div class="d-flex align-items-center">
-                                        <div class="tags me-auto">
-                                            @if (item.Tags != null)
-                                            {
-                                                @foreach (var tag in item.Tags)
-                                                {
-                                                    <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark me-1 text-decoration-none">@tag.TagName</a>
-                                                }
-                                            }
+                <div class="card">
+                    <div class="list-group list-group-flush">
+                        @foreach (var item in Model)
+                        {
+                            <div class="list-group-item question-item p-3">
+                                <div class="d-flex">
+                                    <div class="me-3 text-center stats-box" style="min-width: 70px;">
+                                        <div class="votes mb-2">
+                                            <span class="d-block fw-bold">@item.Score</span>
+                                            <small>votes</small>
                                         </div>
-                                        <small class="text-muted">asked @(item.CreatedDate.ToString("MMM dd")) by @item.User?.DisplayName</small>
+                                        <div class="answers @(item.Answers?.Any() != true ? "zero" : "has-answers")">
+                                            <span class="d-block fw-bold">@(item.Answers?.Count ?? 0)</span>
+                                            <small>answers</small>
+                                        </div>
+                                        <div class="views mt-2">
+                                            <span class="d-block">@item.ViewCount</span>
+                                            <small>views</small>
+                                        </div>
+                                    </div>
+                                    <div class="question-content">
+                                        <h5 class="mb-2">
+                                            <a asp-action="Details" asp-route-id="@item.QuestionId" class="question-title">@item.Title</a>
+                                        </h5>
+                                        <p class="mb-3 question-excerpt">@(item.Body?.Length > 200 ? item.Body.Substring(0, 200) + "..." : item.Body)</p>
+                                        <div class="d-flex flex-wrap align-items-center">
+                                            <div class="tags me-auto mb-2 mb-md-0">
+                                                @if (item.Tags != null)
+                                                {
+                                                    @foreach (var tag in item.Tags)
+                                                    {
+                                                        <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark me-1 text-decoration-none">@tag.TagName</a>
+                                                    }
+                                                }
+                                            </div>
+                                            <div class="user-info d-flex align-items-center">
+                                                <div class="avatar me-2">
+                                                    <i class="bi bi-person-circle"></i>
+                                                </div>
+                                                <small class="text-muted">asked @(item.CreatedDate.HasValue ? item.CreatedDate.Value.ToString("MMM dd") : "unknown") by <a href="#" class="text-decoration-none">@item.User?.DisplayName</a></small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             }
         </div>
@@ -91,78 +119,123 @@
         <!-- Right Sidebar -->
         <div class="col-md-3">
             <!-- The Overflow Blog -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="mb-0">The Overflow Blog</h6>
+            <div class="card mb-4 blog-card">
+                <div class="card-header bg-transparent border-bottom-0">
+                    <h6 class="mb-0 fw-bold">The Overflow Blog</h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-pencil-square me-2"></i>
-                        <a href="#" class="text-decoration-none">Featured blog post 1</a>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="blog-icon me-2 text-primary">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+                        <a href="#" class="text-decoration-none blog-link">Featured blog post 1</a>
                     </div>
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-pencil-square me-2"></i>
-                        <a href="#" class="text-decoration-none">Featured blog post 2</a>
+                        <div class="blog-icon me-2 text-primary">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+                        <a href="#" class="text-decoration-none blog-link">Featured blog post 2</a>
                     </div>
                 </div>
             </div>
 
             <!-- Featured on Meta -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="mb-0">Featured on Meta</h6>
+            <div class="card mb-4 meta-card">
+                <div class="card-header bg-transparent border-bottom-0">
+                    <h6 class="mb-0 fw-bold">Featured on Meta</h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-star-fill me-2 text-warning"></i>
-                        <a href="#" class="text-decoration-none">Meta discussion 1</a>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="meta-icon me-2 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <a href="#" class="text-decoration-none meta-link">Meta discussion 1</a>
                     </div>
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-star-fill me-2 text-warning"></i>
-                        <a href="#" class="text-decoration-none">Meta discussion 2</a>
+                        <div class="meta-icon me-2 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <a href="#" class="text-decoration-none meta-link">Meta discussion 2</a>
                     </div>
                 </div>
             </div>
 
             <!-- Watched Tags -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Watched Tags</h6>
-                    <a asp-controller="TagPreferences" asp-action="WatchedTags" class="text-decoration-none">edit</a>
+            <div class="card mb-4 tags-card">
+                <div class="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Watched Tags</h6>
+                    <a asp-controller="TagPreferences" asp-action="WatchedTags" class="text-decoration-none"><i class="bi bi-gear"></i></a>
                 </div>
                 <div class="card-body">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <p class="text-muted">Add tags to customize your feed</p>
-                        <a asp-controller="TagPreferences" asp-action="WatchedTags" class="btn btn-outline-secondary btn-sm">Watch a tag</a>
+                        <div class="empty-tags text-center py-2 mb-3">
+                            <i class="bi bi-tags fs-3 text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Add tags to customize your feed</p>
+                        </div>
+                        <a asp-controller="TagPreferences" asp-action="WatchedTags" class="btn btn-outline-primary w-100">Watch a tag</a>
                     }
                     else
                     {
-                        <p class="text-muted">Sign up to watch tags</p>
-                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary btn-sm">Sign up</a>
+                        <div class="empty-tags text-center py-2 mb-3">
+                            <i class="bi bi-person-lock fs-3 text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Sign up to watch tags</p>
+                        </div>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary w-100">Sign up</a>
                     }
                 </div>
             </div>
 
             <!-- Ignored Tags -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Ignored Tags</h6>
-                    <a asp-controller="TagPreferences" asp-action="IgnoredTags" class="text-decoration-none">edit</a>
+            <div class="card tags-card">
+                <div class="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Ignored Tags</h6>
+                    <a asp-controller="TagPreferences" asp-action="IgnoredTags" class="text-decoration-none"><i class="bi bi-gear"></i></a>
                 </div>
                 <div class="card-body">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <p class="text-muted">Add tags to hide questions</p>
-                        <a asp-controller="TagPreferences" asp-action="IgnoredTags" class="btn btn-outline-secondary btn-sm">Ignore a tag</a>
+                        <div class="empty-tags text-center py-2 mb-3">
+                            <i class="bi bi-eye-slash fs-3 text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Add tags to hide questions</p>
+                        </div>
+                        <a asp-controller="TagPreferences" asp-action="IgnoredTags" class="btn btn-outline-primary w-100">Ignore a tag</a>
                     }
                     else
                     {
-                        <p class="text-muted">Sign up to ignore tags</p>
-                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary btn-sm">Sign up</a>
+                        <div class="empty-tags text-center py-2 mb-3">
+                            <i class="bi bi-person-lock fs-3 text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Sign up to ignore tags</p>
+                        </div>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary w-100">Sign up</a>
                     }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation to question items
+            const items = document.querySelectorAll('.question-item');
+            items.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, 100 + (index * 50));
+            });
+        });
+    </script>
+
+        <!-- Markdown parser library -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Custom Markdown editor implementation -->
+    <script src="~/js/markdown-editor.js"></script>
+}

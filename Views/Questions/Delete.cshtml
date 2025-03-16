@@ -35,7 +35,7 @@
                         <dd class="col-sm-9">@Model.Title</dd>
                         
                         <dt class="col-sm-3">Created Date</dt>
-                        <dd class="col-sm-9">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                        <dd class="col-sm-9">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "N/A")</dd>
                         
                         <dt class="col-sm-3">Answers</dt>
                         <dd class="col-sm-9">@Model.Answers.Count</dd>

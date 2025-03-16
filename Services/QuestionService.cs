@@ -3,70 +3,110 @@ using DoAnWeb.Repositories;
 
 namespace DoAnWeb.Services
 {
+    /// <summary>
+    /// Implementation of the IQuestionService interface
+    /// Provides business logic for question-related operations
+    /// </summary>
     public class QuestionService : IQuestionService
     {
         private readonly IQuestionRepository _questionRepository;
         private readonly IRepository<Tag> _tagRepository;
         private readonly IRepository<Vote> _voteRepository;
         private readonly IRepository<Answer> _answerRepository;
+        private readonly IQuestionRealTimeService _realTimeService;
+        private readonly INotificationService _notificationService;
 
+        /// <summary>
+        /// Constructor with dependency injection for required repositories
+        /// </summary>
         public QuestionService(
             IQuestionRepository questionRepository,
             IRepository<Tag> tagRepository,
             IRepository<Vote> voteRepository,
-            IRepository<Answer> answerRepository)
+            IRepository<Answer> answerRepository,
+            IQuestionRealTimeService realTimeService,
+            INotificationService notificationService)
         {
             _questionRepository = questionRepository;
             _tagRepository = tagRepository;
             _voteRepository = voteRepository;
             _answerRepository = answerRepository;
+            _realTimeService = realTimeService;
+            _notificationService = notificationService;
         }
 
+        /// <summary>
+        /// Retrieves all questions from the database
+        /// </summary>
         public IEnumerable<Question> GetAllQuestions()
         {
             return _questionRepository.GetAll();
         }
 
+        /// <summary>
+        /// Retrieves all questions with their associated user information
+        /// </summary>
         public IEnumerable<Question> GetQuestionsWithUsers()
         {
             return _questionRepository.GetQuestionsWithUsers();
         }
 
+        /// <summary>
+        /// Retrieves a specific question by its ID
+        /// </summary>
         public Question GetQuestionById(int id)
         {
             return _questionRepository.GetById(id);
         }
 
+        /// <summary>
+        /// Retrieves a question with all its details including answers, comments, and tags
+        /// Also increments the view count for the question
+        /// </summary>
         public Question GetQuestionWithDetails(int id)
         {
             return _questionRepository.GetQuestionWithDetails(id);
         }
 
+        /// <summary>
+        /// Retrieves all questions that have a specific tag
+        /// </summary>
         public IEnumerable<Question> GetQuestionsByTag(string tagName)
         {
             return _questionRepository.GetQuestionsByTag(tagName);
         }
 
+        /// <summary>
+        /// Retrieves all questions created by a specific user
+        /// </summary>
         public IEnumerable<Question> GetQuestionsByUser(int userId)
         {
             return _questionRepository.GetQuestionsByUser(userId);
         }
 
+        /// <summary>
+        /// Searches for questions matching the provided search term
+        /// Searches in title, body, and tags
+        /// </summary>
         public IEnumerable<Question> SearchQuestions(string searchTerm)
         {
             return _questionRepository.SearchQuestions(searchTerm);
         }
 
+        /// <summary>
+        /// Creates a new question with optional tags
+        /// Sets default values and processes tag associations
+        /// </summary>
         public void CreateQuestion(Question question, List<string> tagNames)
         {
-            // Set creation date
+            // Set creation date and default values
             question.CreatedDate = DateTime.Now;
             question.UpdatedDate = DateTime.Now;
             question.ViewCount = 0;
             question.Score = 0;
             question.Status = "Open";
 
-            // Process tags
+            // Process tags if provided
             if (tagNames != null && tagNames.Count > 0)
             {
                 question.Tags = new List<Tag>();
@@ -76,39 +116,60 @@ namespace DoAnWeb.Services
                     var tag = _tagRepository.Find(t => t.TagName == tagName).FirstOrDefault();
                     if (tag == null)
                     {
-                        // Create new tag
+                        // Create new tag if it doesn't exist
                         tag = new Tag { TagName = tagName };
                         _tagRepository.Add(tag);
                         _tagRepository.Save();
                     }
 
+                    // Associate tag with question
                     question.Tags.Add(tag);
                 }
             }
 
-            // Create question
+            // Create question in database
             _questionRepository.Add(question);
             _questionRepository.Save();
+
+            // Notify clients about the new question
+            _realTimeService.NotifyNewQuestion(question);
         }
 
+        /// <summary>
+        /// Updates an existing question and its associated tags
+        /// Handles tag additions and removals
+        /// </summary>
         public void UpdateQuestion(Question question, List<string> tagNames)
         {
-            // Get existing question
+            // Get existing question with details
             var existingQuestion = _questionRepository.GetQuestionWithDetails(question.QuestionId);
             if (existingQuestion == null)
                 throw new ArgumentException("Question not found");
 
-            // Update question properties
+            // Update basic properties
             existingQuestion.Title = question.Title;
             existingQuestion.Body = question.Body;
             existingQuestion.UpdatedDate = DateTime.Now;
+            
+            // Update attachments if provided
+            if (question.Attachments != null && question.Attachments.Count > 0)
+            {
+                // Add new attachments to existing collection
+                foreach (var attachment in question.Attachments)
+                {
+                    if (!existingQuestion.Attachments.Any(a => a.AttachmentId == attachment.AttachmentId))
+                    {
+                        existingQuestion.Attachments.Add(attachment);
+                    }
+                }
+            }
 
-            // Update tags
+            // Update tags if provided
             if (tagNames != null)
             {
                 // Clear existing tags
                 existingQuestion.Tags.Clear();
-
+                
                 // Add new tags
                 foreach (var tagName in tagNames)
                 {
@@ -122,68 +183,67 @@ namespace DoAnWeb.Services
                         _tagRepository.Save();
                     }
 
+                    // Associate tag with question
                     existingQuestion.Tags.Add(tag);
                 }
             }
 
-            // Update question
+            // Save changes
             _questionRepository.Update(existingQuestion);
             _questionRepository.Save();
+
+            // Notify clients about the question update
+            _realTimeService.NotifyQuestionUpdated(existingQuestion);
         }
 
+        /// <summary>
+        /// Deletes a question and all its associated data
+        /// </summary>
         public void DeleteQuestion(int id)
         {
-            // Get the question with its answers
-            var question = _questionRepository.GetQuestionWithDetails(id);
-            if (question == null)
-                return;
-
-            // Delete all answers associated with the question first
-            if (question.Answers != null && question.Answers.Any())
+            var question = _questionRepository.GetById(id);
+            if (question != null)
             {
-                foreach (var answer in question.Answers.ToList())
-                {
-                    _answerRepository.Delete(answer);
-                }
+                _questionRepository.Delete(question);
+                _questionRepository.Save();
             }
-
-            // Now delete the question
-            _questionRepository.Delete(id);
-            _questionRepository.Save();
         }
 
+        /// <summary>
+        /// Records a vote (upvote or downvote) for a question
+        /// Updates the question's score accordingly
+        /// </summary>
         public void VoteQuestion(int questionId, int userId, bool isUpvote)
         {
-            // Get question
-            var question = _questionRepository.GetById(questionId);
-            if (question == null)
-                throw new ArgumentException("Question not found");
+            // Get existing vote if any
+            var existingVote = _voteRepository.Find(v => 
+                v.TargetId == questionId && 
+                v.UserId == userId && 
+                v.TargetType == "Question").FirstOrDefault();
 
-            // Check if user has already voted
-            var existingVote = _voteRepository.Find(v => v.UserId == userId && v.TargetId == questionId && v.TargetType == "Question").FirstOrDefault();
+            // Determine vote value
+            int voteValue = isUpvote ? 1 : -1;
 
             if (existingVote != null)
             {
-                // Update existing vote
-                int currentVoteValue = existingVote.VoteValue;
-                int newVoteValue = isUpvote ? 1 : -1;
-                
-                if (currentVoteValue != newVoteValue)
+                // If vote exists with same value, remove it (toggle off)
+                if (existingVote.VoteValue == voteValue)
                 {
-                    // Change vote direction
-                    existingVote.VoteValue = newVoteValue;
-                    _voteRepository.Update(existingVote);
-
+                    _voteRepository.Delete(existingVote);
+                    _voteRepository.Save();
+                    
                     // Update question score
-                    question.Score += newVoteValue - currentVoteValue;
+                    UpdateQuestionScore(questionId, -voteValue);
                 }
+                // If vote exists with different value, update it
                 else
                 {
-                    // Remove vote
-                    _voteRepository.Delete(existingVote);
-
-                    // Update question score
-                    question.Score -= currentVoteValue;
+                    existingVote.VoteValue = voteValue;
+                    _voteRepository.Update(existingVote);
+                    _voteRepository.Save();
+                    
+                    // Update question score (double effect: remove old vote, add new vote)
+                    UpdateQuestionScore(questionId, voteValue * 2);
                 }
             }
             else
@@ -191,33 +251,86 @@ namespace DoAnWeb.Services
                 // Create new vote
                 var vote = new Vote
                 {
-                    UserId = userId,
                     TargetId = questionId,
+                    UserId = userId,
                     TargetType = "Question",
-                    VoteValue = isUpvote ? 1 : -1,
+                    VoteValue = voteValue,
+                    IsUpvote = isUpvote,
                     CreatedDate = DateTime.Now
                 };
-
+                
                 _voteRepository.Add(vote);
-
+                _voteRepository.Save();
+                
                 // Update question score
-                question.Score += vote.VoteValue;
+                UpdateQuestionScore(questionId, voteValue);
+                
+                // Send notification about the new vote
+                _notificationService.NotifyVoteAsync("Question", questionId, userId);
             }
-
-            // Save changes
-            _questionRepository.Update(question);
-            _voteRepository.Save();
-            _questionRepository.Save();
         }
-         public void AddAnswer(Answer answer)
+
+        /// <summary>
+        /// Helper method to update a question's score
+        /// </summary>
+        private void UpdateQuestionScore(int questionId, int scoreChange)
         {
-            if (answer == null)
-                throw new ArgumentNullException(nameof(answer));
+            var question = _questionRepository.GetById(questionId);
+            if (question != null)
+            {
+                question.Score += scoreChange;
+                _questionRepository.Update(question);
+                _questionRepository.Save();
+            }
+        }
 
+        /// <summary>
+        /// Adds a new answer to a question
+        /// </summary>
+        public void AddAnswer(Answer answer)
+        {
             answer.CreatedDate = DateTime.Now;
-
+            
             _answerRepository.Add(answer);
             _answerRepository.Save();
+            
+            // Update question's UpdatedDate to show activity
+            if (answer.QuestionId.HasValue)
+            {
+                var question = _questionRepository.GetById(answer.QuestionId.Value);
+                if (question != null)
+                {
+                    question.UpdatedDate = DateTime.Now;
+                    _questionRepository.Update(question);
+                    _questionRepository.Save();
+                }
+                
+                // Notify clients about the new answer
+                _realTimeService.NotifyNewAnswer(answer);
+                
+                // Send notification to question owner about the new answer
+                if (answer.UserId.HasValue)
+                {
+                    _notificationService.NotifyNewAnswerAsync(answer.QuestionId.Value, answer.AnswerId, answer.UserId.Value);
+                }
+            }
+        }
+        
+        public void AddAnswerAttachment(AnswerAttachment attachment)
+        {
+            var context = _questionRepository.GetContext() as DevCommunityContext;
+            context.AnswerAttachments.Add(attachment);
+            context.SaveChanges();
+        }
+        
+        /// <summary>
+        /// Adds a new attachment to a question
+        /// </summary>
+        public void AddAttachment(QuestionAttachment attachment)
+        {
+            var context = _questionRepository.GetContext() as DevCommunityContext;
+            context.QuestionAttachments.Add(attachment);
+            context.SaveChanges();
         }
     }
 }

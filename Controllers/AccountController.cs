@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using DoAnWeb.Models;
 using DoAnWeb.Services;
@@ -171,6 +172,13 @@ namespace DoAnWeb.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult Saves()
+        {
+            return RedirectToAction("Index", "SavedItems");
         }
 
         [HttpGet]

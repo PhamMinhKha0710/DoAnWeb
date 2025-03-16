@@ -4,64 +4,94 @@
     ViewData["Title"] = $"Tag: {Model.TagName}";
 }
 
-<div class="container mt-4">
-    <div class="row">
+<div class="container py-5">
+    <div class="row mb-5">
         <div class="col-md-12">
-            <h1 class="display-4">
-                <span class="badge bg-primary">@Model.TagName</span>
-            </h1>
-            <p class="lead">@Model.Description</p>
-            
-            @if (User.Identity.IsAuthenticated)
-            {
-                <div class="mb-4">
-                    <form asp-action="Watch" asp-route-id="@Model.TagId" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-outline-primary">
-                            <i class="bi bi-eye"></i> Watch Tag
-                        </button>
-                    </form>
-                    <form asp-action="Ignore" asp-route-id="@Model.TagId" method="post" class="d-inline ms-2">
-                        <button type="submit" class="btn btn-outline-secondary">
-                            <i class="bi bi-eye-slash"></i> Ignore Tag
-                        </button>
-                    </form>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <h1 class="display-5 fw-bold mb-0">
+                            <span class="badge bg-gradient-primary text-white px-4 py-2 rounded-pill">@Model.TagName</span>
+                        </h1>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <div class="ms-auto">
+                                <form asp-action="Watch" asp-route-id="@Model.TagId" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-primary rounded-pill px-4">
+                                        <i class="bi bi-eye me-2"></i> Watch
+                                    </button>
+                                </form>
+                                <form asp-action="Ignore" asp-route-id="@Model.TagId" method="post" class="d-inline ms-2">
+                                    <button type="submit" class="btn btn-outline-secondary rounded-pill px-4">
+                                        <i class="bi bi-eye-slash me-2"></i> Ignore
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                    <p class="lead text-secondary mb-0">@Model.Description</p>
                 </div>
-            }
+            </div>
         </div>
     </div>
     
-    <div class="row mt-4">
+    <div class="row">
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Questions with this tag</h5>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-gradient-primary border-0 py-3">
+                    <div class="d-flex align-items-center">
+                        <h5 class="text-white fw-bold mb-0">
+                            <i class="bi bi-question-circle me-2"></i> Questions with this tag
+                        </h5>
+                        <span class="ms-3 badge bg-white text-primary rounded-pill px-3">
+                            @(ViewBag.Questions?.Count ?? 0)
+                        </span>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     @if (ViewBag.Questions != null && ViewBag.Questions.Count > 0)
                     {
-                        <div class="list-group">
+                        <div class="question-list">
                             @foreach (var question in ViewBag.Questions)
                             {
-                                <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })" class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h5 class="mb-1">@question.Title</h5>
-                                        <small>@question.CreatedDate.ToString("MMM dd, yyyy")</small>
+                                <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })" class="question-item p-4 border-bottom d-block text-decoration-none text-dark hover-bg-light">
+                                    <div class="d-flex w-100 justify-content-between align-items-start mb-2">
+                                        <h5 class="fw-bold mb-0 text-primary">@question.Title</h5>
+                                        <span class="badge bg-light text-secondary rounded-pill fs-7 ms-2">
+                                            <i class="bi bi-calendar-date me-1"></i>@question.CreatedDate.ToString("MMM dd, yyyy")
+                                        </span>
                                     </div>
-                                    <p class="mb-1">@(question.Body.Length > 200 ? question.Body.Substring(0, 200) + "..." : question.Body)</p>
-                                    <small>
-                                        <span class="text-muted">@question.ViewCount views</span> |
-                                        <span class="text-muted">@question.Answers?.Count answers</span>
-                                    </small>
+                                    <p class="mb-3 text-secondary">@(question.Body.Length > 200 ? question.Body.Substring(0, 200) + "..." : question.Body)</p>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="d-flex align-items-center text-muted">
+                                            <i class="bi bi-eye me-1"></i> @question.ViewCount
+                                        </span>
+                                        <span class="d-flex align-items-center text-muted">
+                                            <i class="bi bi-chat-left-text me-1"></i> @question.Answers?.Count
+                                        </span>
+                                    </div>
                                 </a>
                             }
                         </div>
                     }
                     else
                     {
-                        <p class="text-center">No questions found with this tag.</p>
+                        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                            <i class="bi bi-inbox text-secondary" style="font-size: 3rem;"></i>
+                            <p class="text-secondary mt-3 mb-0">No questions found with this tag.</p>
+                        </div>
                     }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+
+        font-size: 0.875rem;
+    }
+    
+    .rounded-4 {
+        border-radius: 0.8rem;
+    }
+</style>

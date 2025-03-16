@@ -1,0 +1,209 @@
+@model IEnumerable<DoAnWeb.Models.Notification>
+@{
+    ViewData["Title"] = "My Notifications";
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Notifications</h1>
+        <div>
+            <form asp-action="MarkAllAsRead" method="post" id="markAllForm">
+                @Html.AntiForgeryToken()
+                <button type="button" class="btn btn-outline-primary" id="markAllAsReadBtn">
+                    <i class="bi bi-check2-all"></i> Mark All as Read
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> You don't have any notifications yet.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="list-group list-group-flush notification-list">
+                @foreach (var notification in Model)
+                {
+                    <div class="list-group-item @(notification.IsRead == false ? "unread" : "")" data-id="@notification.NotificationId">
+                        <div class="d-flex">
+                            <div class="notification-icon me-3">
+                                @switch (notification.NotificationType)
+                                {
+                                    case "Answer":
+                                        <span class="notification-badge answer-badge">
+                                            <i class="bi bi-chat-left-text"></i>
+                                        </span>
+                                        break;
+                                    case "Comment":
+                                        <span class="notification-badge comment-badge">
+                                            <i class="bi bi-chat-dots"></i>
+                                        </span>
+                                        break;
+                                    case "Vote":
+                                        <span class="notification-badge vote-badge">
+                                            <i class="bi bi-hand-thumbs-up"></i>
+                                        </span>
+                                        break;
+                                    case "Accept":
+                                        <span class="notification-badge accept-badge">
+                                            <i class="bi bi-check-circle"></i>
+                                        </span>
+                                        break;
+                                    case "Mention":
+                                        <span class="notification-badge mention-badge">
+                                            <i class="bi bi-at"></i>
+                                        </span>
+                                        break;
+                                    default:
+                                        <span class="notification-badge general-badge">
+                                            <i class="bi bi-bell"></i>
+                                        </span>
+                                        break;
+                                }
+                            </div>
+                            <div class="notification-content flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="mb-1">@notification.Title</h5>
+                                    <small class="text-muted">
+                                        @(notification.CreatedDate.HasValue ? notification.CreatedDate.Value.ToString("MMM dd, h:mm tt") : "")
+                                    </small>
+                                </div>
+                                <p class="mb-1">@notification.Message</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    @if (!string.IsNullOrEmpty(notification.Url))
+                                    {
+                                        <a href="@notification.Url" class="btn btn-sm btn-link px-0">View Details</a>
+                                    }
+                                    @if (notification.IsRead == false)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-light mark-read-btn" 
+                                                data-id="@notification.NotificationId">
+                                            Mark as Read
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .notification-list .unread {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-left: 3px solid #0d6efd;
+        }
+        
+        .notification-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .answer-badge {
+            background-color: #0d6efd;
+        }
+        
+        .comment-badge {
+            background-color: #6c757d;
+        }
+        
+        .vote-badge {
+            background-color: #198754;
+        }
+        
+        .accept-badge {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .mention-badge {
+            background-color: #dc3545;
+        }
+        
+        .general-badge {
+            background-color: #6610f2;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Mark single notification as read
+            $('.mark-read-btn').on('click', function (e) {
+                e.preventDefault();
+                const notificationId = $(this).data('id');
+                const button = $(this);
+                
+                $.ajax({
+                    url: '@Url.Action("MarkAsRead", "Notifications")',
+                    type: 'POST',
+                    data: {
+                        id: notificationId,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Update UI
+                            const item = button.closest('.list-group-item');
+                            item.removeClass('unread');
+                            button.remove();
+                            
+                            // Update badge in navbar
+                            updateNotificationBadge();
+                        }
+                    },
+                    error: function () {
+                        alert('Error marking notification as read');
+                    }
+                });
+            });
+            
+            // Mark all notifications as read
+            $('#markAllAsReadBtn').on('click', function (e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    url: '@Url.Action("MarkAllAsRead", "Notifications")',
+                    type: 'POST',
+                    data: {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Update UI
+                            $('.list-group-item').removeClass('unread');
+                            $('.mark-read-btn').remove();
+                            
+                            // Update badge in navbar
+                            updateNotificationBadge();
+                        }
+                    },
+                    error: function () {
+                        alert('Error marking all notifications as read');
+                    }
+                });
+            });
+            
+            function updateNotificationBadge() {
+                if (window.updateNotificationCount) {
+                    window.updateNotificationCount();
+                }
+            }
+        });
+    </script>
+} 

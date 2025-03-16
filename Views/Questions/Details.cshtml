@@ -4,13 +4,20 @@
     ViewData["Title"] = Model.Title;
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/questions.css" />
+    <link rel="stylesheet" href="~/css/questions-fix.css" />
+    <link rel="stylesheet" href="~/css/code-blocks.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+}
+
 <div class="container">
     <div class="row mb-4">
         <div class="col">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li class="breadcrumb-item"><a asp-action="Index">Questions</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Questions</a></li>
                     <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
                 </ol>
             </nav>
@@ -19,87 +26,155 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h1 class="card-title mb-0">@Model.Title</h1>
-                    @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString())
-                    {
-                        <div>
-                            <a asp-action="Edit" asp-route-id="@Model.QuestionId" class="btn btn-outline-primary btn-sm">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@Model.QuestionId" class="btn btn-outline-danger btn-sm">Delete</a>
-                        </div>
-                    }
+            <!-- Question Card -->
+            <div class="card mb-4 question-detail-card">
+                <div class="card-header bg-transparent py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="card-title mb-0 fs-4 fw-bold">@Model.Title</h1>
+                        @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString())
+                        {
+                            <div>
+                                <a asp-action="Edit" asp-route-id="@Model.QuestionId" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil me-1"></i> Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@Model.QuestionId" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash me-1"></i> Delete
+                                </a>
+                            </div>
+                        }
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-3">
-                        <div>
-                            <span class="badge bg-primary">@Model.Score votes</span>
-                            <span class="badge bg-secondary">@Model.ViewCount views</span>
-                            <span class="badge bg-info">@Model.Status</span>
+                        <div class="question-stats d-flex gap-2">
+                            <span class="badge bg-primary rounded-pill px-3 py-2">
+                                <i class="bi bi-arrow-up-circle me-1"></i> @Model.Score votes
+                            </span>
+                            <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                <i class="bi bi-eye me-1"></i> @Model.ViewCount views
+                            </span>
+                            <span class="badge bg-info rounded-pill px-3 py-2">
+                                <i class="bi bi-info-circle me-1"></i> @Model.Status
+                            </span>
                         </div>
-                        <div>
-                            <small class="text-muted">Asked on @Model.CreatedDate.ToString("MMM dd, yyyy")</small>
+                        <div class="question-dates">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3 me-1"></i> Asked on @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")
+                            </small>
                             @if (Model.UpdatedDate != Model.CreatedDate)
                             {
-                                <small class="text-muted"> | Updated on @Model.UpdatedDate?.ToString("MMM dd, yyyy")</small>
+                                <small class="text-muted ms-2">
+                                    <i class="bi bi-pencil-square me-1"></i> Updated on @Model.UpdatedDate?.ToString("MMM dd, yyyy")
+                                </small>
                             }
                         </div>
                     </div>
 
-                    <div class="question-body mb-4">
+                    <div class="question-body mb-4 content-area">
                         @Html.Raw(Model.Body)
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         @foreach (var tag in Model.Tags)
                         {
-                            <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-secondary text-decoration-none">@tag.TagName</a>
+                            <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark me-1 text-decoration-none">@tag.TagName</a>
                         }
                     </div>
 
-                    <div class="card bg-light">
-                        <div class="card-body">
+                    @if (Model.Attachments != null && Model.Attachments.Any())
+                    {
+                        <div class="mb-4">
+                            <h5 class="mb-2"><i class="bi bi-paperclip me-2"></i>Attachments</h5>
+                            <div class="attachment-list">
+                                @foreach (var attachment in Model.Attachments)
+                                {
+                                    <div class="attachment-item p-2 border rounded mb-2 d-flex align-items-center">
+                                        @{
+                                            string fileIcon = "bi-file-earmark";
+                                            if (attachment.FileName.EndsWith(".pdf")) fileIcon = "bi-file-earmark-pdf";
+                                            else if (attachment.FileName.EndsWith(".doc") || attachment.FileName.EndsWith(".docx")) fileIcon = "bi-file-earmark-word";
+                                            else if (attachment.FileName.EndsWith(".zip") || attachment.FileName.EndsWith(".rar")) fileIcon = "bi-file-earmark-zip";
+                                            else if (attachment.FileName.EndsWith(".txt")) fileIcon = "bi-file-earmark-text";
+                                            else if (attachment.FileName.EndsWith(".jpg") || attachment.FileName.EndsWith(".jpeg") || attachment.FileName.EndsWith(".png") || attachment.FileName.EndsWith(".gif")) fileIcon = "bi-file-earmark-image";
+                                        }
+                                        <i class="bi @fileIcon me-2 fs-5"></i>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-medium">@attachment.FileName</div>
+                                            <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                        </div>
+                                        <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
+                                            <i class="bi bi-download me-1"></i> Download
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="card author-card bg-light border-0 mb-0">
+                        <div class="card-body p-3">
                             <div class="d-flex">
                                 <div class="flex-shrink-0">
-                                    <img src="@(string.IsNullOrEmpty(Model.User?.AvatarUrl) ? "/img/default-avatar.png" : Model.User.AvatarUrl)" alt="@Model.User?.DisplayName" class="rounded-circle" width="50" height="50">
+                                    <div class="author-avatar rounded-circle d-flex align-items-center justify-content-center bg-primary text-white">
+                                        @if (string.IsNullOrEmpty(Model.User?.AvatarUrl))
+                                        {
+                                            <i class="bi bi-person-fill fs-4"></i>
+                                        }
+                                        else
+                                        {
+                                            <img src="@Model.User.AvatarUrl" alt="@Model.User?.DisplayName" class="rounded-circle" width="50" height="50">
+                                        }
+                                    </div>
                                 </div>
                                 <div class="flex-grow-1 ms-3">
-                                    <h5 class="mt-0">@Model.User?.DisplayName</h5>
-                                    <p class="mb-0">@Model.User?.Bio</p>
+                                    <h5 class="mt-0 mb-1 fw-bold">@Model.User?.DisplayName</h5>
+                                    <p class="mb-0 text-muted">@Model.User?.Bio</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card-footer">
+                <div class="card-footer bg-transparent py-3">
                     @if (TempData["SuccessMessage"] != null)
                     {
-                        <div class="alert alert-success mb-3">
-                            @TempData["SuccessMessage"]
+                        <div class="alert alert-success d-flex align-items-center mb-3">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <div>@TempData["SuccessMessage"]</div>
                         </div>
                     }
                     
                     @if (TempData["ErrorMessage"] != null)
                     {
-                        <div class="alert alert-danger mb-3">
-                            @TempData["ErrorMessage"]
+                        <div class="alert alert-danger d-flex align-items-center mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>@TempData["ErrorMessage"]</div>
                         </div>
                     }
                     
-                    @if (User.Identity.IsAuthenticated)
+                    @if (User.Identity?.IsAuthenticated == true)
                     {
                         <div class="d-flex justify-content-between">
-                            <div>
+                            <div class="action-buttons">
                                 <form asp-action="Vote" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
                                     <input type="hidden" name="isUpvote" value="true" />
-                                    <button type="submit" class="btn btn-outline-success btn-sm">Upvote</button>
+                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-arrow-up"></i> Upvote
+                                    </button>
                                 </form>
                                 <form asp-action="Vote" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
                                     <input type="hidden" name="isUpvote" value="false" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Downvote</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-arrow-down"></i> Downvote
+                                    </button>
+                                </form>
+                                <form asp-controller="SavedItems" asp-action="SaveQuestion" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.QuestionId" />
+                                    <button type="submit" class="btn btn-outline-primary btn-sm @(Model.IsSaved ? "saved" : "")" title="@(Model.IsSaved ? "Unsave this question" : "Save this question")">
+                                        <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i> Save
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -108,32 +183,109 @@
             </div>
 
             <!-- Answers Section -->
-            <h3 class="mt-4">Answers (@(Model.Answers?.Count() ?? 0))</h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold">Answers (@(Model.Answers?.Count() ?? 0))</h3>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a href="#answer-form" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil-square me-1"></i> Write an Answer
+                    </a>
+                }
+            </div>
+            
             <div class="answers-container">
                 @if (Model.Answers != null && Model.Answers.Any())
                 {
                     foreach (var answer in Model.Answers.OrderByDescending(a => a.IsAccepted).ThenByDescending(a => a.Score))
                     {
-                        <div class="card mb-3 @(answer.IsAccepted ? "border-success" : "")">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div class="vote-section">
-                                        <span class="badge bg-secondary">@answer.Score votes</span>
-                                        @if (answer.IsAccepted)
-                                        {
-                                            <span class="badge bg-success">Accepted</span>
-                                        }
-                                    </div>
-                                    <small class="text-muted">Answered on @answer.CreatedDate.ToString("MMM dd, yyyy")</small>
+                        <div class="card mb-4 answer-card @(answer.IsAccepted ? "border-success" : "")">
+                            @if (answer.IsAccepted)
+                            {
+                                <div class="accepted-banner bg-success text-white py-1 px-3">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Accepted Answer
                                 </div>
-                                <div class="answer-content mt-3">
+                            }
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="vote-section d-flex gap-2">
+                                        <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                            <i class="bi bi-arrow-up-circle me-1"></i> @answer.Score votes
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3 me-1"></i> Answered on @(answer.CreatedDate.HasValue ? answer.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")
+                                    </small>
+                                </div>
+                                <div class="answer-content mt-3 content-area">
                                     @Html.Raw(answer.Body)
                                 </div>
-                                <div class="answer-footer mt-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="user-info">
-                                            <small class="text-muted">Answered by @answer.User.DisplayName</small>
+                                
+                                @if (answer.Attachments != null && answer.Attachments.Any())
+                                {
+                                    <div class="mt-3 mb-3">
+                                        <h6 class="mb-2"><i class="bi bi-image me-2"></i>Attachments</h6>
+                                        <div class="attachment-list">
+                                            @foreach (var attachment in answer.Attachments)
+                                            {
+                                                <div class="attachment-item p-2 border rounded mb-2 d-flex align-items-center">
+                                                    <i class="bi bi-file-earmark-image me-2 fs-5"></i>
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-medium">@attachment.FileName</div>
+                                                        <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                                    </div>
+                                                    <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
+                                                        <i class="bi bi-download me-1"></i> Download
+                                                    </a>
+                                                </div>
+                                            }
                                         </div>
+                                    </div>
+                                }
+                                <div class="answer-footer mt-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="user-info d-flex align-items-center">
+                                            <div class="avatar me-2">
+                                                <i class="bi bi-person-circle"></i>
+                                            </div>
+                                            <small class="text-muted">Answered by <a href="#" class="text-decoration-none">@(answer.User?.DisplayName ?? "Unknown")</a></small>
+                                        </div>
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            <div class="action-buttons">
+                                                <form asp-action="VoteAnswer" method="post" class="d-inline">
+                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
+                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                                    <input type="hidden" name="isUpvote" value="true" />
+                                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                                        <i class="bi bi-arrow-up"></i> Upvote
+                                                    </button>
+                                                </form>
+                                                <form asp-action="VoteAnswer" method="post" class="d-inline">
+                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
+                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                                    <input type="hidden" name="isUpvote" value="false" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                        <i class="bi bi-arrow-down"></i> Downvote
+                                                    </button>
+                                                </form>
+                                                <form asp-controller="SavedItems" asp-action="SaveAnswer" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@answer.AnswerId" />
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm @(answer.IsSaved ? "saved" : "")" title="@(answer.IsSaved ? "Unsave this answer" : "Save this answer")">
+                                                        <i class="bi @(answer.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i> Save
+                                                    </button>
+                                                </form>
+                                                @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString() && !answer.IsAccepted)
+                                                {
+                                                    <form asp-action="AcceptAnswer" method="post" class="d-inline">
+                                                        <input type="hidden" name="answerId" value="@answer.AnswerId" />
+                                                        <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                                            <i class="bi bi-check-circle"></i> Accept
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -142,34 +294,92 @@
                 }
                 else
                 {
-                    <p class="text-muted">No answers yet. Be the first to answer!</p>
-                }
-
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Your Answer</h5>
-                        </div>
-                        <div class="card-body">
-                            <form asp-action="SubmitAnswer" method="post">
-                                <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                <div class="form-group">
-                                    <textarea name="body" class="form-control" rows="6" required></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary mt-3">Post Your Answer</button>
-                            </form>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="alert alert-info mt-4">
-                        <p class="mb-0">Please <a asp-controller="Account" asp-action="Login">log in</a> to post an answer.</p>
+                    <div class="empty-state text-center py-5">
+                        <i class="bi bi-chat-square-text display-1 text-muted mb-3"></i>
+                        <h4>No Answers Yet</h4>
+                        <p class="text-muted">Be the first to answer this question!</p>
                     </div>
                 }
             </div>
 
+            <!-- Answer Form -->
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="card mt-5" id="answer-form">
+                    <div class="card-header bg-transparent py-3">
+                        <h4 class="mb-0">Your Answer</h4>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="Answer" method="post">
+                            <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                            <div class="mb-3">
+                                <div class="markdown-editor-container">
+                                    <div class="markdown-toolbar mb-2">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="**Bold**"><i class="bi bi-type-bold"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="*Italic*"><i class="bi bi-type-italic"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="# Heading"><i class="bi bi-type-h1"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="[Link](url)"><i class="bi bi-link"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="![Image](url)"><i class="bi bi-image"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="`Code`"><i class="bi bi-code"></i></button>
+                                        </div>
+                                    </div>
+                                    <textarea name="Body" class="form-control markdown-editor" rows="6" placeholder="Write your answer here..."></textarea>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Attachments</label>
+                                <input type="file" name="AnswerAttachments" class="form-control" multiple />
+                                <div class="form-text">
+                                    <i class="bi bi-image me-1"></i> Supported formats: JPG, JPEG, PNG, GIF, BMP, WEBP (Max 5MB per file)
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send"></i> Post Answer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
+
+
+@section Scripts {
+    <!-- Markdown parser library -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
+    
+    <!-- Custom Markdown editor implementation -->
+    <script src="~/js/markdown-editor.js"></script>
+    
+    <!-- Attachment viewer script -->
+    <script src="~/js/attachment-viewer.js"></script>
+    
+    <!-- Answer attachments script -->
+    <script src="~/js/answer-attachments.js"></script>
+    
+    <!-- Question notification handler for real-time updates -->
+    <script src="~/js/question-notification-handler.js"></script>
+    
+    <script>
+        // Highlight all code blocks on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+        });
+    </script>
+}

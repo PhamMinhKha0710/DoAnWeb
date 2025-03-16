@@ -15,12 +15,11 @@ public partial class RepositoryFile
 
     public string FileHash { get; set; } = null!;
 
-    public virtual Repository? Repository { get; set; }
-    
-    // Added properties to fix view errors
-    public string Content => FileContent ?? string.Empty;
-    
     public DateTime? UpdatedDate { get; set; }
-    
-    public int FileSize { get; set; }
+
+    public long? FileSize { get; set; }
+
+    public string? Content { get; set; }
+
+    public virtual Repository? Repository { get; set; }
 }

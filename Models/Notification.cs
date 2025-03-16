@@ -19,5 +19,22 @@ public partial class Notification
 
     public DateTime? CreatedDate { get; set; }
 
+    // Add notification type for categorization
+    public string NotificationType { get; set; } = "General";
+
+    // Add reference to related entity (e.g., Question, Answer)
+    public int? RelatedEntityId { get; set; }
+
     public virtual User? User { get; set; }
+}
+
+// Enum-like class for notification types
+public static class NotificationTypes
+{
+    public const string Answer = "Answer";
+    public const string Comment = "Comment";
+    public const string Vote = "Vote";
+    public const string Accept = "Accept";
+    public const string Mention = "Mention";
+    public const string General = "General";
 }

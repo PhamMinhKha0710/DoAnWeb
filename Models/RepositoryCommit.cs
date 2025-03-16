@@ -16,15 +16,14 @@ public partial class RepositoryCommit
     public DateTime? CommitDate { get; set; }
 
     public int? ParentCommitId { get; set; }
-
-    public virtual User? Author { get; set; }
-
-    public virtual Repository? Repository { get; set; }
-    
-    // Added properties to fix view errors
-    public string Message => CommitMessage;
     
     public string? CommitHash { get; set; }
     
-    public User? User => Author;
+    public string? Message { get; set; }
+
+    public virtual User? Author { get; set; }
+
+    public virtual User? User { get; set; }
+
+    public virtual Repository? Repository { get; set; }
 }
