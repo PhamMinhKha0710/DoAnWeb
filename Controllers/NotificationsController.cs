@@ -52,6 +52,43 @@ namespace DoAnWeb.Controllers
         }
 
         /// <summary>
+        /// Get latest notifications for the current user (API endpoint)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetLatest()
+        {
+            try
+            {
+                // Get current user ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                // Get the 10 most recent notifications
+                var notifications = await _notificationService.GetUserNotificationsAsync(userId);
+                var latestNotifications = notifications.Take(10).Select(n => new
+                {
+                    id = n.NotificationId,
+                    title = n.Title,
+                    message = n.Message,
+                    url = n.Url,
+                    type = n.NotificationType,
+                    isRead = n.IsRead,
+                    createdDate = n.CreatedDate
+                });
+
+                return Json(new { success = true, notifications = latestNotifications });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving latest notifications");
+                return Json(new { success = false, message = "An error occurred" });
+            }
+        }
+
+        /// <summary>
         /// Get unread notification count for the current user
         /// </summary>
         [HttpGet]
@@ -81,7 +118,6 @@ namespace DoAnWeb.Controllers
         /// Mark a notification as read (AJAX endpoint)
         /// </summary>
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsRead(int id)
         {
             try
@@ -115,7 +151,6 @@ namespace DoAnWeb.Controllers
         /// Mark all notifications as read (AJAX endpoint)
         /// </summary>
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAllAsRead()
         {
             try

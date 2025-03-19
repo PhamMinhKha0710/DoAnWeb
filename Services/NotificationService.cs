@@ -152,17 +152,17 @@ namespace DoAnWeb.Services
                     RelatedEntityId = answerId
                 };
 
-                // Add to groups for SignalR
-                var recipientGroups = new List<string>
-                {
-                    $"question-{questionId}"
-                };
+                // Create group list for real-time delivery
+                var recipientGroups = new List<string> { $"user-{question.UserId}", $"question-{questionId}" };
 
+                // Queue notification with real-time delivery to groups
                 await CreateNotificationAsync(notification, recipientGroups);
+
+                _logger.LogInformation($"New answer notification created for question {questionId}, sent to user {question.UserId}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error creating answer notification for question {questionId}");
+                _logger.LogError(ex, $"Error creating new answer notification for question {questionId}, answer {answerId}");
             }
         }
 
@@ -239,7 +239,7 @@ namespace DoAnWeb.Services
         }
 
         /// <summary>
-        /// Create a notification when someone votes on content
+        /// Create a notification when a vote is cast
         /// </summary>
         public async Task NotifyVoteAsync(string targetType, int targetId, int userId)
         {
@@ -248,6 +248,7 @@ namespace DoAnWeb.Services
                 int? recipientId = null;
                 string contentType = string.Empty;
                 string url = string.Empty;
+                var recipientGroups = new List<string>();
                 
                 // Find the recipient based on target type
                 if (targetType.Equals("Question", StringComparison.OrdinalIgnoreCase))
@@ -258,6 +259,10 @@ namespace DoAnWeb.Services
                         recipientId = question.UserId;
                         contentType = "question";
                         url = $"/Questions/Details/{targetId}";
+                        
+                        // Add specific group for question upvotes
+                        recipientGroups.Add($"user-{question.UserId}");
+                        recipientGroups.Add($"question-upvote-{targetId}");
                     }
                 }
                 else if (targetType.Equals("Answer", StringComparison.OrdinalIgnoreCase))
@@ -274,6 +279,10 @@ namespace DoAnWeb.Services
                         if (answer.Question != null)
                         {
                             url = $"/Questions/Details/{answer.Question.QuestionId}#answer-{targetId}";
+                            
+                            // Add specific group for answer upvotes
+                            recipientGroups.Add($"user-{answer.UserId}");
+                            recipientGroups.Add($"answer-upvote-{targetId}");
                         }
                     }
                 }
@@ -292,7 +301,8 @@ namespace DoAnWeb.Services
                         RelatedEntityId = targetId
                     };
 
-                    await CreateNotificationAsync(notification);
+                    await CreateNotificationAsync(notification, recipientGroups);
+                    _logger.LogInformation($"Vote notification created for {targetType} {targetId}, sent to user {recipientId}");
                 }
             }
             catch (Exception ex)

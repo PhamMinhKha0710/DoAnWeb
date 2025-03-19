@@ -18,10 +18,12 @@ const NotificationHandler = (function () {
         console.log("NotificationHandler: Initializing...");
         
         // Only initialize if user is logged in (check if the notification badge exists)
-        if (document.getElementById('notification-badge')) {
+        if (document.querySelector('.notification-badge')) {
             loadUnreadCount();
             initializeSignalR();
             initializeToastContainer();
+            initializeNotificationDropdown(); // Initialize dropdown with existing notifications
+            addSoundToggleToSettings();
         } else {
             console.log("Notification badge not found, user may not be logged in");
         }
@@ -100,37 +102,37 @@ const NotificationHandler = (function () {
             connection.onreconnected(connectionId => {
                 console.log('Reconnected to notification hub:', connectionId);
                 isConnected = true;
-                retryCount = 0;
                 showConnectionStatus('connected');
-                
-                // Reload notification count after reconnection
-                loadUnreadCount();
             });
             
             connection.onclose(error => {
-                console.log('Connection closed:', error);
+                console.log('Disconnected from notification hub:', error);
                 isConnected = false;
                 showConnectionStatus('disconnected');
                 
-                // Try to reconnect if max retries not reached
+                // Try to reconnect if not a deliberate close
                 if (retryCount < maxRetries) {
-                    retryCount++;
-                    setTimeout(startConnection, 5000);
+                    startConnection();
                 }
             });
             
-            // Set up notification handler
-            connection.on('ReceiveNotification', handleNewNotification);
-            connection.on('NotificationMarkedAsRead', handleNotificationRead);
-            connection.on('AllNotificationsMarkedAsRead', handleAllNotificationsRead);
+            // Register notification handlers
+            connection.on("ReceiveNotification", (notification) => {
+                handleNewNotification(notification);
+            });
+            
+            connection.on("NotificationMarkedAsRead", (notificationId) => {
+                handleNotificationRead(notificationId);
+            });
+            
+            connection.on("AllNotificationsMarkedAsRead", () => {
+                handleAllNotificationsRead();
+            });
             
             // Start the connection
             startConnection();
         } catch (error) {
-            console.error('Error initializing SignalR:', error);
-            
-            // Try to recover by reinitializing after a delay
-            setTimeout(initializeSignalR, 5000);
+            console.error("Error initializing SignalR:", error);
         }
     }
     
@@ -217,6 +219,9 @@ const NotificationHandler = (function () {
         
         // Show toast notification
         showToast(notification);
+        
+        // Also add notification to the dropdown
+        addNotificationToDropdown(notification);
     }
     
     // Handle notification marked as read
@@ -227,6 +232,12 @@ const NotificationHandler = (function () {
             notificationCount--;
             updateNotificationBadge(notificationCount);
         }
+        
+        // Update the notification item in the dropdown
+        const notificationItem = document.querySelector(`.notification-item[data-notification-id="${notificationId}"]`);
+        if (notificationItem) {
+            notificationItem.classList.remove('unread');
+        }
     }
     
     // Handle all notifications marked as read
@@ -235,6 +246,12 @@ const NotificationHandler = (function () {
         
         notificationCount = 0;
         updateNotificationBadge(0);
+        
+        // Update all notification items in the dropdown
+        const notificationItems = document.querySelectorAll('.notification-item.unread');
+        notificationItems.forEach(item => {
+            item.classList.remove('unread');
+        });
     }
     
     // Show toast notification
@@ -248,19 +265,59 @@ const NotificationHandler = (function () {
         
         // Create toast element with a unique id
         const toastId = `toast-${Date.now()}`;
+        
+        // Determine icon and background color based on notification type
+        let icon = 'info-circle';
+        let bgColor = 'bg-primary';
+        let headerText = 'Notification';
+        
+        // Customize based on notification type
+        switch (notification.type) {
+            case 'Vote':
+                icon = 'arrow-up-circle';
+                bgColor = 'bg-success';
+                headerText = 'Upvote Received';
+                break;
+            case 'Answer':
+                icon = 'chat-text';
+                bgColor = 'bg-info';
+                headerText = 'New Answer';
+                break;
+            case 'Accept':
+                icon = 'check-circle';
+                bgColor = 'bg-success';
+                headerText = 'Answer Accepted';
+                break;
+            case 'Comment':
+                icon = 'chat-dots';
+                bgColor = 'bg-secondary';
+                headerText = 'New Comment';
+                break;
+            case 'Mention':
+                icon = 'at';
+                bgColor = 'bg-warning';
+                headerText = 'Mention';
+                break;
+        }
+        
+        // Create toast HTML
         const toastHtml = `
-            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="${toastId}">
-                <div class="toast-header">
-                    <div class="notification-icon me-2">
-                        ${getNotificationIcon(notification.type)}
-                    </div>
-                    <strong class="me-auto">${notification.title}</strong>
-                    <small>${formatTime(notification.createdDate)}</small>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+                <div class="toast-header ${bgColor} text-white">
+                    <i class="bi bi-${icon} me-2"></i>
+                    <strong class="me-auto">${headerText}</strong>
+                    <small>${timeAgo(notification.createdDate)}</small>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
-                <div class="toast-body">
-                    ${notification.message}
-                    ${notification.url ? `<div class="mt-2"><a href="${notification.url}" class="btn btn-sm btn-primary">View</a></div>` : ''}
+                <div class="toast-body d-flex flex-column">
+                    <div>${notification.message}</div>
+                    <div class="mt-2 pt-2 border-top d-flex justify-content-end">
+                        <a href="${notification.url}" class="btn btn-sm btn-primary me-1">View</a>
+                        <button type="button" class="btn btn-sm btn-secondary" 
+                            onclick="NotificationHandler.markAsRead(${notification.id})">
+                            Mark as Read
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -268,39 +325,116 @@ const NotificationHandler = (function () {
         // Add toast to container
         container.insertAdjacentHTML('beforeend', toastHtml);
         
-        // Initialize toast and show it
+        // Initialize the Bootstrap toast and show it
         const toastElement = document.getElementById(toastId);
-        if (toastElement && typeof bootstrap !== 'undefined') {
-            const toast = new bootstrap.Toast(toastElement, {
-                autohide: true,
-                delay: 8000
-            });
-            toast.show();
-            
-            // Remove toast from DOM after hiding
-            toastElement.addEventListener('hidden.bs.toast', () => {
-                toastElement.remove();
-            });
-        } else {
-            console.error("Toast element not found or Bootstrap not loaded");
-            // Fallback if Bootstrap is not available
-            setTimeout(() => {
-                if (toastElement) toastElement.remove();
-            }, 8000);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+        
+        // Remove toast from DOM after it's hidden
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+
+        // Also play a notification sound if available
+        playNotificationSound(notification.type);
+    }
+    
+    // Play notification sound based on type
+    function playNotificationSound(notificationType) {
+        // If sound is disabled in browser or user preferences, skip
+        const soundEnabled = localStorage.getItem('notification_sound_enabled');
+        if (soundEnabled === 'false') {
+            return;
         }
+        
+        let soundUrl = '';
+        
+        // Set different sounds for different notification types
+        switch (notificationType) {
+            case 'Vote':
+                soundUrl = '/sounds/upvote-notification.mp3';
+                break;
+            case 'Answer':
+                soundUrl = '/sounds/answer-notification.mp3';
+                break;
+            default:
+                soundUrl = '/sounds/notification.mp3';
+                break;
+        }
+        
+        // Try to play the sound if it exists
+        try {
+            // First check if the sound file exists
+            fetch(soundUrl)
+                .then(response => {
+                    if (response.ok) {
+                        const audio = new Audio(soundUrl);
+                        audio.volume = 0.5; // 50% volume
+                        const playPromise = audio.play();
+                        
+                        // Handle promise to avoid uncaught errors
+                        if (playPromise !== undefined) {
+                            playPromise.catch(error => {
+                                // Auto-play was prevented
+                                console.log("Auto-play prevented for notification sound:", error);
+                            });
+                        }
+                    } else {
+                        // If sound file doesn't exist, play a default beep
+                        console.log("Notification sound file not found, using fallback");
+                        const beep = new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU");
+                        beep.volume = 0.3;
+                        beep.play().catch(e => console.log("Couldn't play fallback sound"));
+                    }
+                })
+                .catch(error => {
+                    console.log("Error checking sound file:", error);
+                });
+        } catch (error) {
+            console.log("Error playing notification sound:", error);
+        }
+    }
+    
+    // Format date as time ago
+    function timeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        if (seconds < 60) {
+            return 'just now';
+        }
+        
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) {
+            return `${minutes}m ago`;
+        }
+        
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) {
+            return `${hours}h ago`;
+        }
+        
+        const days = Math.floor(hours / 24);
+        if (days < 30) {
+            return `${days}d ago`;
+        }
+        
+        // Format as regular date for older notifications
+        return date.toLocaleDateString();
     }
     
     // Update notification badge
     function updateNotificationBadge(count) {
-        const badge = document.getElementById('notification-badge');
+        const badge = document.querySelector('.notification-badge');
         if (badge) {
             notificationCount = count;
             if (count > 0) {
                 badge.textContent = count > 99 ? '99+' : count.toString();
-                badge.classList.remove('d-none');
+                badge.style.display = 'inline-block';
             } else {
-                badge.textContent = '';
-                badge.classList.add('d-none');
+                badge.textContent = '0';
+                badge.style.display = 'none';
             }
         }
     }
@@ -432,13 +566,192 @@ const NotificationHandler = (function () {
         return null;
     }
     
+    // Add sound toggle to settings dropdown if it exists
+    function addSoundToggleToSettings() {
+        const settingsDropdown = document.querySelector('.dropdown-menu');
+        if (!settingsDropdown) return;
+
+        // Check if sound is enabled (default to true if not set)
+        const soundEnabled = localStorage.getItem('notification_sound_enabled') !== 'false';
+        
+        // Create the toggle element
+        const soundToggle = document.createElement('div');
+        soundToggle.className = 'dropdown-item d-flex align-items-center justify-content-between notification-sound-toggle';
+        soundToggle.innerHTML = `
+            <span>Notification Sounds</span>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="notification-sound-toggle" 
+                    ${soundEnabled ? 'checked' : ''}>
+            </div>
+        `;
+        
+        // Add a divider before the toggle
+        const divider = document.createElement('div');
+        divider.className = 'dropdown-divider';
+        
+        // Insert into dropdown
+        const logoutItem = settingsDropdown.querySelector('form#logoutForm');
+        if (logoutItem) {
+            settingsDropdown.insertBefore(divider, logoutItem);
+            settingsDropdown.insertBefore(soundToggle, logoutItem);
+        } else {
+            settingsDropdown.appendChild(divider);
+            settingsDropdown.appendChild(soundToggle);
+        }
+        
+        // Add event listener to toggle
+        document.getElementById('notification-sound-toggle')?.addEventListener('change', function() {
+            localStorage.setItem('notification_sound_enabled', this.checked);
+            console.log(`Notification sounds ${this.checked ? 'enabled' : 'disabled'}`);
+        });
+    }
+    
+    // Add notification to dropdown
+    function addNotificationToDropdown(notification) {
+        // Get notification list container
+        const dropdownList = document.querySelector('.notification-list');
+        if (!dropdownList) {
+            console.error("Notification dropdown list not found");
+            return;
+        }
+        
+        // Determine icon based on notification type
+        let iconClass = 'bell';
+        switch (notification.type) {
+            case 'Vote':
+                iconClass = 'arrow-up-circle';
+                break;
+            case 'Answer':
+                iconClass = 'chat-text';
+                break;
+            case 'Accept':
+                iconClass = 'check-circle';
+                break;
+            case 'Comment':
+                iconClass = 'chat-dots';
+                break;
+            case 'Mention':
+                iconClass = 'at';
+                break;
+        }
+        
+        // Create notification item element
+        const notificationItem = document.createElement('a');
+        notificationItem.href = notification.url;
+        notificationItem.className = 'notification-item unread d-flex align-items-center';
+        notificationItem.dataset.notificationId = notification.id;
+        
+        notificationItem.innerHTML = `
+            <div class="notification-icon me-3">
+                <i class="bi bi-${iconClass} fs-5"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="notification-title">${notification.title}</div>
+                <div class="notification-message text-muted">${notification.message}</div>
+                <div class="notification-time">${timeAgo(notification.createdDate)}</div>
+            </div>
+            <button class="btn btn-sm mark-read-btn" onclick="event.preventDefault(); NotificationHandler.markAsRead(${notification.id});">
+                <i class="bi bi-check-circle"></i>
+            </button>
+        `;
+        
+        // Insert at the top of the list
+        if (dropdownList.firstChild) {
+            dropdownList.insertBefore(notificationItem, dropdownList.firstChild);
+        } else {
+            dropdownList.appendChild(notificationItem);
+        }
+        
+        // If we have too many notifications, remove the oldest ones
+        const maxNotifications = 10;
+        const notificationItems = dropdownList.querySelectorAll('.notification-item');
+        if (notificationItems.length > maxNotifications) {
+            for (let i = maxNotifications; i < notificationItems.length; i++) {
+                notificationItems[i].remove();
+            }
+        }
+        
+        // Update click handler for mark all as read button
+        document.querySelector('.mark-all-read')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            NotificationHandler.markAllAsRead();
+        });
+    }
+    
+    // Initialize the notification dropdown with existing notifications
+    function initializeNotificationDropdown() {
+        // Get notification list and badge
+        const dropdownList = document.querySelector('.notification-list');
+        const badge = document.querySelector('.notification-badge');
+        
+        if (!dropdownList || !badge) {
+            return;
+        }
+        
+        // Clear any existing content
+        dropdownList.innerHTML = '';
+        
+        // Fetch existing notifications
+        fetch('/Notifications/GetLatest')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && Array.isArray(data.notifications)) {
+                    // Add each notification to the dropdown
+                    data.notifications.forEach(notification => {
+                        addNotificationToDropdown(notification);
+                    });
+                    
+                    // If no notifications, add a message
+                    if (data.notifications.length === 0) {
+                        dropdownList.innerHTML = `
+                            <div class="p-3 text-center text-muted">
+                                <i class="bi bi-bell mb-2 fs-4"></i>
+                                <p>No notifications yet</p>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+                dropdownList.innerHTML = `
+                    <div class="p-3 text-center text-muted">
+                        <p>Error loading notifications</p>
+                    </div>
+                `;
+            });
+            
+        // Update click handler for mark all as read button
+        document.querySelector('.mark-all-read')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            NotificationHandler.markAllAsRead();
+        });
+    }
+    
     // Public API
     return {
         init: init,
         joinGroup: joinGroup,
         leaveGroup: leaveGroup,
         markAsRead: markAsRead,
-        markAllAsRead: markAllAsRead
+        markAllAsRead: markAllAsRead,
+        toggleSound: function(enabled) {
+            localStorage.setItem('notification_sound_enabled', enabled);
+            
+            // Update the toggle if it exists
+            const toggle = document.getElementById('notification-sound-toggle');
+            if (toggle) {
+                toggle.checked = enabled;
+            }
+        },
+        isSoundEnabled: function() {
+            return localStorage.getItem('notification_sound_enabled') !== 'false';
+        }
     };
 })();
 

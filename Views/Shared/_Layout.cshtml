@@ -472,12 +472,12 @@
                             <li class="nav-item dropdown me-3">
                                 <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-bell"></i>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style="display: none;">
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" id="notification-badge" style="display: none;">
                                         0
                                         <span class="visually-hidden">unread notifications</span>
                                     </span>
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 500px; overflow-y: auto;">
                                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                                         <h6 class="mb-0">Notifications</h6>
                                         <div>
@@ -487,6 +487,10 @@
                                     </div>
                                     <div class="notification-list">
                                         <!-- Notifications will be dynamically added here -->
+                                        <div class="p-3 text-center text-muted">
+                                            <i class="bi bi-bell mb-2 fs-4"></i>
+                                            <p>Loading notifications...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </li>
