@@ -41,6 +41,7 @@ builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 builder.Services.AddScoped<IAnswerService, AnswerService>();
 builder.Services.AddScoped<IQuestionRealTimeService, QuestionRealTimeService>();
+builder.Services.AddScoped<IMarkdownService, MarkdownService>();
 
 // Register notification services
 builder.Services.AddSingleton<NotificationBackgroundService>();
@@ -201,6 +202,7 @@ app.MapControllerRoute(
 // Map all SignalR hubs
 app.MapHub<NotificationHub>("/notificationHub");
 app.MapHub<QuestionHub>("/questionHub");
+app.MapHub<ViewCountHub>("/viewCountHub");
 
 // Map new real-time hubs
 app.MapHub<PresenceHub>("/presenceHub");

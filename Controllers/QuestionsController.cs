@@ -17,16 +17,22 @@ namespace DoAnWeb.Controllers
     {
         private readonly IQuestionService _questionService;
         private readonly IAnswerService _answerService;
+        private readonly IMarkdownService _markdownService;
 
         /// <summary>
         /// Constructor with dependency injection for required services
         /// </summary>
         /// <param name="questionService">Service for question operations</param>
         /// <param name="answerService">Service for answer operations</param>
-        public QuestionsController(IQuestionService questionService, IAnswerService answerService)
+        /// <param name="markdownService">Service for processing markdown content</param>
+        public QuestionsController(
+            IQuestionService questionService, 
+            IAnswerService answerService,
+            IMarkdownService markdownService)
         {
             _questionService = questionService;
             _answerService = answerService;
+            _markdownService = markdownService;
         }
 
         /// <summary>
@@ -58,6 +64,30 @@ namespace DoAnWeb.Controllers
             // Apply sorting based on the sort parameter
             questions = SortQuestions(questions, sort);
             ViewData["CurrentSort"] = sort;
+            
+            // For each question, create a plain text excerpt by removing markdown formatting
+            // This is just for display purposes in the list view
+            foreach (var question in questions)
+            {
+                // Remove markdown formatting to create plain text for the excerpt
+                if (!string.IsNullOrEmpty(question.Body))
+                {
+                    // Simple replacements to handle common markdown elements
+                    var plainText = question.Body
+                        .Replace("#", "") // Remove headers
+                        .Replace("*", "") // Remove bold/italic
+                        .Replace("_", "") // Remove underline/italic
+                        .Replace("`", "") // Remove inline code
+                        .Replace("```", "") // Remove code blocks
+                        .Replace("\n", " ") // Replace newlines with spaces
+                        .Replace("\r", ""); // Remove carriage returns
+                    
+                    // Truncate to create excerpt
+                    question.BodyExcerpt = plainText.Length > 200 
+                        ? plainText.Substring(0, 200) + "..." 
+                        : plainText;
+                }
+            }
 
             return View(questions);
         }
@@ -151,7 +181,7 @@ namespace DoAnWeb.Controllers
 
         /// <summary>
         /// Displays the details of a specific question including answers
-        /// Increments the view count for the question
+        /// View count is now handled by SignalR and the ViewCountHub when scrolling to middle of page
         /// </summary>
         /// <param name="id">Question ID</param>
         /// <returns>View with question details or 404 if not found</returns>
@@ -161,6 +191,18 @@ namespace DoAnWeb.Controllers
             if (question == null)
             {
                 return NotFound();
+            }
+
+            // Convert markdown content to HTML
+            question.Body = _markdownService.ConvertToHtml(question.Body);
+
+            // Convert markdown content for all answers
+            if (question.Answers != null)
+            {
+                foreach (var answer in question.Answers)
+                {
+                    answer.Body = _markdownService.ConvertToHtml(answer.Body);
+                }
             }
 
             // Check if user is authenticated and get their vote information
@@ -191,8 +233,7 @@ namespace DoAnWeb.Controllers
                 }
             }
 
-            // Increment view count
-            // _questionService.IncrementViewCount(id);
+            // View count is now handled by SignalR and the ViewCountHub when scrolling to middle of page
 
             return View(question);
         }
@@ -261,11 +302,13 @@ namespace DoAnWeb.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
+            // Store the original markdown content in the database
+            // The HTML rendering will happen at display time
             var answer = new Answer
             {
                 QuestionId = questionId,
                 UserId = userId,
-                Body = Body,
+                Body = Body, // Store the raw markdown
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow,
                 Attachments = new List<AnswerAttachment>()
@@ -506,11 +549,11 @@ namespace DoAnWeb.Controllers
                     if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                         return RedirectToAction("Login", "Account");
 
-                    // Create question
+                    // Create question - store raw markdown content
                     var question = new Question
                     {
                         Title = model.Title,
-                        Body = model.Body,
+                        Body = model.Body, // Store the raw markdown
                         UserId = userId,
                         CreatedDate = DateTime.UtcNow,
                         UpdatedDate = DateTime.UtcNow,
@@ -518,9 +561,9 @@ namespace DoAnWeb.Controllers
                         Attachments = new List<QuestionAttachment>()
                     };
 
-                    // Process tags
+                    // Process tags if provided (now optional)
                     List<string> tagList = null;
-                    if (!string.IsNullOrEmpty(model.Tags))
+                    if (!string.IsNullOrWhiteSpace(model.Tags))
                     {
                         tagList = model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
                             .Select(t => t.Trim())

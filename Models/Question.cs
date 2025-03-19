@@ -28,6 +28,9 @@ public partial class Question
 
     [NotMapped]
     public string? UserVoteType { get; set; }
+    
+    [NotMapped]
+    public string? BodyExcerpt { get; set; }
 
     public virtual ICollection<Answer> Answers { get; set; } = new List<Answer>();
 

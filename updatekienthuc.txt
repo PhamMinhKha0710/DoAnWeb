@@ -357,3 +357,36 @@ Dự án đã được tích hợp tính năng real-time cho câu hỏi và câu
 - **Cấu hình CORS**: Hạn chế chỉ cho phép các origin cụ thể thay vì mở rộng cho tất cả
 - **Kiểm tra tải**: Đảm bảo hệ thống hoạt động tốt dưới tải cao với nhiều kết nối đồng thời
 - **Cấu hình tường lửa**: Đảm bảo mở cổng cần thiết (7133 và 5225) nếu cần thiết
+
+
+Người dùng muốn ứng dụng chỉ tăng số lượt xem (+1) khi người dùng lướt đến giữa trang, chứ không phải chỉ đơn giản là bấm vào trang câu hỏi là đã tăng lượt xem ngay.
+Thực tế, đây chính là tính năng chúng ta đã triển khai rồi. Chúng ta đã tạo:
+SignalR Hub ViewCountHub.cs để xử lý việc tăng lượt xem khi người dùng cuộn đến giữa trang.
+JavaScript view-counter.js để theo dõi sự kiện cuộn và kích hoạt tăng lượt xem khi người dùng cuộn đến giữa trang.
+Đã cập nhật Details.cshtml để sử dụng script này và hiển thị lượt xem theo thời gian thực.
+Đã cập nhật QuestionService.cs để thêm các phương thức UpdateViewCount và GetViewCount.
+Tuy nhiên, tôi cần kiểm tra lại controller để đảm bảo rằng QuestionController.Details() không còn tự động tăng lượt xem khi tải trang, mà để JavaScript xử lý việc này.
+Trong file QuestionsController.cs, chúng ta đã có một dòng bị comment lại:
+Đây đúng là hành vi chúng ta mong muốn. Chúng ta không muốn tăng lượt xem ngay khi tải trang, mà để JavaScript xử lý việc này khi người dùng cuộn đến giữa trang.
+Tôi sẽ giải thích cho người dùng rằng chức năng này đã được triển khai đúng như yêu cầu, và tổng kết lại cách mà chức năng này hoạt động.
+</think>
+Tính năng này đã được triển khai đúng như yêu cầu của bạn! Hệ thống hiện tại đã được thiết lập để chỉ tăng lượt xem (+1) khi người dùng lướt đến giữa trang, chứ không phải chỉ đơn giản bấm vào trang câu hỏi.
+Cách hoạt động của tính năng đếm lượt xem
+Khi người dùng bấm vào câu hỏi lần đầu tiên:
+Trang sẽ tải và hiển thị số lượt xem hiện tại
+Tại thời điểm này, lượt xem CHƯA được tăng lên
+Khi người dùng lướt xuống đến giữa trang:
+JavaScript phát hiện người dùng đã cuộn đến điểm giữa trang
+Gửi yêu cầu tăng lượt xem thông qua SignalR
+Lượt xem được cập nhật trong cơ sở dữ liệu
+Số lượt xem mới được cập nhật trực tiếp trên giao diện
+3. Các trường hợp đặc biệt đã được xử lý:
+Nếu trang quá ngắn (không cần cuộn): hệ thống sẽ tự động tăng lượt xem sau 5 giây nếu người dùng vẫn đang xem
+Sử dụng localStorage để đảm bảo một người dùng không thể tăng lượt xem nhiều lần cho cùng một câu hỏi
+Xử lý đồng bộ lượt xem trong thời gian thực cho tất cả người dùng đang xem trang
+Xác nhận cài đặt
+Tôi đã kiểm tra code và thấy rằng:
+Trong QuestionsController.cs, dòng mã cũ tự động tăng lượt xem đã được comment lại:
+Thay vào đó, việc tăng lượt xem được xử lý hoàn toàn thông qua ViewCountHub.cs và JavaScript, kích hoạt chỉ khi người dùng cuộn đến giữa trang.
+Tính năng này hoạt động chính xác theo yêu cầu của bạn - chỉ tăng lượt xem khi người dùng thực sự đọc nội dung (lướt đến giữa trang) thay vì chỉ đơn giản là bấm vào link.
+Bạn có thể kiểm tra bằng cách bấm vào một câu hỏi, quan sát số lượt xem ban đầu, sau đó lướt xuống giữa trang và xem số lượt xem tăng lên.

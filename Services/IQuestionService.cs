@@ -137,5 +137,19 @@ namespace DoAnWeb.Services
         /// </summary>
         /// <param name="voteId">The vote ID to remove</param>
         void RemoveVote(int voteId);
+        
+        /// <summary>
+        /// Cập nhật lượt xem cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem mới của câu hỏi</returns>
+        int UpdateViewCount(int questionId);
+        
+        /// <summary>
+        /// Lấy số lượt xem hiện tại cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem hiện tại</returns>
+        int GetViewCount(int questionId);
     }
 }

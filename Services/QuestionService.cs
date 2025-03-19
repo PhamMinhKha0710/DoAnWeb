@@ -61,7 +61,7 @@ namespace DoAnWeb.Services
 
         /// <summary>
         /// Retrieves a question with all its details including answers, comments, and tags
-        /// Also increments the view count for the question
+        /// View count handling is now done separately via ViewCountHub
         /// </summary>
         public Question GetQuestionWithDetails(int id)
         {
@@ -407,23 +407,22 @@ namespace DoAnWeb.Services
             var vote = _voteRepository.GetById(voteId);
             if (vote != null)
             {
-                // Store target info before deleting
-                string targetType = vote.TargetType;
+                // Lưu thông tin trước khi xóa
                 int targetId = vote.TargetId;
-                bool isUpvote = vote.IsUpvote;
+                string targetType = vote.TargetType;
+                int scoreChange = vote.IsUpvote ? -1 : 1; // Ngược lại với giá trị ban đầu khi xóa
                 
-                // Delete the vote
                 _voteRepository.Delete(vote);
                 _voteRepository.Save();
-                
-                // Update the target's score
+
+                // Update the score for the affected entity
                 if (targetType == "Question")
                 {
-                    UpdateQuestionScore(targetId, isUpvote ? -1 : 1);
+                    UpdateQuestionScore(targetId, scoreChange);
                 }
                 else if (targetType == "Answer")
                 {
-                    UpdateAnswerScore(targetId, isUpvote ? -1 : 1);
+                    UpdateAnswerScore(targetId, scoreChange);
                 }
             }
         }
@@ -441,6 +440,39 @@ namespace DoAnWeb.Services
                 answer.Score += scoreChange;
                 context.SaveChanges();
             }
+        }
+
+        /// <summary>
+        /// Cập nhật lượt xem cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem mới của câu hỏi</returns>
+        public int UpdateViewCount(int questionId)
+        {
+            var question = _questionRepository.GetById(questionId);
+            if (question == null)
+                throw new ArgumentException("Question not found");
+            
+            // Tăng lượt xem
+            question.ViewCount = (question.ViewCount ?? 0) + 1;
+            _questionRepository.Update(question);
+            _questionRepository.Save();
+            
+            return question.ViewCount ?? 0;
+        }
+        
+        /// <summary>
+        /// Lấy số lượt xem hiện tại cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem hiện tại</returns>
+        public int GetViewCount(int questionId)
+        {
+            var question = _questionRepository.GetById(questionId);
+            if (question == null)
+                throw new ArgumentException("Question not found");
+            
+            return question.ViewCount ?? 0;
         }
     }
 }
