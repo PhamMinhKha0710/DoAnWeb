@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnWeb.Models;
 
@@ -24,6 +25,9 @@ public partial class Question
     public int? Score { get; set; }
 
     public bool IsSaved { get; set; } 
+
+    [NotMapped]
+    public string? UserVoteType { get; set; }
 
     public virtual ICollection<Answer> Answers { get; set; } = new List<Answer>();
 

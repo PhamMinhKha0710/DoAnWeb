@@ -163,6 +163,34 @@ namespace DoAnWeb.Controllers
                 return NotFound();
             }
 
+            // Check if user is authenticated and get their vote information
+            if (User.Identity.IsAuthenticated)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    // Get user's vote on the question
+                    var questionVote = _questionService.GetUserVoteOnQuestion(userId, id);
+                    if (questionVote != null)
+                    {
+                        question.UserVoteType = questionVote.IsUpvote ? "up" : "down";
+                    }
+
+                    // Get user's votes on all answers
+                    if (question.Answers != null)
+                    {
+                        foreach (var answer in question.Answers)
+                        {
+                            var answerVote = _questionService.GetUserVoteOnAnswer(userId, answer.AnswerId);
+                            if (answerVote != null)
+                            {
+                                answer.UserVoteType = answerVote.IsUpvote ? "up" : "down";
+                            }
+                        }
+                    }
+                }
+            }
+
             // Increment view count
             // _questionService.IncrementViewCount(id);
 
@@ -262,15 +290,15 @@ namespace DoAnWeb.Controllers
 
         /// <summary>
         /// Handles voting on a question (upvote or downvote)
-        /// Requires user authentication
+        /// Allows users to upvote, downvote, or remove their vote
         /// </summary>
         /// <param name="id">Question ID</param>
-        /// <param name="isUpvote">True for upvote, false for downvote</param>
+        /// <param name="voteType">Type of vote: "up", "down", or "remove"</param>
         /// <returns>Redirect to question details</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult Vote(int id, bool isUpvote)
+        public IActionResult Vote(int id, string voteType)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
@@ -278,32 +306,75 @@ namespace DoAnWeb.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            try
+            // Get the question
+            var question = _questionService.GetQuestionById(id);
+            if (question == null)
             {
-                _questionService.VoteQuestion(id, userId, isUpvote);
-                TempData["SuccessMessage"] = isUpvote ? "Question upvoted successfully" : "Question downvoted successfully";
+                return NotFound();
             }
-            catch (Exception ex)
+
+            // Check if user has already voted on this question
+            var existingVote = _questionService.GetUserVoteOnQuestion(userId, id);
+
+            if (voteType == "remove" && existingVote != null)
             {
-                TempData["ErrorMessage"] = $"Error voting on question: {ex.Message}";
+                // Remove existing vote
+                _questionService.RemoveVote(existingVote.VoteId);
+                TempData["SuccessMessage"] = "Your vote has been removed.";
+            }
+            else if (voteType == "up" || voteType == "down")
+            {
+                bool isUpvote = voteType == "up";
+
+                if (existingVote != null)
+                {
+                    // User already voted, update their vote
+                    if (existingVote.IsUpvote == isUpvote)
+                    {
+                        // User is trying to vote the same way again, ignore
+                        TempData["ErrorMessage"] = "You have already voted.";
+                    }
+                    else
+                    {
+                        // User is changing their vote type
+                        existingVote.IsUpvote = isUpvote;
+                        existingVote.VoteDate = DateTime.UtcNow;
+                        _questionService.UpdateVote(existingVote);
+                        TempData["SuccessMessage"] = isUpvote ? "Question upvoted successfully." : "Question downvoted successfully.";
+                    }
+                }
+                else
+                {
+                    // New vote
+                    var vote = new Vote
+                    {
+                        UserId = userId,
+                        TargetId = id,
+                        TargetType = "Question",
+                        IsUpvote = isUpvote,
+                        VoteDate = DateTime.UtcNow
+                    };
+
+                    _questionService.AddVote(vote);
+                    TempData["SuccessMessage"] = isUpvote ? "Question upvoted successfully." : "Question downvoted successfully.";
+                }
             }
 
             return RedirectToAction(nameof(Details), new { id });
         }
 
-
         /// <summary>
         /// Handles voting on an answer (upvote or downvote)
-        /// Requires user authentication
+        /// Allows users to upvote, downvote, or remove their vote
         /// </summary>
         /// <param name="answerId">Answer ID</param>
         /// <param name="questionId">Question ID</param>
-        /// <param name="isUpvote">True for upvote, false for downvote</param>
+        /// <param name="voteType">Type of vote: "up", "down", or "remove"</param>
         /// <returns>Redirect to question details</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult VoteAnswer(int answerId, int questionId, bool isUpvote)
+        public IActionResult VoteAnswer(int answerId, int questionId, string voteType)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
@@ -311,14 +382,58 @@ namespace DoAnWeb.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            try
+            // Get the answer
+            var answer = _answerService.GetAnswerById(answerId);
+            if (answer == null)
             {
-                _answerService.VoteAnswer(answerId, userId, isUpvote);
-                TempData["SuccessMessage"] = isUpvote ? "Answer upvoted successfully" : "Answer downvoted successfully";
+                return NotFound();
             }
-            catch (Exception ex)
+
+            // Check if user has already voted on this answer
+            var existingVote = _questionService.GetUserVoteOnAnswer(userId, answerId);
+
+            if (voteType == "remove" && existingVote != null)
             {
-                TempData["ErrorMessage"] = $"Error voting on answer: {ex.Message}";
+                // Remove existing vote
+                _questionService.RemoveVote(existingVote.VoteId);
+                TempData["SuccessMessage"] = "Your vote has been removed.";
+            }
+            else if (voteType == "up" || voteType == "down")
+            {
+                bool isUpvote = voteType == "up";
+
+                if (existingVote != null)
+                {
+                    // User already voted, update their vote
+                    if (existingVote.IsUpvote == isUpvote)
+                    {
+                        // User is trying to vote the same way again, ignore
+                        TempData["ErrorMessage"] = "You have already voted.";
+                    }
+                    else
+                    {
+                        // User is changing their vote type
+                        existingVote.IsUpvote = isUpvote;
+                        existingVote.VoteDate = DateTime.UtcNow;
+                        _questionService.UpdateVote(existingVote);
+                        TempData["SuccessMessage"] = isUpvote ? "Answer upvoted successfully." : "Answer downvoted successfully.";
+                    }
+                }
+                else
+                {
+                    // New vote
+                    var vote = new Vote
+                    {
+                        UserId = userId,
+                        TargetId = answerId,
+                        TargetType = "Answer",
+                        IsUpvote = isUpvote,
+                        VoteDate = DateTime.UtcNow
+                    };
+
+                    _questionService.AddVote(vote);
+                    TempData["SuccessMessage"] = isUpvote ? "Answer upvoted successfully." : "Answer downvoted successfully.";
+                }
             }
 
             return RedirectToAction(nameof(Details), new { id = questionId });

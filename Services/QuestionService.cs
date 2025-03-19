@@ -332,5 +332,115 @@ namespace DoAnWeb.Services
             context.QuestionAttachments.Add(attachment);
             context.SaveChanges();
         }
+
+        /// <summary>
+        /// Gets a user's vote on a specific question
+        /// </summary>
+        public Vote GetUserVoteOnQuestion(int userId, int questionId)
+        {
+            return _voteRepository.Find(v => 
+                v.UserId == userId && 
+                v.TargetId == questionId && 
+                v.TargetType == "Question").FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets a user's vote on a specific answer
+        /// </summary>
+        public Vote GetUserVoteOnAnswer(int userId, int answerId)
+        {
+            return _voteRepository.Find(v => 
+                v.UserId == userId && 
+                v.TargetId == answerId && 
+                v.TargetType == "Answer").FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Adds a new vote
+        /// </summary>
+        public void AddVote(Vote vote)
+        {
+            _voteRepository.Add(vote);
+            _voteRepository.Save();
+            
+            // Update the target's score
+            if (vote.TargetType == "Question")
+            {
+                UpdateQuestionScore(vote.TargetId, vote.IsUpvote ? 1 : -1);
+            }
+            else if (vote.TargetType == "Answer")
+            {
+                UpdateAnswerScore(vote.TargetId, vote.IsUpvote ? 1 : -1);
+            }
+            
+            // Send notification about the new vote if UserId has a value
+            if (vote.UserId.HasValue)
+            {
+                _notificationService.NotifyVoteAsync(vote.TargetType, vote.TargetId, vote.UserId.Value);
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing vote
+        /// </summary>
+        public void UpdateVote(Vote vote)
+        {
+            _voteRepository.Update(vote);
+            _voteRepository.Save();
+            
+            // Update the target's score (double effect: remove old vote, add new vote)
+            if (vote.TargetType == "Question")
+            {
+                UpdateQuestionScore(vote.TargetId, vote.IsUpvote ? 2 : -2);
+            }
+            else if (vote.TargetType == "Answer")
+            {
+                UpdateAnswerScore(vote.TargetId, vote.IsUpvote ? 2 : -2);
+            }
+        }
+
+        /// <summary>
+        /// Removes a vote by its ID
+        /// </summary>
+        public void RemoveVote(int voteId)
+        {
+            var vote = _voteRepository.GetById(voteId);
+            if (vote != null)
+            {
+                // Store target info before deleting
+                string targetType = vote.TargetType;
+                int targetId = vote.TargetId;
+                bool isUpvote = vote.IsUpvote;
+                
+                // Delete the vote
+                _voteRepository.Delete(vote);
+                _voteRepository.Save();
+                
+                // Update the target's score
+                if (targetType == "Question")
+                {
+                    UpdateQuestionScore(targetId, isUpvote ? -1 : 1);
+                }
+                else if (targetType == "Answer")
+                {
+                    UpdateAnswerScore(targetId, isUpvote ? -1 : 1);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Helper method to update an answer's score
+        /// </summary>
+        private void UpdateAnswerScore(int answerId, int scoreChange)
+        {
+            var context = _questionRepository.GetContext() as DevCommunityContext;
+            var answer = context.Answers.FirstOrDefault(a => a.AnswerId == answerId);
+            
+            if (answer != null)
+            {
+                answer.Score += scoreChange;
+                context.SaveChanges();
+            }
+        }
     }
 }
