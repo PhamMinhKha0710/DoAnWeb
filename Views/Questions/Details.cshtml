@@ -9,146 +9,9 @@
     <link rel="stylesheet" href="~/css/questions-fix.css" />
     <link rel="stylesheet" href="~/css/code-blocks.css" />
     <link rel="stylesheet" href="~/css/comment-styles.css" />
+    <link rel="stylesheet" href="~/css/attachment-styles.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
-    <style>
-        .attachment-preview {
-            max-width: 100%;
-            max-height: 300px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.1);
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .attachment-preview:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .vote-button.active {
-            background-color: var(--bs-primary);
-            color: white;
-        }
-        .vote-button.active-downvote {
-            background-color: var(--bs-danger);
-            color: white;
-        }
-        
-        /* Image preview styling */
-        .image-preview {
-            position: relative;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            background-color: #f8f9fa;
-        }
-        
-        .image-preview:hover {
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-        
-        .image-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            object-fit: contain;
-            border-radius: 6px;
-            display: block;
-            margin: 0 auto;
-            padding: 5px;
-            background-color: white;
-        }
-        
-        .image-preview .remove-preview {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #dc3545;
-            border: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
-            z-index: 2;
-        }
-        
-        .image-preview .remove-preview:hover {
-            background: #fff;
-            transform: scale(1.1);
-            color: #ae2029;
-        }
-        
-        #image-preview-container, #answer-image-preview-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        /* Attachment item styling */
-        .attachment-item {
-            transition: all 0.2s ease;
-            background-color: #fff;
-        }
-        
-        .attachment-item:hover {
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
-            transform: translateY(-2px);
-        }
-        
-        .file-icon {
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .image-link {
-            display: block;
-            overflow: hidden;
-            border-radius: 6px;
-        }
-        
-        .image-link img {
-            transition: transform 0.3s ease;
-        }
-        
-        .image-link:hover img {
-            transform: scale(1.05);
-        }
-        
-        /* Lightbox custom styling */
-        .lb-data .lb-caption {
-            font-size: 16px;
-            font-weight: 500;
-        }
-        
-        .lb-data .lb-details {
-            width: 90%;
-            text-align: center;
-            margin: 0 auto;
-        }
-        
-        @@media (max-width: 768px) {
-            .image-preview {
-                margin-bottom: 10px;
-            }
-            .image-preview img {
-                max-height: 150px;
-            }
-        }
-    </style>
 }
 
 <div class="container">
@@ -732,7 +595,9 @@
     <!-- Comment management scripts -->
     <script src="~/js/comment-form.js"></script>
     
-    <!-- Image preview script -->
+    <!-- Image preview handler script -->
+    <script src="~/js/image-preview-handler.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Prism for syntax highlighting
@@ -740,134 +605,9 @@
                 Prism.highlightAll();
             }
             
-            // Initialize lightbox
-            lightbox.option({
-                'resizeDuration': 200,
-                'wrapAround': true,
-                'albumLabel': 'Hình ảnh %1 / %2',
-                'fadeDuration': 300,
-                'imageFadeDuration': 300,
-                'positionFromTop': 80,
-                'showImageNumberLabel': true,
-                'disableScrolling': true,
-                'fitImagesInViewport': true,
-                'maxWidth': Math.min(window.innerWidth - 100, 1200),
-                'maxHeight': window.innerHeight - 160
-            });
-            
-            // Setup for question attachments preview
-            setupImagePreview('file-upload', 'image-preview-container');
-            
-            // Setup for answer attachments preview
-            setupImagePreview('answer-attachments', 'answer-image-preview-container');
-            
             // Khởi tạo tính năng đếm lượt xem
             if (window.ViewCounter) {
                 ViewCounter.init(@Model.QuestionId);
-            }
-            
-            // Function to handle image preview for both question and answer attachments
-            function setupImagePreview(inputId, containerId) {
-                const fileUpload = document.getElementById(inputId);
-                const previewContainer = document.getElementById(containerId);
-                
-                if (!fileUpload || !previewContainer) return;
-                
-                // Handle file selection
-                fileUpload.addEventListener('change', function() {
-                    // Clear previous previews
-                    previewContainer.innerHTML = '';
-                    
-                    // Process each selected file
-                    Array.from(this.files).forEach((file, index) => {
-                        // Check if file is an image
-                        if (file.type.startsWith('image/')) {
-                            // Create preview element
-                            const previewCol = document.createElement('div');
-                            previewCol.className = 'col-md-4 col-sm-6 mb-3';
-                            previewCol.setAttribute('data-file-name', file.name);
-                            
-                            const previewDiv = document.createElement('div');
-                            previewDiv.className = 'image-preview';
-                            
-                            // Create image container with loading indicator
-                            const imgContainer = document.createElement('div');
-                            imgContainer.className = 'position-relative';
-                            
-                            // Add loading spinner
-                            const loadingSpinner = document.createElement('div');
-                            loadingSpinner.className = 'position-absolute top-50 start-50 translate-middle';
-                            loadingSpinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-                            imgContainer.appendChild(loadingSpinner);
-                            
-                            // Create image element
-                            const img = document.createElement('img');
-                            img.alt = file.name;
-                            img.style.opacity = '0';
-                            img.onload = function() {
-                                // Remove spinner and show image when loaded
-                                loadingSpinner.remove();
-                                img.style.opacity = '1';
-                                img.style.transition = 'opacity 0.3s ease';
-                            };
-                            
-                            imgContainer.appendChild(img);
-                            
-                            // Create file name label
-                            const fileNameLabel = document.createElement('div');
-                            fileNameLabel.className = 'small text-center text-truncate px-2 pt-1 pb-2';
-                            fileNameLabel.title = file.name;
-                            fileNameLabel.textContent = file.name;
-                            
-                            // Create remove button
-                            const removeBtn = document.createElement('button');
-                            removeBtn.className = 'remove-preview';
-                            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
-                            removeBtn.type = 'button';
-                            removeBtn.dataset.index = index;
-                            removeBtn.addEventListener('click', function() {
-                                // Animate removal
-                                previewCol.style.transition = 'all 0.3s ease';
-                                previewCol.style.transform = 'scale(0.8)';
-                                previewCol.style.opacity = '0';
-                                
-                                setTimeout(() => {
-                                    previewCol.remove();
-                                    
-                                    // Create a notification about removal
-                                    const notification = document.createElement('div');
-                                    notification.className = 'alert alert-info alert-dismissible fade show mt-2';
-                                    notification.innerHTML = `
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        <strong>${file.name}</strong> will be removed when you submit the form
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    `;
-                                    previewContainer.appendChild(notification);
-                                    
-                                    // Auto remove notification after 3 seconds
-                                    setTimeout(() => {
-                                        notification.classList.remove('show');
-                                        setTimeout(() => notification.remove(), 150);
-                                    }, 3000);
-                                }, 300);
-                            });
-                            
-                            // Read the file and set the image source
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                img.src = e.target.result;
-                            };
-                            reader.readAsDataURL(file);
-                            
-                            // Add elements to the DOM
-                            previewDiv.appendChild(imgContainer);
-                            previewDiv.appendChild(fileNameLabel);
-                            previewDiv.appendChild(removeBtn);
-                            previewCol.appendChild(previewDiv);
-                            previewContainer.appendChild(previewCol);
-                        }
-                    });
-                });
             }
         });
     </script>

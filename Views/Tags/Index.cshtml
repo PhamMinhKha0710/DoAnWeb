@@ -2,23 +2,130 @@
 
 @{
     ViewData["Title"] = "Tags";
+    var searchQuery = ViewBag.SearchQuery as string;
+    var searchResultCount = ViewBag.SearchResultCount ?? Model.Count();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tags.css" />
+    <style>
+        .search-container {
+            position: relative;
+        }
+        
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 10;
+        }
+        
+        .clear-search {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+        
+        .clear-search:hover {
+            opacity: 1;
+            background-color: rgba(108, 117, 125, 0.1);
+        }
+        
+        .search-input {
+            padding-left: 40px;
+            padding-right: 40px;
+            border-radius: 50rem;
+        }
+        
+        .transition {
+            transition: all 0.3s ease;
+        }
+        
+        .rounded-4 {
+            border-radius: 0.8rem;
+        }
+        
+        .rounded-3 {
+            border-radius: 0.6rem;
+        }
+        
+        .tag-card {
+            transition: all 0.3s ease;
+        }
+        
+        .tag-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .no-results-container {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .search-options {
+            margin-top: 10px;
+            text-align: right;
+            font-size: 0.85rem;
+        }
+        
+        .search-info {
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+        }
+    </style>
 }
 
 <div class="container py-5">
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 bg-gradient-primary p-4">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                     <div>
                         <h1 class="text-white fw-bold mb-1">Tags</h1>
-                        <p class="text-white opacity-75 mb-0">Browse all available topics</p>
+                        <p class="text-white opacity-75 mb-0">
+                            Browse all available topics (<span id="tag-count">@Model.Count()</span> tags)
+                        </p>
                     </div>
-                    <div>
-                        <div class="input-group bg-white rounded-pill overflow-hidden">
-                            <input type="text" class="form-control border-0 ps-3" placeholder="Search tags...">
-                            <button class="btn btn-link text-primary px-3" type="button">
-                                <i class="bi bi-search"></i>
-                            </button>
+                    <div class="search-container">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" 
+                               id="tag-search-input"
+                               class="form-control search-input" 
+                               placeholder="Search tags by name or description..."
+                               autocomplete="off"
+                               value="@searchQuery">
+                        <button id="clear-search-button" class="clear-search" title="Clear search">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        
+                        <div class="search-options text-white">
+                            <small>
+                                Client-side search updates as you type. 
+                                <a href="#" id="toggle-server-search" class="text-white text-decoration-underline">Switch to server-side search</a>
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -26,27 +133,66 @@
         </div>
     </div>
     
+    <!-- Server-side search form (hidden by default) -->
+    <div id="server-search-form" class="d-none mb-4">
+        <form asp-action="Search" method="get" class="mb-0">
+            <div class="input-group">
+                <input type="text" name="query" class="form-control" placeholder="Server-side search..." value="@searchQuery">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search me-2"></i> Search
+                </button>
+            </div>
+        </form>
+        <small class="text-muted mt-1 d-block">
+            Server-side search requires a page refresh but can provide more accurate results for complex queries.
+            <a href="#" id="back-to-client-search" class="text-decoration-underline">Back to client-side search</a>
+        </small>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(searchQuery))
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="search-info bg-light">
+                    <div>
+                        <strong>Search results for:</strong> "@searchQuery"
+                        <span class="badge bg-primary">@Model.Count() result(s)</span>
+                    </div>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Clear search
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    
     <div class="row">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-body p-4">
+                    <div id="no-search-results" class="no-results-container @(Model.Any() ? "d-none" : "")">
+                        <i class="bi bi-search fs-1 text-muted mb-3"></i>
+                        <h4 class="text-muted">No tags found</h4>
+                        <p class="text-muted">Try searching with different keywords</p>
+                    </div>
+                    
                     <div class="row g-4">
                         @foreach (var tag in Model)
                         {
-                            <div class="col-md-3">
-                                <div class="card h-100 border-0 shadow-sm rounded-3 hover-shadow transition">
+                            <div class="col-md-3 tag-card">
+                                <div class="card h-100 border-0 shadow-sm rounded-3 transition">
                                     <div class="card-body p-4">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <h5 class="mb-0">
                                                 <a asp-action="Details" asp-route-id="@tag.TagId" class="text-decoration-none">
-                                                    <span class="badge bg-gradient-primary text-white px-3 py-2 rounded-pill">@tag.TagName</span>
+                                                    <span class="badge bg-gradient-primary text-white px-3 py-2 rounded-pill tag-name">@tag.TagName</span>
                                                 </a>
                                             </h5>
                                             <span class="badge bg-light text-secondary rounded-pill">
                                                 <i class="bi bi-hash me-1"></i>@(tag.QuestionTags?.Count() ?? 0)
                                             </span>
                                         </div>
-                                        <p class="card-text text-secondary mb-0">@tag.Description</p>
+                                        <p class="card-text text-secondary mb-0 tag-description">@tag.Description</p>
                                     </div>
                                     <div class="card-footer border-0 bg-transparent pt-0 pb-3 px-4">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -67,19 +213,29 @@
         </div>
     </div>
 </div>
-<!-- 
-@section Stylesheets {
-    <style>
-    .transition {
-        transition: all 0.3s ease;
-    }
+
+@section Scripts {
+    <script src="~/js/tag-search.js"></script>
     
-    .rounded-4 {
-        border-radius: 0.8rem;
-    }
-    
-    .rounded-3 {
-        border-radius: 0.6rem;
-    }
-    </style>
-} -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const clientSearchContainer = document.querySelector('.search-container');
+            const serverSearchForm = document.getElementById('server-search-form');
+            const toggleServerSearch = document.getElementById('toggle-server-search');
+            const backToClientSearch = document.getElementById('back-to-client-search');
+            
+            // Toggle between client and server search
+            toggleServerSearch.addEventListener('click', function(e) {
+                e.preventDefault();
+                clientSearchContainer.classList.add('d-none');
+                serverSearchForm.classList.remove('d-none');
+            });
+            
+            backToClientSearch.addEventListener('click', function(e) {
+                e.preventDefault();
+                serverSearchForm.classList.add('d-none');
+                clientSearchContainer.classList.remove('d-none');
+            });
+        });
+    </script>
+}
