@@ -4,73 +4,128 @@
     ViewData["Title"] = "Login";
 }
 
-<div class="row justify-content-center my-5">
-    <div class="col-md-5">
-        <div class="text-center mb-4">
-            <i class="bi bi-code-square fs-1 text-primary mb-2"></i>
-            <h2 class="fw-bold">Welcome back</h2>
-            <p class="text-muted">Sign in to your DevCommunity account</p>
-        </div>
-        
-        <div class="card auth-card">
-            <div class="card-body p-4">
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success d-flex align-items-center">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        <div>@TempData["SuccessMessage"]</div>
-                    </div>
-                }
-                
-                <form asp-action="Login" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
-                    
-                    <div class="mb-3">
-                        <label asp-for="Username" class="form-label">Username or Email</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-person"></i>
-                            </span>
-                            <input asp-for="Username" class="form-control border-start-0" placeholder="Enter your username or email" />
-                        </div>
-                        <span asp-validation-for="Username" class="text-danger"></span>
+@section Styles {
+    <link rel="stylesheet" href="~/css/account-styles.css" />
+}
+
+<div class="account-page">
+    <div class="account-container">
+        <div class="row g-0">
+            <div class="col-lg-6">
+                <div class="account-card h-100">
+                    <div class="account-header">
+                        <h2 class="account-title">Welcome Back</h2>
+                        <p class="account-subtitle">Sign in to continue to DevCommunity</p>
                     </div>
                     
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <label asp-for="Password" class="form-label">Password</label>
-                            <a href="#" class="text-decoration-none small">Forgot password?</a>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-lock"></i>
-                            </span>
-                            <input asp-for="Password" class="form-control border-start-0" placeholder="Enter your password" />
-                        </div>
-                        <span asp-validation-for="Password" class="text-danger"></span>
+                    <div class="account-body">
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <div>@TempData["SuccessMessage"]</div>
+                            </div>
+                        }
+                        
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>@TempData["ErrorMessage"]</div>
+                            </div>
+                        }
+                        
+                        <form asp-action="Login" method="post">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                            <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
+                            
+                            <div class="account-form-group">
+                                <i class="bi bi-person account-form-icon"></i>
+                                <input asp-for="Username" class="form-control account-form-control" placeholder="Username or Email" autocomplete="username" />
+                                <span asp-validation-for="Username" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="account-form-group">
+                                <i class="bi bi-lock account-form-icon"></i>
+                                <input asp-for="Password" class="form-control account-form-control" placeholder="Password" autocomplete="current-password" />
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-4">
+                                <div class="form-check">
+                                    <input asp-for="RememberMe" class="form-check-input" />
+                                    <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                                </div>
+                                <a href="#" class="text-decoration-none">Forgot password?</a>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary account-submit-btn w-100">
+                                Sign In
+                            </button>
+                            
+                            <div class="social-login">
+                                <a href="#" class="social-btn google">
+                                    <i class="bi bi-google"></i> Google
+                                </a>
+                                <a href="#" class="social-btn github">
+                                    <i class="bi bi-github"></i> GitHub
+                                </a>
+                            </div>
+                        </form>
                     </div>
                     
-                    <div class="mb-4 form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                    <div class="account-footer text-center">
+                        <p class="mb-0">
+                            Don't have an account? 
+                            <a asp-action="Register" class="text-decoration-none fw-medium">Create an account</a>
+                        </p>
                     </div>
-                    
-                    <div class="d-grid gap-2 mb-4">
-                        <button type="submit" class="btn btn-primary py-2">Sign in</button>
-                    </div>
-                    
-                    <div class="text-center">
-                        <p class="mb-0">Don't have an account? <a asp-action="Register" class="text-decoration-none fw-medium">Create account</a></p>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
-        
-        <div class="text-center mt-4">
-            <p class="text-muted small">
-                By signing in, you agree to our <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
-            </p>
+            
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="h-100 bg-primary" style="background: linear-gradient(rgba(13, 110, 253, 0.9), rgba(13, 110, 253, 0.8)), url('/images/code-bg.jpg'); background-size: cover; background-position: center;">
+                    <div class="d-flex flex-column justify-content-center align-items-center h-100 text-white p-5">
+                        <div class="mb-4 text-center">
+                            <i class="bi bi-code-square display-1 mb-3"></i>
+                            <h2 class="fw-bold">DevCommunity</h2>
+                            <p class="lead opacity-75">A place for developers to learn, share & build together</p>
+                        </div>
+                        
+                        <div class="register-benefits w-100">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-question-circle"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Ask Questions</h5>
+                                    <p class="mb-0 opacity-75">Get answers from a community of developers</p>
+                                </div>
+                            </div>
+                            
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-share"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Share Knowledge</h5>
+                                    <p class="mb-0 opacity-75">Help others by sharing your expertise</p>
+                                </div>
+                            </div>
+                            
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-person-badge"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Build Reputation</h5>
+                                    <p class="mb-0 opacity-75">Earn recognition for your contributions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

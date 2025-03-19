@@ -2,56 +2,80 @@
     ViewData["Title"] = "Saved Items";
 }
 
-<div class="container">
-    <h1 class="mb-4">Your Saved Items</h1>
-    
-    <ul class="nav nav-tabs mb-4" id="savedItemsTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab" aria-controls="questions" aria-selected="true">
+@section Styles {
+    <link rel="stylesheet" href="~/css/saved-items-modern.css" />
+}
+
+<div class="saved-container">
+    <div class="saved-header">
+        <div class="saved-header-content">
+            <h1 class="saved-title">Your Collection</h1>
+            <p class="saved-subtitle">Your personalized library of saved content for easy reference and continued learning</p>
+        </div>
+    </div>
+
+    <div class="saved-tabs">
+        <div class="saved-tab-item">
+            <a href="#questions" class="saved-tab-link active" data-bs-toggle="tab" id="questions-tab">
+                <i class="bi bi-bookmark-star"></i>
                 Saved Questions
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="answers-tab" data-bs-toggle="tab" data-bs-target="#answers" type="button" role="tab" aria-controls="answers" aria-selected="false">
+                @if (ViewBag.SavedQuestions != null && ViewBag.SavedQuestions.Count > 0)
+                {
+                    <span class="saved-tab-count">@ViewBag.SavedQuestions.Count</span>
+                }
+            </a>
+        </div>
+        <div class="saved-tab-item">
+            <a href="#answers" class="saved-tab-link" data-bs-toggle="tab" id="answers-tab">
+                <i class="bi bi-chat-square-text"></i>
                 Saved Answers
-            </button>
-        </li>
-    </ul>
+                @if (ViewBag.SavedAnswers != null && ViewBag.SavedAnswers.Count > 0)
+                {
+                    <span class="saved-tab-count">@ViewBag.SavedAnswers.Count</span>
+                }
+            </a>
+        </div>
+    </div>
     
-    <div class="tab-content" id="savedItemsTabContent">
-        <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
+    <div class="saved-tab-content" id="savedItemsTabContent">
+        <div class="saved-tab-pane active" id="questions">
             @if (ViewBag.SavedQuestions != null && ViewBag.SavedQuestions.Count > 0)
             {
-                <div class="list-group">
+                <div class="saved-items-list">
                     @foreach (var question in ViewBag.SavedQuestions)
                     {
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-1">
-                                    <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })" class="text-decoration-none">
+                        <div class="saved-item">
+                            <div class="saved-item-header">
+                                <h3 class="saved-item-title">
+                                    <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })">
                                         @question.Title
                                     </a>
-                                </h5>
-                                <form asp-controller="SavedItems" asp-action="RemoveQuestion" method="post" class="d-inline">
+                                </h3>
+                                <form asp-controller="SavedItems" asp-action="RemoveQuestion" method="post">
                                     <input type="hidden" name="id" value="@question.QuestionId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-bookmark-x"></i> Remove
+                                    <button type="submit" class="saved-remove-btn">
+                                        <i class="bi bi-bookmark-dash"></i> Remove
                                     </button>
                                 </form>
                             </div>
-                            <p class="mb-1 text-truncate" style="max-width: 800px;">
+                            <div class="saved-item-body">
                                 @Html.Raw(question.Body.Length > 200 ? question.Body.Substring(0, 200) + "..." : question.Body)
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    Asked by @question.User?.DisplayName on @question.CreatedDate?.ToString("MMM dd, yyyy")
-                                </small>
-                                <div>
+                            </div>
+                            <div class="saved-item-footer">
+                                <div class="saved-item-meta">
+                                    <div class="saved-item-meta-info">
+                                        <i class="bi bi-person-circle"></i> @question.User?.DisplayName
+                                    </div>
+                                    <div class="saved-item-meta-info">
+                                        <i class="bi bi-calendar-event"></i> @question.CreatedDate?.ToString("MMM dd, yyyy")
+                                    </div>
+                                </div>
+                                <div class="saved-item-tag-group">
                                     @if (question.Tags != null)
                                     {
                                         @foreach (var tag in question.Tags)
                                         {
-                                            <span class="badge bg-light text-dark border me-1">@tag.TagName</span>
+                                            <a asp-controller="Questions" asp-action="Index" asp-route-tag="@tag.TagName" class="saved-item-tag">@tag.TagName</a>
                                         }
                                     }
                                 </div>
@@ -62,46 +86,55 @@
             }
             else
             {
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> You haven't saved any questions yet.
+                <div class="saved-empty">
+                    <i class="bi bi-bookmark-star saved-empty-icon"></i>
+                    <p class="saved-empty-text">Your questions collection is empty</p>
+                    <a asp-controller="Questions" asp-action="Index" class="saved-empty-action">
+                        <i class="bi bi-search"></i> Discover Questions
+                    </a>
                 </div>
             }
         </div>
         
-        <div class="tab-pane fade" id="answers" role="tabpanel" aria-labelledby="answers-tab">
+        <div class="saved-tab-pane" id="answers">
             @if (ViewBag.SavedAnswers != null && ViewBag.SavedAnswers.Count > 0)
             {
-                <div class="list-group">
+                <div class="saved-items-list">
                     @foreach (var answer in ViewBag.SavedAnswers)
                     {
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-1">
-                                    <a href="@Url.Action("Details", "Questions", new { id = answer.Question?.QuestionId })#answer-@answer.AnswerId" class="text-decoration-none">
+                        <div class="saved-item">
+                            <div class="saved-item-header">
+                                <h3 class="saved-item-title">
+                                    <a href="@Url.Action("Details", "Questions", new { id = answer.Question?.QuestionId })#answer-@answer.AnswerId">
                                         Answer to: @answer.Question?.Title
                                     </a>
-                                </h5>
-                                <form asp-controller="SavedItems" asp-action="RemoveAnswer" method="post" class="d-inline">
+                                </h3>
+                                <form asp-controller="SavedItems" asp-action="RemoveAnswer" method="post">
                                     <input type="hidden" name="id" value="@answer.AnswerId" />
                                     <input type="hidden" name="questionId" value="@answer.Question?.QuestionId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-bookmark-x"></i> Remove
+                                    <button type="submit" class="saved-remove-btn">
+                                        <i class="bi bi-bookmark-dash"></i> Remove
                                     </button>
                                 </form>
                             </div>
-                            <p class="mb-1 text-truncate" style="max-width: 800px;">
+                            <div class="saved-item-body">
                                 @Html.Raw(answer.Body.Length > 200 ? answer.Body.Substring(0, 200) + "..." : answer.Body)
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    Answered by @answer.User?.DisplayName on @answer.CreatedDate?.ToString("MMM dd, yyyy")
-                                </small>
-                                <div>
+                            </div>
+                            <div class="saved-item-footer">
+                                <div class="saved-item-meta">
+                                    <div class="saved-item-meta-info">
+                                        <i class="bi bi-person-circle"></i> @answer.User?.DisplayName
+                                    </div>
+                                    <div class="saved-item-meta-info">
+                                        <i class="bi bi-calendar-event"></i> @answer.CreatedDate?.ToString("MMM dd, yyyy")
+                                    </div>
+                                </div>
+                                <div class="saved-item-tag-group">
                                     @if (answer.Question?.Tags != null)
                                     {
                                         @foreach (var tag in answer.Question.Tags)
                                         {
-                                            <span class="badge bg-light text-dark border me-1">@tag.TagName</span>
+                                            <a asp-controller="Questions" asp-action="Index" asp-route-tag="@tag.TagName" class="saved-item-tag">@tag.TagName</a>
                                         }
                                     }
                                 </div>
@@ -112,8 +145,12 @@
             }
             else
             {
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> You haven't saved any answers yet.
+                <div class="saved-empty">
+                    <i class="bi bi-chat-square-text saved-empty-icon"></i>
+                    <p class="saved-empty-text">Your answers collection is empty</p>
+                    <a asp-controller="Questions" asp-action="Index" class="saved-empty-action">
+                        <i class="bi bi-search"></i> Discover Answers
+                    </a>
                 </div>
             }
         </div>
@@ -123,15 +160,29 @@
 @section Scripts {
     <script>
         $(function () {
-            // Initialize Bootstrap tabs
-            var triggerTabList = [].slice.call(document.querySelectorAll('#savedItemsTabs button'))
-            triggerTabList.forEach(function (triggerEl) {
-                var tabTrigger = new bootstrap.Tab(triggerEl)
-                triggerEl.addEventListener('click', function (event) {
-                    event.preventDefault()
-                    tabTrigger.show()
-                })
-            })
+            // Tab functionality with smooth transition
+            $('.saved-tab-link').on('click', function(e) {
+                e.preventDefault();
+                
+                // Update active tab link
+                $('.saved-tab-link').removeClass('active');
+                $(this).addClass('active');
+                
+                // Get target tab pane
+                const targetPane = $($(this).attr('href'));
+                
+                // Fade out current tab pane
+                $('.saved-tab-pane.active').fadeOut(200, function() {
+                    $(this).removeClass('active');
+                    
+                    // Fade in target tab pane
+                    targetPane.fadeIn(200).addClass('active');
+                });
+            });
+            
+            // Initialize - ensure the active tab is visible
+            $('.saved-tab-pane.active').show();
+            $('.saved-tab-pane:not(.active)').hide();
         });
     </script>
 }

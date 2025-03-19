@@ -1,72 +1,358 @@
 @model DoAnWeb.ViewModels.ProfileViewModel
 
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "My Profile";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/account-styles.css" />
+}
+
+<div class="profile-page py-5">
+    <div class="container">
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4>Your Profile</h4>
+            <div class="col-lg-10">
+                <div class="account-card">
+                    <div class="account-header">
+                        <h2 class="account-title">My Profile</h2>
+                        <p class="account-subtitle">Manage your personal information and preferences</p>
             </div>
-            <div class="card-body">
+
+                    <div class="account-body">
                 @if (TempData["SuccessMessage"] != null)
                 {
-                    <div class="alert alert-success">
-                        @TempData["SuccessMessage"]
+                            <div class="alert alert-success d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <div>@TempData["SuccessMessage"]</div>
                     </div>
                 }
                 
-                <form asp-action="Profile" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <form asp-action="Profile" method="post" enctype="multipart/form-data">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <input type="hidden" asp-for="UserId" />
                     
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="text-center mb-3">
-                                <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)" 
-                                     class="img-fluid rounded-circle" style="max-width: 150px;" alt="Profile Picture" />
+                            <div class="row g-4">
+                                <div class="col-lg-4">
+                                    <div class="profile-image-section text-center">
+                                        <div class="profile-image-container mb-3">
+                                            <img id="profile-image-preview" src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)" 
+                                                class="profile-image" alt="Profile Picture" />
+                                            <div class="profile-image-overlay" id="trigger-file-upload">
+                                                <i class="bi bi-camera"></i>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <input type="file" id="profile-image-upload" name="ProfileImage" class="d-none" accept="image/*" />
+                                            <button type="button" id="upload-profile-btn" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-upload me-1"></i> Upload Image
+                                            </button>
+                                            <button type="button" id="remove-profile-btn" class="btn btn-sm btn-outline-danger @(string.IsNullOrEmpty(Model.AvatarUrl) ? "d-none" : "")">
+                                                <i class="bi bi-trash me-1"></i> Remove
+                                            </button>
+                                        </div>
+                                        <input type="hidden" asp-for="AvatarUrl" id="avatar-url-field" />
+                                        <input type="hidden" name="RemoveAvatar" id="remove-avatar-field" value="false" />
+                                        <p class="small text-muted mb-2">Profile visibility: <span class="fw-medium text-success">Public</span></p>
+                                        <p class="small text-muted">Member since: <span class="fw-medium">@DateTime.Now.AddMonths(-3).ToString("MMM yyyy")</span></p>
+                                        
+                                        <div class="profile-stats mt-4">
+                                            <div class="row g-2">
+                                                <div class="col-4">
+                                                    <div class="profile-stat">
+                                                        <div class="stat-value">15</div>
+                                                        <div class="stat-label">Posts</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="profile-stat">
+                                                        <div class="stat-value">142</div>
+                                                        <div class="stat-label">Comments</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="profile-stat">
+                                                        <div class="stat-value">24</div>
+                                                        <div class="stat-label">Tags</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-8">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label asp-for="Username" class="form-label">Username</label>
+                                            <div class="account-form-group">
+                                                <i class="bi bi-person account-form-icon"></i>
+                                                <input asp-for="Username" class="form-control account-form-control" readonly />
+                                                <span asp-validation-for="Username" class="text-danger"></span>
+                                            </div>
+                                            <div class="form-text">Username cannot be changed</div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <label asp-for="DisplayName" class="form-label">Display Name</label>
+                                            <div class="account-form-group">
+                                                <i class="bi bi-person-badge account-form-icon"></i>
+                                                <input asp-for="DisplayName" class="form-control account-form-control" />
+                                                <span asp-validation-for="DisplayName" class="text-danger"></span>
+                                            </div>
+                                            <div class="form-text">How your name appears to other users</div>
+                                        </div>
+                                        
+                                        <div class="col-12">
+                                            <label asp-for="Email" class="form-label">Email Address</label>
+                                            <div class="account-form-group">
+                                                <i class="bi bi-envelope account-form-icon"></i>
+                                                <input asp-for="Email" class="form-control account-form-control" />
+                                                <span asp-validation-for="Email" class="text-danger"></span>
+                                            </div>
+                                            <div class="form-text">Your primary contact email</div>
+                                        </div>
+                                        
+                                        <!-- Email Verification Status -->
+                                        <div class="col-12">
+                                            <div class="alert @(User.FindFirst("IsEmailVerified")?.Value == "true" ? "alert-success" : "alert-warning") d-flex align-items-center">
+                                                <i class="bi @(User.FindFirst("IsEmailVerified")?.Value == "true" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2 fs-5"></i>
+                                                <div class="flex-grow-1">
+                                                    @if (User.FindFirst("IsEmailVerified")?.Value == "true")
+                                                    {
+                                                        <strong>Email Verified</strong>
+                                                        <p class="mb-0 small">Your email has been verified. You have access to all account features.</p>
+                                                    }
+                                                    else
+                                                    {
+                                                        <strong>Email Not Verified</strong>
+                                                        <p class="mb-0 small">Please verify your email to access all account features including password changes and security settings.</p>
+                                                    }
+                                                </div>
+                                                @if (User.FindFirst("IsEmailVerified")?.Value != "true")
+                                                {
+                                                    <div class="ms-2">
+                                                        <form asp-action="ResendVerificationEmail" method="post">
+                                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                                <i class="bi bi-envelope-check me-1"></i> Resend Verification
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-12">
+                                            <label class="form-label">Profile Picture</label>
+                                            <div class="alert alert-light border">
+                                                <div class="d-flex">
+                                                    <div class="me-3 text-primary fs-4">
+                                                        <i class="bi bi-info-circle"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong>About profile pictures</strong>
+                                                        <p class="small mb-0 mt-1">
+                                                            You can upload your own image or provide a URL. Images will be resized to fit the profile picture area.
+                                                            <br>Maximum size: 5MB. Supported formats: JPG, PNG, GIF.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="input-group mb-1">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="bi bi-link"></i>
+                                                </span>
+                                                <input type="text" id="avatar-url-input" class="form-control" placeholder="https://example.com/avatar.jpg" 
+                                                       value="@Model.AvatarUrl" />
+                                                <button type="button" id="use-url-btn" class="btn btn-outline-secondary">Use URL</button>
+                                            </div>
+                                            <div class="form-text">Alternatively, provide a URL to your profile picture</div>
+                                        </div>
+                                        
+                                        <div class="col-12">
+                                            <label asp-for="Bio" class="form-label">About Me</label>
+                                            <textarea asp-for="Bio" class="form-control" rows="4" 
+                                                      placeholder="Tell the community about yourself, your interests, and expertise..."></textarea>
+                                            <span asp-validation-for="Bio" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="col-12 mt-4">
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" class="btn btn-primary account-submit-btn">
+                                                    <i class="bi bi-check2-circle me-2"></i> Save Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="account-card mt-4">
+                    <div class="account-header">
+                        <h4 class="account-title">Account Security</h4>
+                        <p class="account-subtitle">Manage your password and security settings</p>
+                    </div>
+                    
+                    <div class="account-body">
+                        <div class="security-settings">
+                            <div class="security-item mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h5 class="mb-1"><i class="bi bi-key me-2"></i>Password</h5>
+                                        <p class="text-muted small mb-0">Last changed: <span class="fw-medium">3 months ago</span></p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#changePasswordCollapse" aria-expanded="false" 
+                                            @(User.FindFirst("IsEmailVerified")?.Value != "true" ? "disabled" : "")>
+                                        Change Password
+                                    </button>
+                                </div>
+                                
+                                @if (User.FindFirst("IsEmailVerified")?.Value != "true")
+                                {
+                                    <div class="mt-2 alert alert-info d-flex align-items-center">
+                                        <i class="bi bi-info-circle-fill me-2"></i>
+                                        <div>
+                                            <strong>Email verification required</strong>
+                                            <p class="mb-0 small">You must verify your email address before you can change your password.</p>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                <div class="collapse" id="changePasswordCollapse">
+                                    <div class="card card-body border-0 bg-light">
+                                        <form id="change-password-form" asp-action="ChangePassword" method="post">
+                                            <div class="mb-3">
+                                                <label class="form-label">Current Password</label>
+                                                <div class="input-group">
+                                                    <input type="password" name="CurrentPassword" class="form-control" placeholder="Enter your current password" required />
+                                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">New Password</label>
+                                                <div class="input-group">
+                                                    <input type="password" name="NewPassword" id="new-password" class="form-control" placeholder="Enter new password" required />
+                                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
                             </div>
                         </div>
-                        <div class="col-md-8">
                             <div class="mb-3">
-                                <label asp-for="Username" class="form-label"></label>
-                                <input asp-for="Username" class="form-control" readonly />
-                                <span asp-validation-for="Username" class="text-danger"></span>
+                                                <label class="form-label">Confirm New Password</label>
+                                                <div class="input-group">
+                                                    <input type="password" name="ConfirmPassword" class="form-control" placeholder="Confirm new password" required />
+                                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-end">
+                                                <button type="button" class="btn btn-light me-2" data-bs-toggle="collapse" data-bs-target="#changePasswordCollapse">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-check2 me-1"></i> Update Password
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                             
+                            <div class="security-item mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h5 class="mb-1"><i class="bi bi-shield-lock me-2"></i>Two-Factor Authentication</h5>
+                                        <p class="text-muted small mb-0">Status: <span class="badge bg-danger">Disabled</span></p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#twoFactorCollapse" aria-expanded="false">
+                                        Set Up
+                                    </button>
+                                </div>
+                                
+                                <div class="collapse" id="twoFactorCollapse">
+                                    <div class="card card-body border-0 bg-light">
                             <div class="mb-3">
-                                <label asp-for="Email" class="form-label"></label>
-                                <input asp-for="Email" class="form-control" />
-                                <span asp-validation-for="Email" class="text-danger"></span>
+                                            <div class="alert alert-info d-flex">
+                                                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                                                <div>
+                                                    <strong>Enhanced security for your account</strong>
+                                                    <p class="mb-0 small">Two-factor authentication adds an extra layer of security to your account. When enabled, you'll need to provide a verification code in addition to your password when signing in.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-center mb-3">
+                                            <i class="bi bi-shield-lock display-1 text-primary"></i>
+                                        </div>
+                                        <div class="mb-3 text-center">
+                                            <p>To set up two-factor authentication, you'll need to:</p>
+                                            <ol class="text-start">
+                                                <li>Download an authenticator app like Google Authenticator or Microsoft Authenticator</li>
+                                                <li>Scan the QR code that will be provided</li>
+                                                <li>Enter the verification code from the app</li>
+                                            </ol>
+                                        </div>
+                                        <div class="d-flex justify-content-center">
+                                            <button type="button" class="btn btn-light me-2" data-bs-toggle="collapse" data-bs-target="#twoFactorCollapse">
+                                                Cancel
+                                            </button>
+                                            <a href="#" class="btn btn-primary">
+                                                <i class="bi bi-shield-check me-1"></i> Continue Setup
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
+                            <div class="security-item">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h5 class="mb-1"><i class="bi bi-trash me-2"></i>Delete Account</h5>
+                                        <p class="text-muted small mb-0">This action cannot be undone</p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#deleteAccountCollapse" aria-expanded="false">
+                                        Delete Account
+                                    </button>
+                                </div>
+                                
+                                <div class="collapse" id="deleteAccountCollapse">
+                                    <div class="card card-body border-0 bg-light">
+                                        <div class="alert alert-danger">
+                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                            <strong>Warning: This action cannot be undone!</strong>
+                                            <p class="mb-0 mt-1">All your data, including questions, answers, and comments will be permanently deleted.</p>
+                                        </div>
+                                        <form id="delete-account-form" asp-action="DeleteAccount" method="post">
                             <div class="mb-3">
-                                <label asp-for="DisplayName" class="form-label"></label>
-                                <input asp-for="DisplayName" class="form-control" />
-                                <span asp-validation-for="DisplayName" class="text-danger"></span>
+                                                <label class="form-label">Confirm by typing your password</label>
+                                                <input type="password" name="Password" class="form-control" placeholder="Enter your password" required />
+                                            </div>
+                                            <div class="mb-3 form-check">
+                                                <input type="checkbox" class="form-check-input" id="confirmDelete" required />
+                                                <label class="form-check-label" for="confirmDelete">
+                                                    I understand that this action is permanent and cannot be reversed
+                                                </label>
+                                            </div>
+                                            <div class="d-flex justify-content-end">
+                                                <button type="button" class="btn btn-light me-2" data-bs-toggle="collapse" data-bs-target="#deleteAccountCollapse">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="bi bi-trash me-1"></i> Permanently Delete Account
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="AvatarUrl" class="form-label"></label>
-                        <input asp-for="AvatarUrl" class="form-control" placeholder="https://example.com/avatar.jpg" />
-                        <span asp-validation-for="AvatarUrl" class="text-danger"></span>
-                        <small class="form-text text-muted">Enter a URL to your profile picture</small>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="Bio" class="form-label"></label>
-                        <textarea asp-for="Bio" class="form-control" rows="4"></textarea>
-                        <span asp-validation-for="Bio" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -74,4 +360,136 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileImageUpload = document.getElementById('profile-image-upload');
+            const profileImagePreview = document.getElementById('profile-image-preview');
+            const triggerFileUpload = document.getElementById('trigger-file-upload');
+            const uploadProfileBtn = document.getElementById('upload-profile-btn');
+            const removeProfileBtn = document.getElementById('remove-profile-btn');
+            const avatarUrlField = document.getElementById('avatar-url-field');
+            const removeAvatarField = document.getElementById('remove-avatar-field');
+            const avatarUrlInput = document.getElementById('avatar-url-input');
+            const useUrlBtn = document.getElementById('use-url-btn');
+            
+            console.log('Profile page scripts initialized');
+            
+            // Force enctype to multipart/form-data
+            const profileForm = document.querySelector('form[asp-action="Profile"]');
+            if (profileForm) {
+                profileForm.setAttribute('enctype', 'multipart/form-data');
+                console.log('Form enctype set to multipart/form-data');
+                
+                // Debug form submit
+                profileForm.addEventListener('submit', function(e) {
+                    // Check if file is selected
+                    if (profileImageUpload.files && profileImageUpload.files.length > 0) {
+                        const file = profileImageUpload.files[0];
+                        console.log('Submitting form with file:', file.name, 'Size:', file.size, 'Type:', file.type);
+                    } else {
+                        console.log('Submitting form without file. Avatar URL:', avatarUrlField.value);
+                        console.log('Remove avatar flag:', removeAvatarField.value);
+                    }
+                });
+            } else {
+                console.error('Profile form not found!');
+            }
+            
+            triggerFileUpload.addEventListener('click', function() {
+                profileImageUpload.click();
+                console.log('Trigger file upload clicked');
+            });
+            
+            uploadProfileBtn.addEventListener('click', function() {
+                profileImageUpload.click();
+                console.log('Upload profile button clicked');
+            });
+            
+            profileImageUpload.addEventListener('change', function() {
+                console.log('File input changed, files:', this.files?.length || 0);
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    console.log('Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
+                    
+                    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                    if (!validImageTypes.includes(file.type)) {
+                        alert('Please select a valid image file (JPEG, PNG, GIF)');
+                        this.value = '';
+                        return;
+                    }
+                    
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Image size should not exceed 5MB');
+                        this.value = '';
+                        return;
+                    }
+                    
+                    const objectUrl = URL.createObjectURL(file);
+                    profileImagePreview.src = objectUrl;
+                    console.log('Preview image updated with object URL');
+                    
+                    avatarUrlInput.value = '';
+                    avatarUrlField.value = '';
+                    removeAvatarField.value = 'false';
+                    removeProfileBtn.classList.remove('d-none');
+                }
+            });
+            
+            removeProfileBtn.addEventListener('click', function() {
+                profileImagePreview.src = '/images/default-avatar.png';
+                profileImageUpload.value = '';
+                avatarUrlInput.value = '';
+                avatarUrlField.value = '';
+                removeAvatarField.value = 'true';
+                removeProfileBtn.classList.add('d-none');
+                console.log('Profile image removed');
+            });
+            
+            useUrlBtn.addEventListener('click', function() {
+                const url = avatarUrlInput.value.trim();
+                if (url) {
+                    if (!/^https?:\/\/.+/i.test(url)) {
+                        alert('Please enter a valid URL starting with http:// or https://');
+                        return;
+                    }
+                    
+                    console.log('Testing image URL:', url);
+                    const testImage = new Image();
+                    testImage.onload = function() {
+                        profileImagePreview.src = url;
+                        avatarUrlField.value = url;
+                        profileImageUpload.value = '';
+                        removeAvatarField.value = 'false';
+                        removeProfileBtn.classList.remove('d-none');
+                        console.log('Using image URL:', url);
+                    };
+                    testImage.onerror = function() {
+                        alert('Could not load image from the provided URL. Please ensure it points to a valid image file.');
+                        console.error('Failed to load image from URL:', url);
+                    };
+                    testImage.src = url;
+                } else {
+                    alert('Please enter a URL');
+                }
+            });
+            
+            document.querySelectorAll('.toggle-password').forEach(button => {
+                button.addEventListener('click', function() {
+                    const passwordInput = this.previousElementSibling;
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    }
+                });
+            });
+        });
+    </script>
 }

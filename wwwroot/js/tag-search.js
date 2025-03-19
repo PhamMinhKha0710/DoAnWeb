@@ -9,15 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('tag-search-input');
     const tagCards = document.querySelectorAll('.tag-card');
     const noResultsMessage = document.getElementById('no-search-results');
-    const tagCount = document.getElementById('tag-count');
     const totalTagCount = tagCards.length;
     
     if (!searchInput || !tagCards.length) return;
-    
-    // Initialize tag count
-    if (tagCount) {
-        tagCount.textContent = totalTagCount;
-    }
     
     // Handle search input
     searchInput.addEventListener('input', function() {
@@ -26,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Filter tags based on search term
         tagCards.forEach(card => {
-            const tagName = card.querySelector('.tag-name').textContent.toLowerCase();
+            const tagName = card.querySelector('.tag-badge').textContent.toLowerCase();
             const tagDescription = card.querySelector('.tag-description')?.textContent.toLowerCase() || '';
             
             // Check if tag name or description contains the search term
@@ -34,17 +28,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show/hide the card based on match
             if (isMatch) {
-                card.classList.remove('d-none');
+                card.style.display = '';
                 visibleCount++;
             } else {
-                card.classList.add('d-none');
+                card.style.display = 'none';
             }
         });
-        
-        // Update tag count
-        if (tagCount) {
-            tagCount.textContent = visibleCount;
-        }
         
         // Show/hide no results message
         if (noResultsMessage) {
@@ -64,5 +53,30 @@ document.addEventListener('DOMContentLoaded', function() {
             searchInput.dispatchEvent(new Event('input'));
             searchInput.focus();
         });
+    }
+    
+    // Server-side search toggle
+    const toggleServerSearch = document.getElementById('toggle-server-search');
+    const backToClientSearch = document.getElementById('back-to-client-search');
+    const clientSearchContainer = document.querySelector('.tags-search-container');
+    const serverSearchForm = document.getElementById('server-search-form');
+    
+    if (toggleServerSearch && backToClientSearch) {
+        toggleServerSearch.addEventListener('click', function(e) {
+            e.preventDefault();
+            clientSearchContainer.classList.add('d-none');
+            serverSearchForm.classList.remove('d-none');
+        });
+        
+        backToClientSearch.addEventListener('click', function(e) {
+            e.preventDefault();
+            serverSearchForm.classList.add('d-none');
+            clientSearchContainer.classList.remove('d-none');
+        });
+    }
+    
+    // Initial search if there's a query in the input
+    if (searchInput.value.trim() !== '') {
+        searchInput.dispatchEvent(new Event('input'));
     }
 }); 

@@ -1,143 +1,201 @@
 @model DoAnWeb.Models.User
 
 @{
-    ViewData["Title"] = $"User: {Model.DisplayName ?? "Unknown"}";
+    ViewData["Title"] = $"{Model.DisplayName ?? "User Profile"}";
 }
 
-<div class="container py-5">
-    <div class="row">
-        <!-- Hồ sơ người dùng -->
-        <div class="col-md-12 mb-4">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-0">
-                    <div class="bg-gradient-primary text-white p-5">
-                        <div class="d-flex flex-column flex-md-row align-items-center">
-                            <!-- Avatar -->
-                            <div class="position-relative me-md-4 mb-4 mb-md-0">
-                                <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)" 
-                                     class="rounded-circle border border-4 border-white shadow" width="150" height="150" alt="@Model.DisplayName">
-                                <div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-1 border border-3 border-white" 
-                                     style="width: 25px; height: 25px;">
-                                    <i class="bi bi-check-lg"></i>
-                                </div>
-                            </div>
-                            <!-- Thông tin cá nhân -->
-                            <div class="text-center text-md-start">
-                                <h1 class="display-5 fw-bold mb-1">@Model.DisplayName</h1>
-                                <p class="text-white-50 fs-5 mb-3">@($"@{Model.Username}")</p>
-                                <div class="d-flex flex-wrap gap-2 mb-3">
-                                    <span class="badge bg-white text-primary px-3 py-2 rounded-pill fs-6">
-                                        <i class="bi bi-star-fill me-2"></i> @Model.Reputation reputation
-                                    </span>
-                                    <span class="badge bg-white bg-opacity-25 text-white px-3 py-2 rounded-pill fs-6">
-                                        <i class="bi bi-calendar-check me-2"></i> Member since @(Model.CreatedDate?.ToString("MMM yyyy") ?? "unknown")
-                                    </span>
-                                </div>
-                                @if (!string.IsNullOrEmpty(Model.Bio))
-                                {
-                                    <p class="text-white-50 mb-0">@Model.Bio</p>
-                                }
-                            </div>
-                            <!-- Hành động -->
-                            <div class="ms-auto mt-4 mt-md-0 d-none d-md-block">
-                                <button class="btn btn-light rounded-pill px-4 shadow-sm">
-                                    <i class="bi bi-person-plus me-2"></i> Follow
-                                </button>
-                                <button class="btn btn-outline-light rounded-pill px-4 ms-2">
-                                    <i class="bi bi-envelope me-2"></i> Message
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/users-modern.css" />
+}
+
+<div class="user-profile-container">
+    <div class="user-profile-header">
+        <div class="user-profile-info">
+            <div class="user-profile-avatar">
+                <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)" 
+                     alt="@Model.DisplayName">
+                <div class="status-badge">
+                    <i class="bi bi-check-lg"></i>
                 </div>
             </div>
-        </div>
-
-        <!-- Thống kê -->
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-primary"></i> Statistics</h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-4">
-                        @foreach (var stat in new[]
-                        {
-                            new { Label = "Questions", Count = Model.Questions?.Count ?? 0 },
-                            new { Label = "Answers", Count = Model.Answers?.Count ?? 0 },
-                            new { Label = "Repos", Count = Model.Repositories?.Count ?? 0 },
-                            new { Label = "Comments", Count = Model.Comments?.Count ?? 0 }
-                        })
-                        {
-                            <div class="col-6">
-                                <div class="card bg-light border-0 rounded-3">
-                                    <div class="card-body text-center py-3">
-                                        <div class="display-6 fw-bold text-primary mb-1">@stat.Count</div>
-                                        <div class="text-secondary">@stat.Label</div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
+            
+            <div class="user-profile-details">
+                <h1 class="user-profile-name">@Model.DisplayName</h1>
+                <p class="user-profile-username">@($"@{Model.Username}")</p>
+                
+                <div class="user-profile-badges">
+                    <div class="user-profile-badge highlight">
+                        <i class="bi bi-star-fill"></i> @Model.Reputation reputation
                     </div>
+                    <div class="user-profile-badge">
+                        <i class="bi bi-calendar-check"></i> Member since @(Model.CreatedDate?.ToString("MMM yyyy") ?? "unknown")
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Bio))
+                {
+                    <p class="user-profile-bio">@Model.Bio</p>
+                }
+            </div>
+            
+            <div class="user-profile-actions">
+                <button class="user-profile-action-btn">
+                    <i class="bi bi-person-plus"></i> Follow
+                </button>
+                <button class="user-profile-action-btn outline">
+                    <i class="bi bi-envelope"></i> Message
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Statistics -->
+        <div class="col-md-4">
+            <div class="user-profile-stats-card mb-4">
+                <div class="user-profile-stats-header">
+                    <h2 class="user-profile-stats-title">
+                        <i class="bi bi-bar-chart-line"></i> Statistics
+                    </h2>
+                </div>
+                <div class="user-profile-stats-grid">
+                    @foreach (var stat in new[]
+                    {
+                        new { Label = "Questions", Count = Model.Questions?.Count ?? 0, Icon = "bi-question-circle" },
+                        new { Label = "Answers", Count = Model.Answers?.Count ?? 0, Icon = "bi-chat-left-text" },
+                        new { Label = "Repos", Count = Model.Repositories?.Count ?? 0, Icon = "bi-code-square" },
+                        new { Label = "Comments", Count = Model.Comments?.Count ?? 0, Icon = "bi-chat-dots" }
+                    })
+                    {
+                        <div class="user-profile-stat-item">
+                            <div class="user-profile-stat-value">@stat.Count</div>
+                            <div class="user-profile-stat-label">@stat.Label</div>
+                        </div>
+                    }
                 </div>
             </div>
 
             <!-- Tags -->
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-tags me-2 text-primary"></i> Top Tags</h5>
+            <div class="user-profile-stats-card">
+                <div class="user-profile-stats-header">
+                    <h2 class="user-profile-stats-title">
+                        <i class="bi bi-tags"></i> Top Tags
+                    </h2>
                 </div>
-                <div class="card-body p-4">
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach (var tagPair in Model.TopTags())
-                        {
-                            <span class="badge bg-light text-primary px-3 py-2 rounded-pill">@tagPair.Key <small class="text-secondary">×@tagPair.Value</small></span>
-                        }
-                    </div>
+                <div class="user-profile-tags">
+                    @foreach (var tagPair in Model.TopTags())
+                    {
+                        <div class="user-profile-tag">
+                            @tagPair.Key 
+                            <span class="user-profile-tag-count">@tagPair.Value</span>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
 
-        <!-- Hoạt động gần đây -->
+        <!-- Recent Activity -->
         <div class="col-md-8">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i> Recent Activity</h5>
+            <div class="user-profile-activity">
+                <div class="user-profile-activity-header">
+                    <h2 class="user-profile-activity-title">
+                        <i class="bi bi-clock-history"></i> Recent Activity
+                    </h2>
                 </div>
-                <div class="card-body p-0">
-                    @if ((Model.Questions?.Any() ?? false) || (Model.Answers?.Any() ?? false))
-                    {
-                        <div class="activity-list">
-                            @foreach (var question in Model.Questions?.OrderByDescending(q => q.CreatedDate).Take(5) ?? new List<Question>())
-                            {
-                                <div class="activity-item p-4 border-bottom">
-                                    <div class="d-flex">
-                                        <div class="activity-icon bg-light-primary text-primary rounded-circle p-2 me-3">
-                                            <i class="bi bi-question-lg"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="fw-bold mb-0">
-                                                <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })" 
-                                                   class="text-decoration-none text-dark hover-primary">
-                                                    @question.Title
-                                                </a>
-                                            </h6>
-                                            <small class="text-muted">@(question.CreatedDate?.ToString("MMM dd, yyyy") ?? "unknown")</small>
-                                        </div>
+                
+                @if ((Model.Questions?.Any() ?? false) || (Model.Answers?.Any() ?? false))
+                {
+                    <ul class="user-profile-activity-list">
+                        @foreach (var question in Model.Questions?.OrderByDescending(q => q.CreatedDate).Take(5) ?? new List<Question>())
+                        {
+                            <li class="user-profile-activity-item">
+                                <div class="user-profile-activity-content">
+                                    <div class="user-profile-activity-icon">
+                                        <i class="bi bi-question-lg"></i>
+                                    </div>
+                                    <div class="user-profile-activity-info">
+                                        <h3 class="user-profile-activity-title">
+                                            <a href="@Url.Action("Details", "Questions", new { id = question.QuestionId })">
+                                                @question.Title
+                                            </a>
+                                        </h3>
+                                        <p class="user-profile-activity-date">
+                                            <i class="bi bi-calendar3 me-1"></i> @(question.CreatedDate?.ToString("MMM dd, yyyy") ?? "unknown")
+                                        </p>
                                     </div>
                                 </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="d-flex flex-column align-items-center justify-content-center py-5">
-                            <i class="bi bi-inbox text-secondary" style="font-size: 3rem;"></i>
-                            <p class="text-secondary mt-3 mb-0">No recent activity found.</p>
-                        </div>
-                    }
-                </div>
+                            </li>
+                        }
+                        
+                        @foreach (var answer in Model.Answers?.OrderByDescending(a => a.CreatedDate).Take(3) ?? new List<Answer>())
+                        {
+                            <li class="user-profile-activity-item">
+                                <div class="user-profile-activity-content">
+                                    <div class="user-profile-activity-icon">
+                                        <i class="bi bi-chat-left-text"></i>
+                                    </div>
+                                    <div class="user-profile-activity-info">
+                                        <h3 class="user-profile-activity-title">
+                                            <a href="@Url.Action("Details", "Questions", new { id = answer.Question?.QuestionId })#answer-@answer.AnswerId">
+                                                Answered: @answer.Question?.Title
+                                            </a>
+                                        </h3>
+                                        <p class="user-profile-activity-date">
+                                            <i class="bi bi-calendar3 me-1"></i> @(answer.CreatedDate?.ToString("MMM dd, yyyy") ?? "unknown")
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="user-profile-activity-empty">
+                        <i class="bi bi-inbox"></i>
+                        <p class="user-profile-activity-empty-text">No recent activity found.</p>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add subtle animations
+            const animateElements = [
+                '.user-profile-info',
+                '.user-profile-stats-card',
+                '.user-profile-activity'
+            ];
+            
+            animateElements.forEach((selector, index) => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px)';
+                    el.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out';
+                    
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, 100 + (index * 150));
+                });
+            });
+            
+            // Add hover effects for stat items
+            const statItems = document.querySelectorAll('.user-profile-stat-item');
+            statItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+}

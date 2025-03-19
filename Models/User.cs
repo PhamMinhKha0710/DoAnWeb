@@ -32,6 +32,25 @@ public partial class User
     
     public string? ConnectionId { get; set; }
     
+    // Account verification and security properties
+    public bool IsEmailVerified { get; set; } = false;
+    
+    public string? VerificationToken { get; set; }
+    
+    public DateTime? VerificationTokenExpiry { get; set; }
+    
+    public bool IsLocked { get; set; } = false;
+    
+    public int? FailedLoginAttempts { get; set; } = 0;
+    
+    public DateTime? LockoutEnd { get; set; }
+    
+    public DateTime? LastPasswordChangeDate { get; set; }
+    
+    public string? PasswordResetToken { get; set; }
+    
+    public DateTime? PasswordResetTokenExpiry { get; set; }
+    
     public int Reputation
     {
         get

@@ -279,6 +279,17 @@ public partial class DevCommunityContext : DbContext
             entity.Property(e => e.LastLoginDate)
                 .HasColumnType("datetime")
                 .IsRequired(false);
+                
+            // New security columns
+            entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
+            entity.Property(e => e.VerificationToken).HasMaxLength(128);
+            entity.Property(e => e.VerificationTokenExpiry).HasColumnType("datetime");
+            entity.Property(e => e.IsLocked).HasDefaultValue(false);
+            entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
+            entity.Property(e => e.LockoutEnd).HasColumnType("datetime");
+            entity.Property(e => e.LastPasswordChangeDate).HasColumnType("datetime");
+            entity.Property(e => e.PasswordResetToken).HasMaxLength(128);
+            entity.Property(e => e.PasswordResetTokenExpiry).HasColumnType("datetime");
 
             entity.HasMany(d => d.Roles).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(

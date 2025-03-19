@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace DoAnWeb.ViewModels
 {
@@ -20,10 +21,17 @@ namespace DoAnWeb.ViewModels
         public required string DisplayName { get; set; }
 
         [StringLength(500, ErrorMessage = "Bio cannot exceed 500 characters")]
-        public required string Bio { get; set; }
+        public string Bio { get; set; } = string.Empty;
 
         [StringLength(255, ErrorMessage = "Avatar URL cannot exceed 255 characters")]
         [Url(ErrorMessage = "Invalid URL format")]
-        public required string AvatarUrl { get; set; }
+        public string AvatarUrl { get; set; } = string.Empty;
+        
+        // New properties for file upload
+        [Display(Name = "Profile Image")]
+        public IFormFile? ProfileImage { get; set; }
+        
+        // Property to handle avatar removal
+        public bool RemoveAvatar { get; set; } = false;
     }
 }

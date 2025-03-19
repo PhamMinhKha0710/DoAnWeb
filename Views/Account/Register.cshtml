@@ -1,93 +1,188 @@
 @model DoAnWeb.ViewModels.RegisterViewModel
 
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Create Account";
 }
 
-<div class="row justify-content-center my-5">
-    <div class="col-md-5">
-        <div class="text-center mb-4">
-            <i class="bi bi-code-square fs-1 text-primary mb-2"></i>
-            <h2 class="fw-bold">Join the community</h2>
-            <p class="text-muted">Create your DevCommunity account</p>
-        </div>
-        
-        <div class="card auth-card">
-            <div class="card-body p-4">
-                <form asp-action="Register" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/account-styles.css" />
+}
+
+<div class="account-page">
+    <div class="account-container">
+        <div class="row g-0">
+            <div class="col-lg-7">
+                <div class="account-card h-100">
+                    <div class="account-header">
+                        <h2 class="account-title">Join our Community</h2>
+                        <p class="account-subtitle">Create your DevCommunity account to get started</p>
+                    </div>
                     
-                    <div class="mb-3">
-                        <label asp-for="Username" class="form-label">Username</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-person"></i>
-                            </span>
-                            <input asp-for="Username" class="form-control border-start-0" placeholder="Choose a username" />
+                    <div class="account-body">
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>@TempData["ErrorMessage"]</div>
+                            </div>
+                        }
+                        
+                        <form asp-action="Register" method="post" class="row">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                            
+                            <div class="col-md-6">
+                                <div class="account-form-group">
+                                    <i class="bi bi-person account-form-icon"></i>
+                                    <input asp-for="Username" class="form-control account-form-control" placeholder="Username" autocomplete="username" />
+                                    <span asp-validation-for="Username" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="account-form-group">
+                                    <i class="bi bi-person-badge account-form-icon"></i>
+                                    <input asp-for="DisplayName" class="form-control account-form-control" placeholder="Display Name" />
+                                    <span asp-validation-for="DisplayName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="account-form-group">
+                                    <i class="bi bi-envelope account-form-icon"></i>
+                                    <input asp-for="Email" class="form-control account-form-control" placeholder="Email Address" autocomplete="email" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="account-form-group">
+                                    <i class="bi bi-lock account-form-icon"></i>
+                                    <input asp-for="Password" class="form-control account-form-control" placeholder="Password" autocomplete="new-password" />
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="account-form-group">
+                                    <i class="bi bi-lock-fill account-form-icon"></i>
+                                    <input asp-for="ConfirmPassword" class="form-control account-form-control" placeholder="Confirm Password" autocomplete="new-password" />
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="mb-4">
+                                    <div class="alert alert-light border">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-shield-lock me-2 text-primary"></i>
+                                            <strong>Password Requirements</strong>
+                                        </div>
+                                        <ul class="small mb-0 ps-4">
+                                            <li>At least 8 characters long</li>
+                                            <li>At least one uppercase letter (A-Z)</li>
+                                            <li>At least one lowercase letter (a-z)</li>
+                                            <li>At least one number (0-9)</li>
+                                            <li>At least one special character</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="mb-4 form-check">
+                                    <input type="checkbox" class="form-check-input" id="termsCheck" required />
+                                    <label class="form-check-label" for="termsCheck">
+                                        I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary account-submit-btn w-100">
+                                    Create Account
+                                </button>
+                                
+                                <div class="text-center mt-4">
+                                    <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                                        <hr class="flex-grow-1">
+                                        <span class="text-muted">Or sign up with</span>
+                                        <hr class="flex-grow-1">
+                                    </div>
+                                    
+                                    <div class="social-login">
+                                        <a href="#" class="social-btn google">
+                                            <i class="bi bi-google"></i> Google
+                                        </a>
+                                        <a href="#" class="social-btn github">
+                                            <i class="bi bi-github"></i> GitHub
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="account-footer text-center">
+                        <p class="mb-0">
+                            Already have an account? 
+                            <a asp-action="Login" class="text-decoration-none fw-medium">Sign in instead</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="h-100" style="background: url('/images/developer-bg.jpg'); background-size: cover; background-position: center;">
+                    <div class="d-flex flex-column justify-content-center align-items-center h-100 text-white p-5" style="background: rgba(0, 0, 0, 0.7);">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-code-square display-1 mb-3"></i>
+                            <h2 class="fw-bold">Why Join DevCommunity?</h2>
+                            <p class="opacity-75">Connect with millions of developers worldwide</p>
                         </div>
-                        <span asp-validation-for="Username" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label">Email</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-envelope"></i>
-                            </span>
-                            <input asp-for="Email" class="form-control border-start-0" placeholder="Enter your email" />
+                        
+                        <div class="register-benefits w-100">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Community Support</h5>
+                                    <p class="mb-0 opacity-75">Get your questions answered quickly</p>
+                                </div>
+                            </div>
+                            
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Career Growth</h5>
+                                    <p class="mb-0 opacity-75">Improve your skills and get noticed</p>
+                                </div>
+                            </div>
+                            
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-bookmark"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Knowledge Base</h5>
+                                    <p class="mb-0 opacity-75">Save and organize helpful resources</p>
+                                </div>
+                            </div>
+                            
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="bi bi-lightning"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Quick Solutions</h5>
+                                    <p class="mb-0 opacity-75">Find answers to coding challenges fast</p>
+                                </div>
+                            </div>
                         </div>
-                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="DisplayName" class="form-label">Display Name</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-person-badge"></i>
-                            </span>
-                            <input asp-for="DisplayName" class="form-control border-start-0" placeholder="How you'll appear to others" />
-                        </div>
-                        <span asp-validation-for="DisplayName" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-lock"></i>
-                            </span>
-                            <input asp-for="Password" class="form-control border-start-0" placeholder="Create a password" />
-                        </div>
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                        <small class="text-muted">Must be at least 8 characters with letters, numbers and symbols</small>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-lock-fill"></i>
-                            </span>
-                            <input asp-for="ConfirmPassword" class="form-control border-start-0" placeholder="Confirm your password" />
-                        </div>
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="mb-4 form-check">
-                        <input type="checkbox" class="form-check-input" id="termsCheck" required />
-                        <label class="form-check-label" for="termsCheck">
-                            I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
-                        </label>
-                    </div>
-                    
-                    <div class="d-grid gap-2 mb-4">
-                        <button type="submit" class="btn btn-primary py-2">Create account</button>
-                    </div>
-                    
-                    <div class="text-center">
-                        <p class="mb-0">Already have an account? <a asp-action="Login" class="text-decoration-none fw-medium">Sign in</a></p>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
