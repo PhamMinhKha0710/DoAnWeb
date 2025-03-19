@@ -34,4 +34,7 @@ public partial class Answer
     public virtual User? User { get; set; }
     
     public virtual ICollection<AnswerAttachment>? Attachments { get; set; }
+
+    [NotMapped]
+    public virtual ICollection<Comment>? Comments { get; set; }
 }

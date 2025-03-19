@@ -1,5 +1,6 @@
 using DoAnWeb.Models;
 using DoAnWeb.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace DoAnWeb.Services
 {
@@ -15,6 +16,7 @@ namespace DoAnWeb.Services
         private readonly IRepository<Answer> _answerRepository;
         private readonly IQuestionRealTimeService _realTimeService;
         private readonly INotificationService _notificationService;
+        private readonly DevCommunityContext _context;
 
         /// <summary>
         /// Constructor with dependency injection for required repositories
@@ -25,7 +27,8 @@ namespace DoAnWeb.Services
             IRepository<Vote> voteRepository,
             IRepository<Answer> answerRepository,
             IQuestionRealTimeService realTimeService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            DevCommunityContext context)
         {
             _questionRepository = questionRepository;
             _tagRepository = tagRepository;
@@ -33,6 +36,7 @@ namespace DoAnWeb.Services
             _answerRepository = answerRepository;
             _realTimeService = realTimeService;
             _notificationService = notificationService;
+            _context = context;
         }
 
         /// <summary>
@@ -63,9 +67,44 @@ namespace DoAnWeb.Services
         /// Retrieves a question with all its details including answers, comments, and tags
         /// View count handling is now done separately via ViewCountHub
         /// </summary>
-        public Question GetQuestionWithDetails(int id)
+        public Question GetQuestionWithDetails(int questionId)
         {
-            return _questionRepository.GetQuestionWithDetails(id);
+            var question = _context.Questions
+                .Include(q => q.User)
+                .Include(q => q.QuestionTags)
+                    .ThenInclude(qt => qt.Tag)
+                .Include(q => q.Attachments)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.User)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.Attachments)
+                .FirstOrDefault(q => q.QuestionId == questionId);
+
+            if (question != null)
+            {
+                // Load comments for the question
+                var questionComments = _context.Comments
+                    .Include(c => c.User)
+                    .Where(c => c.QuestionId == questionId && c.AnswerId == null)
+                    .OrderBy(c => c.CreatedDate)
+                    .ToList();
+                
+                question.Comments = questionComments;
+
+                // Load comments for each answer
+                foreach (var answer in question.Answers)
+                {
+                    var answerComments = _context.Comments
+                        .Include(c => c.User)
+                        .Where(c => c.AnswerId == answer.AnswerId)
+                        .OrderBy(c => c.CreatedDate)
+                        .ToList();
+                    
+                    answer.Comments = answerComments;
+                }
+            }
+
+            return question;
         }
 
         /// <summary>

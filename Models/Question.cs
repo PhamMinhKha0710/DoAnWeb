@@ -41,4 +41,7 @@ public partial class Question
     public virtual ICollection<QuestionTag> QuestionTags { get; set; } = new List<QuestionTag>();
     
     public virtual ICollection<QuestionAttachment> Attachments { get; set; } = new List<QuestionAttachment>();
+    
+    [NotMapped]
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

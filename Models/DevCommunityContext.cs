@@ -115,6 +115,16 @@ public partial class DevCommunityContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Comments__UserId__75A278F5");
+                
+            entity.HasOne(d => d.Question).WithMany()
+                .HasForeignKey(d => d.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__Comments__QuestionId__75A278F6");
+                
+            entity.HasOne(d => d.Answer).WithMany()
+                .HasForeignKey(d => d.AnswerId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__Comments__AnswerId__75A278F7");
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -334,6 +344,10 @@ public partial class DevCommunityContext : DbContext
         modelBuilder.Entity<ConversationParticipant>(entity =>
         {
             entity.HasKey(e => e.ParticipantId);
+            
+            entity.Property(e => e.IsAdmin).HasDefaultValue(false);
+            entity.Property(e => e.IsArchived).HasDefaultValue(false);
+            entity.Property(e => e.IsMuted).HasDefaultValue(false);
             
             entity.HasOne(d => d.Conversation)
                 .WithMany(p => p.Participants)

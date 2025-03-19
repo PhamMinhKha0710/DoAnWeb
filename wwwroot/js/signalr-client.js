@@ -109,6 +109,19 @@ const DevCommunitySignalR = {
                 }
             });
             
+            // Handle new comments being posted
+            this.questionConnection.on("ReceiveNewComment", (comment) => {
+                console.log("New comment received:", comment);
+                
+                // If we're on the question detail page for this comment's question
+                if (comment.questionId) {
+                    const questionDetailContainer = document.querySelector(`.question-detail[data-question-id="${comment.questionId}"]`);
+                    if (questionDetailContainer) {
+                        this.appendNewComment(comment);
+                    }
+                }
+            });
+            
             // Handle question updates
             this.questionConnection.on("QuestionUpdated", (question) => {
                 console.log("Question updated:", question);
@@ -448,6 +461,135 @@ const DevCommunitySignalR = {
                 setTimeout(() => notification.remove(), 300);
             }
         }, 8000);
+    },
+    
+    /**
+     * Append a new comment to the appropriate container
+     */
+    appendNewComment: function(comment) {
+        console.log("Appending new comment:", comment);
+        
+        let container;
+        if (comment.targetType === "Question") {
+            // Comment on a question
+            container = document.querySelector(`.question-detail[data-question-id="${comment.questionId}"] .question-comments-container`);
+        } else if (comment.targetType === "Answer") {
+            // Comment on an answer
+            container = document.querySelector(`.answer-item[data-answer-id="${comment.targetId}"] .answer-comments-container`);
+        }
+        
+        if (!container) {
+            console.error(`Container not found for comment: ${comment.commentId}, type: ${comment.targetType}, id: ${comment.targetId}`);
+            return;
+        }
+        
+        // Check if comment already exists
+        if (document.querySelector(`#comment-${comment.commentId}`)) {
+            console.log(`Comment ${comment.commentId} already exists, not adding duplicate`);
+            return;
+        }
+        
+        // Create the comment element
+        const commentHtml = this.createCommentHtml(comment);
+        
+        // Check if this is the first comment
+        const noCommentsMsg = container.querySelector('.no-comments-message');
+        if (noCommentsMsg) {
+            noCommentsMsg.remove();
+        }
+        
+        // Add the new comment
+        container.insertAdjacentHTML('beforeend', commentHtml);
+        
+        // Highlight the new comment
+        const newComment = container.querySelector(`#comment-${comment.commentId}`);
+        if (newComment) {
+            newComment.classList.add('highlight-new');
+            
+            // Update comment count
+            const countElement = container.parentElement.querySelector('.comment-count-badge');
+            if (countElement) {
+                const currentCount = parseInt(countElement.textContent);
+                countElement.textContent = isNaN(currentCount) ? '1' : (currentCount + 1).toString();
+            }
+        }
+    },
+    
+    /**
+     * Create HTML for a comment
+     */
+    createCommentHtml: function(comment) {
+        const createdDate = new Date(comment.createdDate).toLocaleString();
+        const avatarUrl = comment.userAvatar || '/images/default-avatar.png';
+        
+        return `
+            <div id="comment-${comment.commentId}" class="comment-item card mb-2">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="comment-avatar me-2">
+                            <img src="${avatarUrl}" class="rounded-circle" alt="${comment.userName}">
+                        </div>
+                        <div class="comment-content flex-grow-1">
+                            <div class="comment-text">${comment.body}</div>
+                            <div class="comment-meta text-muted">
+                                <span class="comment-author">${comment.userName}</span>
+                                <span class="comment-date">${createdDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Submit a comment to the server
+     */
+    submitComment: function(text, targetType, targetId, callback) {
+        if (!text || !targetType || !targetId) {
+            console.error("Missing required parameter for comment submission");
+            if (callback) callback(false, "Missing required parameters");
+            return;
+        }
+        
+        // Create comment data
+        const commentData = {
+            body: text,
+            targetType: targetType,
+            targetId: parseInt(targetId)
+        };
+        
+        // Post to server
+        fetch('/Comments/Create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': this.getAntiForgeryToken()
+            },
+            body: JSON.stringify(commentData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                console.log("Comment submitted successfully:", result);
+                if (callback) callback(true, result);
+            } else {
+                console.error("Error submitting comment:", result.message);
+                if (callback) callback(false, result.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error submitting comment:", error);
+            if (callback) callback(false, "Network error occurred");
+        });
+    },
+    
+    /**
+     * Get anti-forgery token from the page
+     */
+    getAntiForgeryToken: function() {
+        const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+        return tokenElement ? tokenElement.value : '';
     }
 };
 
