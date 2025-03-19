@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnWeb.Models;
 
@@ -24,10 +25,16 @@ public partial class Answer
     public DateTime UpdatedDate { get; set; }
 
     public int? IsUpvote { get; set; }
+    
+    [NotMapped]
+    public string? UserVoteType { get; set; }
 
     public virtual Question? Question { get; set; }
 
     public virtual User? User { get; set; }
     
     public virtual ICollection<AnswerAttachment>? Attachments { get; set; }
+
+    [NotMapped]
+    public virtual ICollection<Comment>? Comments { get; set; }
 }

@@ -33,5 +33,20 @@ namespace DoAnWeb.Services
         
         // Check if email exists
         bool EmailExists(string email);
+        
+        // Change password for a user (returns true if successful)
+        bool ChangePassword(int userId, string currentPassword, string newPassword);
+        
+        // Delete account with password verification (returns true if successful)
+        bool DeleteAccount(int userId, string password);
+        
+        // Email verification methods
+        bool VerifyEmail(string token);
+        
+        // Send verification email
+        bool SendVerificationEmail(int userId);
+        
+        // Generate verification token for email
+        string GenerateEmailVerificationToken(int userId);
     }
 }

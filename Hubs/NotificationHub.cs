@@ -49,6 +49,20 @@ namespace DoAnWeb.Hubs
                         foreach (var questionId in watchedQuestions)
                         {
                             await Groups.AddToGroupAsync(Context.ConnectionId, $"question-{questionId}");
+                            // Also add to the upvote notification group for each question
+                            await Groups.AddToGroupAsync(Context.ConnectionId, $"question-upvote-{questionId}");
+                        }
+
+                        // Find answers the user has posted (to get upvote notifications)
+                        var userAnswers = _context.Answers
+                            .Where(a => a.UserId == userIdInt)
+                            .Select(a => a.AnswerId)
+                            .ToList();
+
+                        // Add to upvote notification groups for their answers
+                        foreach (var answerId in userAnswers)
+                        {
+                            await Groups.AddToGroupAsync(Context.ConnectionId, $"answer-upvote-{answerId}");
                         }
 
                         // Find tags user is watching
@@ -62,6 +76,8 @@ namespace DoAnWeb.Hubs
                         {
                             await Groups.AddToGroupAsync(Context.ConnectionId, $"tag-{tagId}");
                         }
+
+                        _logger.LogInformation($"User {userId} connected to NotificationHub and joined {watchedQuestions.Count} question groups, {userAnswers.Count} answer groups, and {watchedTags.Count} tag groups");
                     }
                 }
                 
@@ -83,7 +99,8 @@ namespace DoAnWeb.Hubs
                 return;
 
             // Security check - only allow joining groups the user should have access to
-            if (groupName.StartsWith("question-") || groupName.StartsWith("tag-"))
+            if (groupName.StartsWith("question-") || groupName.StartsWith("tag-") || 
+                groupName.StartsWith("answer-") || groupName.StartsWith("user-"))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
                 _logger.LogInformation($"User {Context.User?.Identity?.Name} joined group {groupName}");

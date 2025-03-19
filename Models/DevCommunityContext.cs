@@ -115,6 +115,16 @@ public partial class DevCommunityContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Comments__UserId__75A278F5");
+                
+            entity.HasOne(d => d.Question).WithMany()
+                .HasForeignKey(d => d.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__Comments__QuestionId__75A278F6");
+                
+            entity.HasOne(d => d.Answer).WithMany()
+                .HasForeignKey(d => d.AnswerId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__Comments__AnswerId__75A278F7");
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -269,6 +279,17 @@ public partial class DevCommunityContext : DbContext
             entity.Property(e => e.LastLoginDate)
                 .HasColumnType("datetime")
                 .IsRequired(false);
+                
+            // New security columns
+            entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
+            entity.Property(e => e.VerificationToken).HasMaxLength(128);
+            entity.Property(e => e.VerificationTokenExpiry).HasColumnType("datetime");
+            entity.Property(e => e.IsLocked).HasDefaultValue(false);
+            entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
+            entity.Property(e => e.LockoutEnd).HasColumnType("datetime");
+            entity.Property(e => e.LastPasswordChangeDate).HasColumnType("datetime");
+            entity.Property(e => e.PasswordResetToken).HasMaxLength(128);
+            entity.Property(e => e.PasswordResetTokenExpiry).HasColumnType("datetime");
 
             entity.HasMany(d => d.Roles).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(
@@ -334,6 +355,10 @@ public partial class DevCommunityContext : DbContext
         modelBuilder.Entity<ConversationParticipant>(entity =>
         {
             entity.HasKey(e => e.ParticipantId);
+            
+            entity.Property(e => e.IsAdmin).HasDefaultValue(false);
+            entity.Property(e => e.IsArchived).HasDefaultValue(false);
+            entity.Property(e => e.IsMuted).HasDefaultValue(false);
             
             entity.HasOne(d => d.Conversation)
                 .WithMany(p => p.Participants)

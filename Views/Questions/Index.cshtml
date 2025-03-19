@@ -89,7 +89,7 @@
                                         <h5 class="mb-2">
                                             <a asp-action="Details" asp-route-id="@item.QuestionId" class="question-title">@item.Title</a>
                                         </h5>
-                                        <p class="mb-3 question-excerpt">@(item.Body?.Length > 200 ? item.Body.Substring(0, 200) + "..." : item.Body)</p>
+                                        <p class="mb-3 question-excerpt">@item.BodyExcerpt</p>
                                         <div class="d-flex flex-wrap align-items-center">
                                             <div class="tags me-auto mb-2 mb-md-0">
                                                 @if (item.Tags != null)

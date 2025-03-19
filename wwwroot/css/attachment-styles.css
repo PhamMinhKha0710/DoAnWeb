@@ -1,0 +1,136 @@
+.attachment-preview {
+    max-width: 100%;
+    max-height: 300px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.1);
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.attachment-preview:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.vote-button.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+.vote-button.active-downvote {
+    background-color: var(--bs-danger);
+    color: white;
+}
+
+/* Image preview styling */
+.image-preview {
+    position: relative;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.image-preview:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 6px;
+    display: block;
+    margin: 0 auto;
+    padding: 5px;
+    background-color: white;
+}
+
+.image-preview .remove-preview {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #dc3545;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.image-preview .remove-preview:hover {
+    background: #fff;
+    transform: scale(1.1);
+    color: #ae2029;
+}
+
+#image-preview-container, #answer-image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* Attachment item styling */
+.attachment-item {
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.attachment-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
+    transform: translateY(-2px);
+}
+
+.file-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-link {
+    display: block;
+    overflow: hidden;
+    border-radius: 6px;
+}
+
+.image-link img {
+    transition: transform 0.3s ease;
+}
+
+.image-link:hover img {
+    transform: scale(1.05);
+}
+
+/* Lightbox custom styling */
+.lb-data .lb-caption {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.lb-data .lb-details {
+    width: 90%;
+    text-align: center;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .image-preview {
+        margin-bottom: 10px;
+    }
+    .image-preview img {
+        max-height: 150px;
+    }
+} 

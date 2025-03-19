@@ -31,7 +31,14 @@
                 </div>
                 <div class="card-body text-center">
                     <div class="reputation-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
-                        <span class="display-5 fw-bold">1</span>
+                        @if (User.Identity.IsAuthenticated && ViewBag.CurrentUser != null)
+                        {
+                            <span class="display-5 fw-bold">@ViewBag.CurrentUser.Reputation</span>
+                        }
+                        else
+                        {
+                            <span class="display-5 fw-bold">0</span>
+                        }
                     </div>
                     <p class="text-muted">Earn reputation by Asking, Answering and Editing.</p>
                 </div>

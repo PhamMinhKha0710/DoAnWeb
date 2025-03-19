@@ -1,0 +1,303 @@
+/**
+ * Account Pages Styling
+ * 
+ * This stylesheet contains styles for the account-related pages:
+ * - Login
+ * - Register
+ * - Profile
+ */
+
+/* Common Account Page Styles */
+.account-page {
+    min-height: calc(100vh - 60px);
+    background-color: #f8f9fa;
+    padding: 2rem 0;
+}
+
+.account-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.account-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.account-header {
+    padding: 1.5rem 1.5rem 0;
+    text-align: center;
+}
+
+.account-title {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.account-subtitle {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.account-body {
+    padding: 1.5rem;
+}
+
+.account-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Form Elements */
+.account-form-group {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.account-form-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 2;
+}
+
+.account-form-control {
+    padding-left: 2.5rem;
+    height: 48px;
+    border-radius: 8px;
+    border: 1px solid #dce0e5;
+    background-color: #f8f9fa;
+    transition: all 0.2s ease;
+}
+
+.account-form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    background-color: #fff;
+}
+
+/* Buttons */
+.account-submit-btn {
+    height: 48px;
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+}
+
+.account-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Social Login */
+.social-login {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #fff;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.social-btn.google {
+    background-color: #db4437;
+}
+
+.social-btn.github {
+    background-color: #333;
+}
+
+.social-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    color: #fff;
+}
+
+/* Register Page Specific Styles */
+.register-benefits {
+    margin-top: 2rem;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+}
+
+.benefit-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    font-size: 1.25rem;
+}
+
+/* Profile Page Specific Styles */
+.profile-page {
+    background-color: #f8f9fa;
+}
+
+.profile-image-section {
+    padding: 0.5rem;
+}
+
+.profile-image-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.profile-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.profile-image-overlay i {
+    color: #fff;
+    font-size: 2rem;
+}
+
+.profile-image-container:hover .profile-image-overlay {
+    opacity: 1;
+}
+
+.profile-image-container:hover .profile-image {
+    transform: scale(1.05);
+}
+
+.profile-stats {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.profile-stat {
+    padding: 0.5rem 0;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.stat-value {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #0d6efd;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Account Security Styles */
+.security-settings {
+    margin: 0;
+}
+
+.security-item {
+    padding: 1.25rem;
+    border-radius: 8px;
+    background-color: #fff;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.security-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.security-item:last-child {
+    margin-bottom: 0;
+}
+
+.toggle-password {
+    cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .account-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .account-page {
+        padding: 1rem 0;
+    }
+    
+    .social-login {
+        flex-direction: column;
+    }
+    
+    .social-btn {
+        width: 100%;
+    }
+    
+    .profile-image-container {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+/* Login Page Specific Styles */
+@media (min-width: 992px) {
+    .login-right-bg {
+        background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem;
+        color: white;
+    }
+} 

@@ -8,7 +8,10 @@
     <link rel="stylesheet" href="~/css/questions.css" />
     <link rel="stylesheet" href="~/css/questions-fix.css" />
     <link rel="stylesheet" href="~/css/code-blocks.css" />
+    <link rel="stylesheet" href="~/css/comment-styles.css" />
+    <link rel="stylesheet" href="~/css/attachment-styles.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
 }
 
 <div class="container">
@@ -51,7 +54,7 @@
                                 <i class="bi bi-arrow-up-circle me-1"></i> @Model.Score votes
                             </span>
                             <span class="badge bg-secondary rounded-pill px-3 py-2">
-                                <i class="bi bi-eye me-1"></i> @Model.ViewCount views
+                                <i class="bi bi-eye me-1"></i> <span class="view-count">@Model.ViewCount</span> views
                             </span>
                             <span class="badge bg-info rounded-pill px-3 py-2">
                                 <i class="bi bi-info-circle me-1"></i> @Model.Status
@@ -74,6 +77,62 @@
                         @Html.Raw(Model.Body)
                     </div>
 
+                    <!-- Question Comments Section -->
+                    <div class="comment-section question-comments-section mt-3">
+                        <div class="comment-header">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Bình luận<span class="comment-count-badge comment-count">@(Model.Comments?.Count ?? 0)</span>
+                        </div>
+                        <div class="question-comments-container">
+                            @if (Model.Comments != null && Model.Comments.Any())
+                            {
+                                foreach (var comment in Model.Comments.OrderBy(c => c.CreatedDate))
+                                {
+                                    <div class="comment-item" data-comment-id="@comment.CommentId">
+                                        <div class="card-body py-2">
+                                            <div class="d-flex">
+                                                <div class="comment-avatar me-2">
+                                                    <img src="@(comment.User?.AvatarUrl ?? "/images/default-avatar.png")" 
+                                                         alt="@comment.User?.DisplayName" class="rounded-circle">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="comment-content">
+                                                        <div class="comment-text">@comment.Body</div>
+                                                    </div>
+                                                    <div class="comment-meta">
+                                                        <span class="comment-author">@(comment.User?.DisplayName ?? "Unknown user")</span>
+                                                        <span class="mx-1">•</span>
+                                                        <span class="comment-date" title="@comment.CreatedDate?.ToString("g")">
+                                                            @(comment.CreatedDate.HasValue ? (DateTime.Now - comment.CreatedDate.Value).TotalDays < 1 ? 
+                                                                comment.CreatedDate.Value.ToString("HH:mm") : 
+                                                                comment.CreatedDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                                              : "unknown date")
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="no-comments-message">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
+                            }
+                        </div>
+                        
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="comment-controls">
+                                <a href="#" class="add-comment-link" 
+                                   data-target-type="Question" data-target-id="@Model.QuestionId">
+                                    <i class="bi bi-chat"></i> Viết bình luận...
+                                </a>
+                                <div class="comment-form-container d-none"></div>
+                            </div>
+                        }
+                    </div>
+
                     <div class="mb-4">
                         @foreach (var tag in Model.Tags)
                         {
@@ -84,27 +143,62 @@
                     @if (Model.Attachments != null && Model.Attachments.Any())
                     {
                         <div class="mb-4">
-                            <h5 class="mb-2"><i class="bi bi-paperclip me-2"></i>Attachments</h5>
-                            <div class="attachment-list">
+                            <h5 class="mb-3"><i class="bi bi-paperclip me-2"></i>Attachments</h5>
+                            <div class="attachment-list row">
                                 @foreach (var attachment in Model.Attachments)
                                 {
-                                    <div class="attachment-item p-2 border rounded mb-2 d-flex align-items-center">
-                                        @{
-                                            string fileIcon = "bi-file-earmark";
-                                            if (attachment.FileName.EndsWith(".pdf")) fileIcon = "bi-file-earmark-pdf";
-                                            else if (attachment.FileName.EndsWith(".doc") || attachment.FileName.EndsWith(".docx")) fileIcon = "bi-file-earmark-word";
-                                            else if (attachment.FileName.EndsWith(".zip") || attachment.FileName.EndsWith(".rar")) fileIcon = "bi-file-earmark-zip";
-                                            else if (attachment.FileName.EndsWith(".txt")) fileIcon = "bi-file-earmark-text";
-                                            else if (attachment.FileName.EndsWith(".jpg") || attachment.FileName.EndsWith(".jpeg") || attachment.FileName.EndsWith(".png") || attachment.FileName.EndsWith(".gif")) fileIcon = "bi-file-earmark-image";
-                                        }
-                                        <i class="bi @fileIcon me-2 fs-5"></i>
-                                        <div class="flex-grow-1">
-                                            <div class="fw-medium">@attachment.FileName</div>
-                                            <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <div class="attachment-item p-3 border rounded h-100 shadow-sm">
+                                            @{
+                                                string fileIcon = "bi-file-earmark";
+                                                bool isImage = false;
+                                                string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+                                                
+                                                if (attachment.FileName.EndsWith(".pdf")) fileIcon = "bi-file-earmark-pdf";
+                                                else if (attachment.FileName.EndsWith(".doc") || attachment.FileName.EndsWith(".docx")) fileIcon = "bi-file-earmark-word";
+                                                else if (attachment.FileName.EndsWith(".zip") || attachment.FileName.EndsWith(".rar")) fileIcon = "bi-file-earmark-zip";
+                                                else if (attachment.FileName.EndsWith(".txt")) fileIcon = "bi-file-earmark-text";
+                                                else if (imageExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext)))
+                                                {
+                                                    fileIcon = "bi-file-earmark-image";
+                                                    isImage = true;
+                                                }
+                                            }
+                                            
+                                            @if (isImage)
+                                            {
+                                                <div class="text-center mb-3">
+                                                    <a href="@attachment.FilePath" data-lightbox="question-images" data-title="@attachment.FileName" class="image-link">
+                                                        <img src="@attachment.FilePath" alt="@attachment.FileName" class="attachment-preview img-fluid" />
+                                                    </a>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <i class="bi @fileIcon me-2 fs-5"></i>
+                                                        <span class="fw-medium text-truncate d-inline-block" style="max-width: 150px;" title="@attachment.FileName">@attachment.FileName</span>
+                                                        <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                                    </div>
+                                                    <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
+                                                        <i class="bi bi-download me-1"></i> Download
+                                                    </a>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex align-items-center h-100">
+                                                    <div class="file-icon me-3 text-primary">
+                                                        <i class="bi @fileIcon fs-1"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-medium text-truncate" title="@attachment.FileName">@attachment.FileName</div>
+                                                        <div class="text-muted small mb-2">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                                        <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
+                                                            <i class="bi bi-download me-1"></i> Download
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            }
                                         </div>
-                                        <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
-                                            <i class="bi bi-download me-1"></i> Download
-                                        </a>
                                     </div>
                                 }
                             </div>
@@ -156,24 +250,28 @@
                     {
                         <div class="d-flex justify-content-between">
                             <div class="action-buttons">
-                                <form asp-action="Vote" method="post" class="d-inline">
+                                @{
+                                    bool hasUpvoted = Model.UserVoteType == "up";
+                                    bool hasDownvoted = Model.UserVoteType == "down";
+                                }
+                                <form asp-action="Vote" method="post" class="d-inline vote-form">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <input type="hidden" name="isUpvote" value="true" />
-                                    <button type="submit" class="btn btn-outline-success btn-sm">
-                                        <i class="bi bi-arrow-up"></i> Upvote
+                                    <input type="hidden" name="voteType" value="@(hasUpvoted ? "remove" : "up")" class="vote-type-input" />
+                                    <button type="submit" class="btn @(hasUpvoted ? "btn-primary" : "btn-outline-success") btn-sm vote-button @(hasUpvoted ? "active" : "")">
+                                        <i class="bi @(hasUpvoted ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> @(hasUpvoted ? "Upvoted" : "Upvote")
                                     </button>
                                 </form>
-                                <form asp-action="Vote" method="post" class="d-inline">
+                                <form asp-action="Vote" method="post" class="d-inline vote-form">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <input type="hidden" name="isUpvote" value="false" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        <i class="bi bi-arrow-down"></i> Downvote
+                                    <input type="hidden" name="voteType" value="@(hasDownvoted ? "remove" : "down")" class="vote-type-input" />
+                                    <button type="submit" class="btn @(hasDownvoted ? "btn-danger" : "btn-outline-danger") btn-sm vote-button @(hasDownvoted ? "active-downvote" : "")">
+                                        <i class="bi @(hasDownvoted ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> @(hasDownvoted ? "Downvoted" : "Downvote")
                                     </button>
                                 </form>
                                 <form asp-controller="SavedItems" asp-action="SaveQuestion" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
                                     <button type="submit" class="btn btn-outline-primary btn-sm @(Model.IsSaved ? "saved" : "")" title="@(Model.IsSaved ? "Unsave this question" : "Save this question")">
-                                        <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i> Save
+                                        <i class="bi @(Model.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> @(Model.IsSaved ? "Question saved" : "Save question")
                                     </button>
                                 </form>
                             </div>
@@ -220,22 +318,121 @@
                                     @Html.Raw(answer.Body)
                                 </div>
                                 
+                                <!-- Answer Comments Section -->
+                                <div class="comment-section answer-comments-section mt-3">
+                                    <div class="comment-header">
+                                        <i class="bi bi-chat-text me-1"></i>
+                                        Bình luận<span class="comment-count-badge comment-count">@(answer.Comments?.Count ?? 0)</span>
+                                    </div>
+                                    <div class="answer-comments-container">
+                                        @if (answer.Comments != null && answer.Comments.Any())
+                                        {
+                                            foreach (var comment in answer.Comments.OrderBy(c => c.CreatedDate))
+                                            {
+                                                <div class="comment-item" data-comment-id="@comment.CommentId">
+                                                    <div class="card-body py-2">
+                                                        <div class="d-flex">
+                                                            <div class="comment-avatar me-2">
+                                                                <img src="@(comment.User?.AvatarUrl ?? "/images/default-avatar.png")" 
+                                                                     alt="@comment.User?.DisplayName" class="rounded-circle">
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <div class="comment-content">
+                                                                    <div class="comment-text">@comment.Body</div>
+                                                                </div>
+                                                                <div class="comment-meta">
+                                                                    <span class="comment-author">@(comment.User?.DisplayName ?? "Unknown user")</span>
+                                                                    <span class="mx-1">•</span>
+                                                                    <span class="comment-date" title="@comment.CreatedDate?.ToString("g")">
+                                                                        @(comment.CreatedDate.HasValue ? (DateTime.Now - comment.CreatedDate.Value).TotalDays < 1 ? 
+                                                                            comment.CreatedDate.Value.ToString("HH:mm") : 
+                                                                            comment.CreatedDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                                                          : "unknown date")
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="no-comments-message">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
+                                        }
+                                    </div>
+                                    
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <div class="comment-controls">
+                                            <a href="#" class="add-comment-link" 
+                                               data-target-type="Answer" data-target-id="@answer.AnswerId">
+                                                <i class="bi bi-chat"></i> Viết bình luận...
+                                            </a>
+                                            <div class="comment-form-container d-none"></div>
+                                        </div>
+                                    }
+                                </div>
+                                
                                 @if (answer.Attachments != null && answer.Attachments.Any())
                                 {
                                     <div class="mt-3 mb-3">
-                                        <h6 class="mb-2"><i class="bi bi-image me-2"></i>Attachments</h6>
-                                        <div class="attachment-list">
+                                        <h6 class="mb-3"><i class="bi bi-image me-2"></i>Attachments</h6>
+                                        <div class="attachment-list row">
                                             @foreach (var attachment in answer.Attachments)
                                             {
-                                                <div class="attachment-item p-2 border rounded mb-2 d-flex align-items-center">
-                                                    <i class="bi bi-file-earmark-image me-2 fs-5"></i>
-                                                    <div class="flex-grow-1">
-                                                        <div class="fw-medium">@attachment.FileName</div>
-                                                        <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                                <div class="col-md-6 col-lg-4 mb-3">
+                                                    <div class="attachment-item p-3 border rounded h-100 shadow-sm">
+                                                        @{
+                                                            bool isImage = false;
+                                                            string fileIcon = "bi-file-earmark";
+                                                            string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+                                                            
+                                                            if (attachment.FileName.EndsWith(".pdf")) fileIcon = "bi-file-earmark-pdf";
+                                                            else if (attachment.FileName.EndsWith(".doc") || attachment.FileName.EndsWith(".docx")) fileIcon = "bi-file-earmark-word";
+                                                            else if (attachment.FileName.EndsWith(".zip") || attachment.FileName.EndsWith(".rar")) fileIcon = "bi-file-earmark-zip";
+                                                            else if (attachment.FileName.EndsWith(".txt")) fileIcon = "bi-file-earmark-text";
+                                                            else if (imageExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext)))
+                                                            {
+                                                                fileIcon = "bi-file-earmark-image";
+                                                                isImage = true;
+                                                            }
+                                                        }
+                                                        
+                                                        @if (isImage)
+                                                        {
+                                                            <div class="text-center mb-3">
+                                                                <a href="@attachment.FilePath" data-lightbox="answer-@answer.AnswerId-images" data-title="@attachment.FileName" class="image-link">
+                                                                    <img src="@attachment.FilePath" alt="@attachment.FileName" class="attachment-preview img-fluid" />
+                                                                </a>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between">
+                                                                <div>
+                                                                    <i class="bi @fileIcon me-2 fs-5"></i>
+                                                                    <span class="fw-medium text-truncate d-inline-block" style="max-width: 150px;" title="@attachment.FileName">@attachment.FileName</span>
+                                                                    <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                                                </div>
+                                                                <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
+                                                                    <i class="bi bi-download me-1"></i> Download
+                                                                </a>
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="d-flex align-items-center h-100">
+                                                                <div class="file-icon me-3 text-primary">
+                                                                    <i class="bi @fileIcon fs-1"></i>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <div class="fw-medium text-truncate" title="@attachment.FileName">@attachment.FileName</div>
+                                                                    <div class="text-muted small mb-2">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
+                                                                    <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
+                                                                        <i class="bi bi-download me-1"></i> Download
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        }
                                                     </div>
-                                                    <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
-                                                        <i class="bi bi-download me-1"></i> Download
-                                                    </a>
                                                 </div>
                                             }
                                         </div>
@@ -252,26 +449,30 @@
                                         @if (User.Identity?.IsAuthenticated == true)
                                         {
                                             <div class="action-buttons">
-                                                <form asp-action="VoteAnswer" method="post" class="d-inline">
+                                                @{
+                                                    bool hasUpvotedAnswer = answer.UserVoteType == "up";
+                                                    bool hasDownvotedAnswer = answer.UserVoteType == "down";
+                                                }
+                                                <form asp-action="VoteAnswer" method="post" class="d-inline vote-form">
                                                     <input type="hidden" name="answerId" value="@answer.AnswerId" />
                                                     <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                    <input type="hidden" name="isUpvote" value="true" />
-                                                    <button type="submit" class="btn btn-outline-success btn-sm">
-                                                        <i class="bi bi-arrow-up"></i> Upvote
+                                                    <input type="hidden" name="voteType" value="@(hasUpvotedAnswer ? "remove" : "up")" class="vote-type-input" />
+                                                    <button type="submit" class="btn @(hasUpvotedAnswer ? "btn-primary" : "btn-outline-success") btn-sm vote-button @(hasUpvotedAnswer ? "active" : "")">
+                                                        <i class="bi @(hasUpvotedAnswer ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> @(hasUpvotedAnswer ? "Upvoted" : "Upvote")
                                                     </button>
                                                 </form>
-                                                <form asp-action="VoteAnswer" method="post" class="d-inline">
+                                                <form asp-action="VoteAnswer" method="post" class="d-inline vote-form">
                                                     <input type="hidden" name="answerId" value="@answer.AnswerId" />
                                                     <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                    <input type="hidden" name="isUpvote" value="false" />
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                        <i class="bi bi-arrow-down"></i> Downvote
+                                                    <input type="hidden" name="voteType" value="@(hasDownvotedAnswer ? "remove" : "down")" class="vote-type-input" />
+                                                    <button type="submit" class="btn @(hasDownvotedAnswer ? "btn-danger" : "btn-outline-danger") btn-sm vote-button @(hasDownvotedAnswer ? "active-downvote" : "")">
+                                                        <i class="bi @(hasDownvotedAnswer ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> @(hasDownvotedAnswer ? "Downvoted" : "Downvote")
                                                     </button>
                                                 </form>
                                                 <form asp-controller="SavedItems" asp-action="SaveAnswer" method="post" class="d-inline">
                                                     <input type="hidden" name="id" value="@answer.AnswerId" />
                                                     <button type="submit" class="btn btn-outline-primary btn-sm @(answer.IsSaved ? "saved" : "")" title="@(answer.IsSaved ? "Unsave this answer" : "Save this answer")">
-                                                        <i class="bi @(answer.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i> Save
+                                                        <i class="bi @(answer.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> @(answer.IsSaved ? "Answer saved" : "Save answer")
                                                     </button>
                                                 </form>
                                                 @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString() && !answer.IsAccepted)
@@ -310,7 +511,7 @@
                         <h4 class="mb-0">Your Answer</h4>
                     </div>
                     <div class="card-body">
-                        <form asp-action="Answer" method="post">
+                        <form asp-action="Answer" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="questionId" value="@Model.QuestionId" />
                             <div class="mb-3">
                                 <div class="markdown-editor-container">
@@ -329,9 +530,14 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Attachments</label>
-                                <input type="file" name="AnswerAttachments" class="form-control" multiple />
+                                <input type="file" name="AnswerAttachments" class="form-control" multiple id="answer-attachments" />
                                 <div class="form-text">
                                     <i class="bi bi-image me-1"></i> Supported formats: JPG, JPEG, PNG, GIF, BMP, WEBP (Max 5MB per file)
+                                </div>
+                                
+                                <!-- Answer Image Preview Container -->
+                                <div id="answer-image-preview-container" class="mt-3 row g-2">
+                                    <!-- Preview images will be inserted here by JavaScript -->
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end">
@@ -349,6 +555,12 @@
 
 
 @section Scripts {
+    <!-- SignalR core library -->
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    
+    <!-- View Counter Script -->
+    <script src="~/js/view-counter.js"></script>
+    
     <!-- Markdown parser library -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
@@ -362,6 +574,9 @@
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
     
+    <!-- Lightbox for image viewing -->
+    <script src="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/js/lightbox.min.js"></script>
+    
     <!-- Custom Markdown editor implementation -->
     <script src="~/js/markdown-editor.js"></script>
     
@@ -374,11 +589,25 @@
     <!-- Question notification handler for real-time updates -->
     <script src="~/js/question-notification-handler.js"></script>
     
+    <!-- SignalR client for real-time communication -->
+    <script src="~/js/signalr-client.js"></script>
+    
+    <!-- Comment management scripts -->
+    <script src="~/js/comment-form.js"></script>
+    
+    <!-- Image preview handler script -->
+    <script src="~/js/image-preview-handler.js"></script>
+    
     <script>
-        // Highlight all code blocks on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Prism for syntax highlighting
             if (typeof Prism !== 'undefined') {
                 Prism.highlightAll();
+            }
+            
+            // Khởi tạo tính năng đếm lượt xem
+            if (window.ViewCounter) {
+                ViewCounter.init(@Model.QuestionId);
             }
         });
     </script>

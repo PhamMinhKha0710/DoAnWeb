@@ -13,11 +13,15 @@
     <link rel="stylesheet" href="~/css/tags.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/signalr-styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DoAnWeb.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" integrity="sha512-vswe+cgvic/XBoF1OcM/TeJ2FW0OofqAVdCZiEYkd6dwGXthvkSFWOoGGJgS2CW70VK5dQM5Oh+7ne47s74VTg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         :root {
             --primary-color: #0d6efd;
             --hover-color: #0b5ed7;
             --border-color: #e3e6e8;
+            --code-bg-color: #2d2d2d;
+            --inline-code-bg-color: #f5f5f5;
+            --inline-code-color: #d63384;
         }
 
         body {
@@ -259,6 +263,157 @@
             border-radius: 50%;
             margin-right: 10px;
         }
+
+        /* Code Block Styling */
+        pre {
+            background-color: var(--code-bg-color);
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            overflow: auto;
+            position: relative;
+            padding-top: 2.5rem;
+            max-height: 500px;
+        }
+        
+        pre code {
+            color: #f8f8f2;
+            font-family: 'Consolas', 'Monaco', 'Andale Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-shadow: none;
+            white-space: pre;
+            word-break: normal;
+            word-spacing: normal;
+            tab-size: 4;
+        }
+        
+        /* Inline code styling */
+        p code, li code, td code {
+            background-color: var(--inline-code-bg-color);
+            color: var(--inline-code-color);
+            font-family: 'Consolas', 'Monaco', 'Andale Mono', monospace;
+            font-size: 0.9em;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+        
+        /* Language indicator on code blocks */
+        pre[data-language]::before {
+            content: attr(data-language);
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #3a3a3a;
+            color: #eee;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border-bottom-left-radius: 6px;
+            border-top-right-radius: 6px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        
+        /* Cải thiện code blocks cho các ngôn ngữ cụ thể */
+        pre[data-language="html"]::before,
+        pre[data-language="markup"]::before,
+        pre[data-language="xml"]::before {
+            background-color: #e34c26;
+        }
+        
+        pre[data-language="css"]::before {
+            background-color: #264de4;
+        }
+        
+        pre[data-language="javascript"]::before,
+        pre[data-language="js"]::before {
+            background-color: #f7df1e;
+            color: #000;
+        }
+        
+        pre[data-language="typescript"]::before,
+        pre[data-language="ts"]::before {
+            background-color: #007acc;
+        }
+        
+        pre[data-language="csharp"]::before,
+        pre[data-language="cs"]::before {
+            background-color: #9B4F96;
+        }
+        
+        pre[data-language="python"]::before,
+        pre[data-language="py"]::before {
+            background-color: #306998;
+        }
+        
+        pre[data-language="java"]::before {
+            background-color: #ED8B00;
+            color: #000;
+        }
+        
+        pre[data-language="php"]::before {
+            background-color: #8892BF;
+        }
+        
+        pre[data-language="sql"]::before {
+            background-color: #ffda44;
+            color: #000;
+        }
+        
+        pre[data-language="cpp"]::before,
+        pre[data-language="c"]::before {
+            background-color: #00599C;
+        }
+        
+        pre[data-language="ruby"]::before {
+            background-color: #CC342D;
+        }
+        
+        pre[data-language="go"]::before {
+            background-color: #00ADD8;
+        }
+        
+        pre[data-language="rust"]::before {
+            background-color: #DEA584;
+        }
+        
+        pre[data-language="json"]::before {
+            background-color: #000;
+            color: #fff;
+        }
+        
+        pre[data-language="bash"]::before,
+        pre[data-language="shell"]::before {
+            background-color: #3e474a;
+        }
+        
+        pre[data-language="markdown"]::before,
+        pre[data-language="md"]::before {
+            background-color: #755838;
+        }
+        
+        pre[data-language="yaml"]::before {
+            background-color: #cb171e;
+        }
+        
+        pre[data-language="plaintext"]::before {
+            background-color: #808080;
+        }
+        
+        /* Blockquote styling for Markdown */
+        blockquote {
+            border-left: 4px solid var(--primary-color);
+            margin: 1.5rem 0;
+            padding: 0.5rem 1rem;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        
+        blockquote p:last-child {
+            margin-bottom: 0;
+        }
     </style>
     @await RenderSectionAsync("Styles", required: false)
     @RenderSection("Stylesheets", required: false)
@@ -317,12 +472,12 @@
                             <li class="nav-item dropdown me-3">
                                 <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-bell"></i>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style="display: none;">
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" id="notification-badge" style="display: none;">
                                         0
                                         <span class="visually-hidden">unread notifications</span>
                                     </span>
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 500px; overflow-y: auto;">
                                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                                         <h6 class="mb-0">Notifications</h6>
                                         <div>
@@ -332,6 +487,10 @@
                                     </div>
                                     <div class="notification-list">
                                         <!-- Notifications will be dynamically added here -->
+                                        <div class="p-3 text-center text-muted">
+                                            <i class="bi bi-bell mb-2 fs-4"></i>
+                                            <p>Loading notifications...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </li>
@@ -440,8 +599,92 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/saved-items.js" asp-append-version="true"></script>
     <script src="~/js/signalr-client.js" asp-append-version="true"></script>
-    <!-- Notification Handler -->
+    <script src="~/js/comment-form.js" asp-append-version="true"></script>
     <script src="~/js/notification-handler.js" asp-append-version="true"></script>
+    <!-- Syntax Highlighting with Prism.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9D9tQ3nBL/YDR65JnEF4iHyRUMikEZgR6V3SJvNiTQs3kdJTbPuUF+cbd5y/RCQ8JJ8CXZsSl+6hWdLQXqYw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" integrity="sha512-SkmBfuA2hqjzEVpmnMt/LINrjop3GKWqsuLSSB3e7iBmYK7JuWw4ldmmxwD9mdm2IRTTi0OxSAfEGvgEi0i2Kw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Initialize Prism for dynamically added code blocks -->
+    <script>
+        // Re-initialize Prism highlighting after content changes (e.g., after AJAX loads)
+        function refreshPrism() {
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+        }
+        
+        // Cấu hình tải tự động các ngôn ngữ
+        Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/';
+        
+        // Hàm này sẽ xác định ngôn ngữ thông qua class của thẻ code
+        function detectAndHighlightCode() {
+            document.querySelectorAll('pre code').forEach((block) => {
+                // Nếu không có class language nào, gán mặc định là text
+                if (!block.className.includes('language-')) {
+                    block.className += ' language-plaintext';
+                }
+                
+                // Trích xuất tên ngôn ngữ từ class
+                const langClass = block.className.match(/language-(\w+)/);
+                if (langClass && langClass[1]) {
+                    // Xác định ngôn ngữ từ class
+                    const language = langClass[1].toLowerCase();
+                    
+                    // Thêm data-language cho pre tag nếu chưa có thuộc tính này
+                    const preTag = block.parentElement;
+                    if (preTag && preTag.tagName === 'PRE' && !preTag.hasAttribute('data-language')) {
+                        preTag.setAttribute('data-language', language);
+                    }
+                }
+            });
+            
+            // Chạy Prism
+            Prism.highlightAll();
+        }
+        
+        // Theo dõi thay đổi DOM để xử lý các code blocks mới được thêm vào
+        function setupMutationObserver() {
+            // Khởi tạo MutationObserver để theo dõi thay đổi DOM
+            const observer = new MutationObserver(function(mutations) {
+                let needsRefresh = false;
+                
+                mutations.forEach(function(mutation) {
+                    // Kiểm tra nếu có node mới được thêm vào
+                    if (mutation.addedNodes.length) {
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            const node = mutation.addedNodes[i];
+                            // Kiểm tra node có phải là element và có chứa pre code không
+                            if (node.nodeType === 1 && (
+                                node.tagName === 'PRE' || 
+                                node.querySelector('pre') || 
+                                node.querySelector('code')
+                            )) {
+                                needsRefresh = true;
+                                break;
+                            }
+                        }
+                    }
+                });
+                
+                // Nếu cần, refresh Prism
+                if (needsRefresh) {
+                    detectAndHighlightCode();
+                }
+            });
+            
+            // Bắt đầu theo dõi thay đổi trên toàn bộ body
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+        
+        // Run after page load
+        $(document).ready(function() {
+            detectAndHighlightCode();
+            setupMutationObserver();
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

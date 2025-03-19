@@ -1,0 +1,227 @@
+/* Comments styling - Facebook style */
+.comment-section {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e6e6e6;
+}
+
+.comment-header {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #65676b;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.comment-count-badge {
+    background-color: #e4e6eb;
+    color: #65676b;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 0.1rem 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.question-comments-container,
+.answer-comments-container {
+    margin-top: 8px;
+}
+
+.comment-item {
+    transition: background-color 0.3s ease;
+    margin-bottom: 8px;
+    background: transparent;
+    border: none !important;
+}
+
+.comment-item .card-body {
+    padding: 8px 0;
+    background: transparent;
+}
+
+.comment-content {
+    background-color: #f0f2f5;
+    border-radius: 18px;
+    padding: 8px 12px;
+    position: relative;
+}
+
+.comment-item .comment-avatar img {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.comment-item .comment-text {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: #050505;
+    word-break: break-word;
+}
+
+.comment-item .comment-meta {
+    font-size: 0.75rem;
+    color: #65676b;
+    margin-top: 4px;
+}
+
+.comment-item .comment-author {
+    font-weight: 600;
+    color: #050505;
+}
+
+.comment-item.highlight-new {
+    animation: highlight-comment 2s ease;
+}
+
+@keyframes highlight-comment {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.no-comments-message {
+    font-size: 0.8rem;
+    color: #65676b;
+    font-style: italic;
+    padding: 0.5rem 0;
+}
+
+.add-comment-link {
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: #65676b;
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.add-comment-link:hover {
+    text-decoration: none;
+    color: #1877f2;
+}
+
+.add-comment-link i {
+    margin-right: 4px;
+}
+
+/* Comment form styling */
+.comment-form-container {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.comment-form {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.comment-form .form-group {
+    flex: 1;
+    margin-bottom: 0;
+    margin-right: 8px;
+}
+
+.comment-form .comment-text {
+    border-radius: 20px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    background-color: #f0f2f5;
+    border: 1px solid #dddfe2;
+    box-shadow: none;
+    height: 36px;
+    resize: none;
+}
+
+.comment-form .comment-text:focus {
+    outline: none;
+    border-color: #1877f2;
+    box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+}
+
+.comment-form .btn {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comment-form .btn-primary {
+    background-color: #1877f2;
+    border-color: #1877f2;
+}
+
+.comment-form .btn-primary:hover {
+    background-color: #166fe5;
+    border-color: #166fe5;
+}
+
+.comment-form .btn-secondary {
+    background-color: #e4e6eb;
+    border-color: #e4e6eb;
+    color: #65676b;
+}
+
+.comment-form .btn-secondary:hover {
+    background-color: #d8dadf;
+    border-color: #d8dadf;
+}
+
+/* Reaction options (could be added later) */
+.comment-reactions {
+    display: flex;
+    margin-top: 4px;
+    margin-left: 40px;
+    font-size: 0.75rem;
+}
+
+.comment-react {
+    color: #65676b;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.comment-react:hover {
+    text-decoration: underline;
+    color: #1877f2;
+}
+
+/* Current user avatar for new comment */
+.current-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 576px) {
+    .comment-item .comment-avatar img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .comment-content {
+        padding: 6px 10px;
+    }
+    
+    .comment-item .comment-text {
+        font-size: 0.8rem;
+    }
+    
+    .comment-form .comment-text {
+        height: 32px;
+        font-size: 0.8rem;
+    }
+    
+    .comment-form .btn {
+        width: 32px;
+        height: 32px;
+    }
+} 

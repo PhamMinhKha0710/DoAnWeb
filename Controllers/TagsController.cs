@@ -19,9 +19,23 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: Tags
-        public IActionResult Index()
+        public IActionResult Index(string searchQuery = null)
         {
-            var tags = _context.Tags.Include(t => t.QuestionTags).ToList();
+            IQueryable<Tag> tagsQuery = _context.Tags.Include(t => t.QuestionTags);
+            
+            // Apply search filter if provided
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                searchQuery = searchQuery.Trim().ToLower();
+                tagsQuery = tagsQuery.Where(t => 
+                    t.TagName.ToLower().Contains(searchQuery) || 
+                    (t.Description != null && t.Description.ToLower().Contains(searchQuery))
+                );
+                
+                ViewBag.SearchQuery = searchQuery;
+            }
+            
+            var tags = tagsQuery.ToList();
             return View(tags);
         }
 
@@ -162,6 +176,31 @@ namespace DoAnWeb.Controllers
             }
 
             return RedirectToAction("Index", "Home");
+        }
+        
+        // GET: Tags/Search
+        public IActionResult Search(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            
+            query = query.Trim().ToLower();
+            
+            // Search tags by name or description
+            var tags = _context.Tags
+                .Include(t => t.QuestionTags)
+                .Where(t => 
+                    t.TagName.ToLower().Contains(query) || 
+                    (t.Description != null && t.Description.ToLower().Contains(query))
+                )
+                .ToList();
+                
+            ViewBag.SearchQuery = query;
+            ViewBag.SearchResultCount = tags.Count;
+            
+            return View("Index", tags);
         }
     }
 }

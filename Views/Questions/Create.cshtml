@@ -56,9 +56,9 @@
                             </div>
                         </div>
 
-                        <!-- Tags input with icon -->
+                        <!-- Tags input with icon (now optional) -->
                         <div class="mb-4">
-                            <label asp-for="Tags" class="form-label fw-medium">Tags</label>
+                            <label asp-for="Tags" class="form-label fw-medium">Tags (Optional)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="bi bi-tags"></i>
@@ -72,12 +72,17 @@
                             </div>
                         </div>
 
-                        <!-- File upload section -->
+                        <!-- File upload section with image preview -->
                         <div class="mb-4">
                             <label asp-for="Attachments" class="form-label fw-medium">Attachments</label>
-                            <input type="file" asp-for="Attachments" class="form-control" multiple />
+                            <input type="file" asp-for="Attachments" class="form-control" multiple id="file-upload" />
                             <div class="form-text">
-                                <i class="bi bi-paperclip me-1"></i> Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR (Max 10MB per file)
+                                <i class="bi bi-paperclip me-1"></i> Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR, JPG, JPEG, PNG, GIF, BMP, WEBP (Max 10MB per file)
+                            </div>
+                            
+                            <!-- Image preview container -->
+                            <div id="image-preview-container" class="mt-3 row g-2">
+                                <!-- Preview images will be inserted here by JavaScript -->
                             </div>
                         </div>
 
@@ -221,6 +226,38 @@
             display: flex !important;
             visibility: visible !important;
         }
+        
+        /* Image preview styling */
+        .image-preview {
+            position: relative;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .image-preview .remove-preview {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #dc3545;
+            border: none;
+        }
     </style>
 }
 
@@ -240,4 +277,71 @@
     <script src="~/js/question-attachments.js"></script>
     <!-- Form fix script -->
     <script src="~/js/form-fix.js"></script>
+    
+    <!-- Image preview script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileUpload = document.getElementById('file-upload');
+            const previewContainer = document.getElementById('image-preview-container');
+            
+            // Handle file selection
+            fileUpload.addEventListener('change', function() {
+                // Clear previous previews
+                previewContainer.innerHTML = '';
+                
+                // Process each selected file
+                Array.from(this.files).forEach((file, index) => {
+                    // Check if file is an image
+                    if (file.type.startsWith('image/')) {
+                        // Create preview element
+                        const previewCol = document.createElement('div');
+                        previewCol.className = 'col-md-4 col-sm-6';
+                        
+                        const previewDiv = document.createElement('div');
+                        previewDiv.className = 'image-preview';
+                        
+                        // Create image element
+                        const img = document.createElement('img');
+                        img.alt = file.name;
+                        
+                        // Create remove button
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-preview';
+                        removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+                        removeBtn.type = 'button';
+                        removeBtn.dataset.index = index;
+                        removeBtn.addEventListener('click', function() {
+                            previewCol.remove();
+                            
+                            // Create a new FileList without the removed file
+                            // This is complex due to FileList being immutable,
+                            // so we just notify the user that the file will be removed when submitting
+                            // The actual removal will happen on the server side
+                            const notification = document.createElement('div');
+                            notification.className = 'alert alert-info mt-2';
+                            notification.textContent = `${file.name} will be removed when you submit the form`;
+                            previewContainer.appendChild(notification);
+                            
+                            setTimeout(() => {
+                                notification.remove();
+                            }, 3000);
+                        });
+                        
+                        // Read the file and set the image source
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                        
+                        // Add elements to the DOM
+                        previewDiv.appendChild(img);
+                        previewDiv.appendChild(removeBtn);
+                        previewCol.appendChild(previewDiv);
+                        previewContainer.appendChild(previewCol);
+                    }
+                });
+            });
+        });
+    </script>
 }

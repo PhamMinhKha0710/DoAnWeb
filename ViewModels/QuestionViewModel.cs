@@ -37,9 +37,10 @@ namespace DoAnWeb.ViewModels
         /// <summary>
         /// Comma-separated list of tags to categorize the question
         /// These will be parsed and stored as separate tag entities
+        /// Optional field - not required to create a question
         /// </summary>
         [Display(Name = "Tags (comma separated)")]
-        public required string Tags { get; set; }
+        public string? Tags { get; set; }
 
         /// <summary>
         /// ID of the user who created the question

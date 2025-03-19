@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnWeb.Models;
 
@@ -25,6 +26,12 @@ public partial class Question
 
     public bool IsSaved { get; set; } 
 
+    [NotMapped]
+    public string? UserVoteType { get; set; }
+    
+    [NotMapped]
+    public string? BodyExcerpt { get; set; }
+
     public virtual ICollection<Answer> Answers { get; set; } = new List<Answer>();
 
     public virtual User? User { get; set; }
@@ -34,4 +41,7 @@ public partial class Question
     public virtual ICollection<QuestionTag> QuestionTags { get; set; } = new List<QuestionTag>();
     
     public virtual ICollection<QuestionAttachment> Attachments { get; set; } = new List<QuestionAttachment>();
+    
+    [NotMapped]
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

@@ -8,11 +8,12 @@ namespace DoAnWeb.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IUserService _userService;
 
-
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IUserService userService)
     {
         _logger = logger;
+        _userService = userService;
     }
 
     public IActionResult Index()
@@ -52,6 +53,14 @@ public class HomeController : Controller
         
         ViewBag.RecentQuestions = recentQuestions;
         ViewBag.RecentRepositories = recentRepositories;
+        
+        // Get current user if authenticated
+        if (User.Identity.IsAuthenticated)
+        {
+            string username = User.Identity.Name;
+            var currentUser = _userService.GetUserByUsername(username);
+            ViewBag.CurrentUser = currentUser;
+        }
         
         return View();
     }

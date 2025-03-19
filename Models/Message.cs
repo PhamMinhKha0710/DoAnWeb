@@ -16,7 +16,7 @@ namespace DoAnWeb.Models
         
         public int SenderId { get; set; }
         
-        public string Content { get; set; }
+        public string Content { get; set; } = null!;
         
         public DateTime SentAt { get; set; }
         
@@ -26,9 +26,9 @@ namespace DoAnWeb.Models
         
         // Navigation properties
         [ForeignKey("ConversationId")]
-        public virtual Conversation Conversation { get; set; }
+        public virtual Conversation Conversation { get; set; } = null!;
         
         [ForeignKey("SenderId")]
-        public virtual User Sender { get; set; }
+        public virtual User Sender { get; set; } = null!;
     }
 } 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnWeb.Models;
 
@@ -20,6 +21,13 @@ public partial class Vote
     public bool IsUpvote { get; set; }
 
     public DateTime? CreatedDate { get; set; }
+    
+    [NotMapped]
+    public DateTime VoteDate 
+    {
+        get { return CreatedDate ?? DateTime.Now; }
+        set { CreatedDate = value; }
+    }
 
     public virtual User? User { get; set; }
 

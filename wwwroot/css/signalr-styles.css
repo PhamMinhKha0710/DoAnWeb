@@ -168,4 +168,157 @@
 .new-answer {
     position: relative;
     transition: background-color 0.5s ease;
+}
+
+/* Notification Styles */
+.notification-dropdown {
+    padding: 0;
+}
+
+.notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.3s;
+    color: #212529;
+    text-decoration: none;
+    display: block;
+}
+
+.notification-item:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    text-decoration: none;
+}
+
+.notification-item.unread {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.notification-item .notification-title {
+    font-weight: 600;
+    margin-bottom: 3px;
+    font-size: 0.95rem;
+}
+
+.notification-item .notification-message {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 3px;
+}
+
+.notification-item .notification-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.notification-badge {
+    font-size: 0.6rem;
+    transform: translate(-50%, -50%) !important;
+}
+
+.mark-all-read {
+    color: #0d6efd;
+    font-size: 0.85rem;
+}
+
+.mark-all-read:hover {
+    color: #0a58ca;
+}
+
+.notification-icon i {
+    color: #6c757d;
+}
+
+.notification-icon i.bi-arrow-up-circle {
+    color: #198754;
+}
+
+.notification-icon i.bi-chat-text {
+    color: #0dcaf0;
+}
+
+.notification-icon i.bi-check-circle {
+    color: #198754;
+}
+
+.notification-icon i.bi-chat-dots {
+    color: #6c757d;
+}
+
+.notification-icon i.bi-at {
+    color: #fd7e14;
+}
+
+.mark-read-btn {
+    color: #6c757d;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.notification-item:hover .mark-read-btn {
+    opacity: 1;
+}
+
+/* Toast notification styles */
+.toast-container {
+    z-index: 1050;
+}
+
+.toast {
+    min-width: 350px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.toast .toast-header {
+    padding: 0.5rem 0.75rem;
+}
+
+.toast .toast-body {
+    padding: 0.75rem;
+}
+
+/* Connection status indicator */
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    z-index: 1040;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+.connection-status.connecting {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.connection-status.disconnected {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+}
+
+/* Notification sound toggle */
+.notification-sound-toggle {
+    padding: 8px 16px;
+}
+
+.notification-sound-toggle .form-check-input {
+    cursor: pointer;
 } 

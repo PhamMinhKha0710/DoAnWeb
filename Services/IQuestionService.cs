@@ -103,5 +103,53 @@ namespace DoAnWeb.Services
         /// </summary>
         /// <param name="attachment">The attachment to add</param>
         void AddAnswerAttachment(AnswerAttachment attachment);
+
+        /// <summary>
+        /// Gets a user's vote on a specific question
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="questionId">The question ID</param>
+        /// <returns>The vote if found, otherwise null</returns>
+        Vote GetUserVoteOnQuestion(int userId, int questionId);
+
+        /// <summary>
+        /// Gets a user's vote on a specific answer
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="answerId">The answer ID</param>
+        /// <returns>The vote if found, otherwise null</returns>
+        Vote GetUserVoteOnAnswer(int userId, int answerId);
+
+        /// <summary>
+        /// Adds a new vote
+        /// </summary>
+        /// <param name="vote">The vote to add</param>
+        void AddVote(Vote vote);
+
+        /// <summary>
+        /// Updates an existing vote
+        /// </summary>
+        /// <param name="vote">The vote to update</param>
+        void UpdateVote(Vote vote);
+
+        /// <summary>
+        /// Removes a vote by its ID
+        /// </summary>
+        /// <param name="voteId">The vote ID to remove</param>
+        void RemoveVote(int voteId);
+        
+        /// <summary>
+        /// Cập nhật lượt xem cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem mới của câu hỏi</returns>
+        int UpdateViewCount(int questionId);
+        
+        /// <summary>
+        /// Lấy số lượt xem hiện tại cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem hiện tại</returns>
+        int GetViewCount(int questionId);
     }
 }

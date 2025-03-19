@@ -1,5 +1,6 @@
 using DoAnWeb.Models;
 using DoAnWeb.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace DoAnWeb.Services
 {
@@ -15,6 +16,7 @@ namespace DoAnWeb.Services
         private readonly IRepository<Answer> _answerRepository;
         private readonly IQuestionRealTimeService _realTimeService;
         private readonly INotificationService _notificationService;
+        private readonly DevCommunityContext _context;
 
         /// <summary>
         /// Constructor with dependency injection for required repositories
@@ -25,7 +27,8 @@ namespace DoAnWeb.Services
             IRepository<Vote> voteRepository,
             IRepository<Answer> answerRepository,
             IQuestionRealTimeService realTimeService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            DevCommunityContext context)
         {
             _questionRepository = questionRepository;
             _tagRepository = tagRepository;
@@ -33,6 +36,7 @@ namespace DoAnWeb.Services
             _answerRepository = answerRepository;
             _realTimeService = realTimeService;
             _notificationService = notificationService;
+            _context = context;
         }
 
         /// <summary>
@@ -61,11 +65,46 @@ namespace DoAnWeb.Services
 
         /// <summary>
         /// Retrieves a question with all its details including answers, comments, and tags
-        /// Also increments the view count for the question
+        /// View count handling is now done separately via ViewCountHub
         /// </summary>
-        public Question GetQuestionWithDetails(int id)
+        public Question GetQuestionWithDetails(int questionId)
         {
-            return _questionRepository.GetQuestionWithDetails(id);
+            var question = _context.Questions
+                .Include(q => q.User)
+                .Include(q => q.QuestionTags)
+                    .ThenInclude(qt => qt.Tag)
+                .Include(q => q.Attachments)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.User)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.Attachments)
+                .FirstOrDefault(q => q.QuestionId == questionId);
+
+            if (question != null)
+            {
+                // Load comments for the question
+                var questionComments = _context.Comments
+                    .Include(c => c.User)
+                    .Where(c => c.QuestionId == questionId && c.AnswerId == null)
+                    .OrderBy(c => c.CreatedDate)
+                    .ToList();
+                
+                question.Comments = questionComments;
+
+                // Load comments for each answer
+                foreach (var answer in question.Answers)
+                {
+                    var answerComments = _context.Comments
+                        .Include(c => c.User)
+                        .Where(c => c.AnswerId == answer.AnswerId)
+                        .OrderBy(c => c.CreatedDate)
+                        .ToList();
+                    
+                    answer.Comments = answerComments;
+                }
+            }
+
+            return question;
         }
 
         /// <summary>
@@ -331,6 +370,148 @@ namespace DoAnWeb.Services
             var context = _questionRepository.GetContext() as DevCommunityContext;
             context.QuestionAttachments.Add(attachment);
             context.SaveChanges();
+        }
+
+        /// <summary>
+        /// Gets a user's vote on a specific question
+        /// </summary>
+        public Vote GetUserVoteOnQuestion(int userId, int questionId)
+        {
+            return _voteRepository.Find(v => 
+                v.UserId == userId && 
+                v.TargetId == questionId && 
+                v.TargetType == "Question").FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets a user's vote on a specific answer
+        /// </summary>
+        public Vote GetUserVoteOnAnswer(int userId, int answerId)
+        {
+            return _voteRepository.Find(v => 
+                v.UserId == userId && 
+                v.TargetId == answerId && 
+                v.TargetType == "Answer").FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Adds a new vote
+        /// </summary>
+        public void AddVote(Vote vote)
+        {
+            _voteRepository.Add(vote);
+            _voteRepository.Save();
+            
+            // Update the target's score
+            if (vote.TargetType == "Question")
+            {
+                UpdateQuestionScore(vote.TargetId, vote.IsUpvote ? 1 : -1);
+            }
+            else if (vote.TargetType == "Answer")
+            {
+                UpdateAnswerScore(vote.TargetId, vote.IsUpvote ? 1 : -1);
+            }
+            
+            // Send notification about the new vote if UserId has a value
+            if (vote.UserId.HasValue)
+            {
+                _notificationService.NotifyVoteAsync(vote.TargetType, vote.TargetId, vote.UserId.Value);
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing vote
+        /// </summary>
+        public void UpdateVote(Vote vote)
+        {
+            _voteRepository.Update(vote);
+            _voteRepository.Save();
+            
+            // Update the target's score (double effect: remove old vote, add new vote)
+            if (vote.TargetType == "Question")
+            {
+                UpdateQuestionScore(vote.TargetId, vote.IsUpvote ? 2 : -2);
+            }
+            else if (vote.TargetType == "Answer")
+            {
+                UpdateAnswerScore(vote.TargetId, vote.IsUpvote ? 2 : -2);
+            }
+        }
+
+        /// <summary>
+        /// Removes a vote by its ID
+        /// </summary>
+        public void RemoveVote(int voteId)
+        {
+            var vote = _voteRepository.GetById(voteId);
+            if (vote != null)
+            {
+                // Lưu thông tin trước khi xóa
+                int targetId = vote.TargetId;
+                string targetType = vote.TargetType;
+                int scoreChange = vote.IsUpvote ? -1 : 1; // Ngược lại với giá trị ban đầu khi xóa
+                
+                _voteRepository.Delete(vote);
+                _voteRepository.Save();
+
+                // Update the score for the affected entity
+                if (targetType == "Question")
+                {
+                    UpdateQuestionScore(targetId, scoreChange);
+                }
+                else if (targetType == "Answer")
+                {
+                    UpdateAnswerScore(targetId, scoreChange);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Helper method to update an answer's score
+        /// </summary>
+        private void UpdateAnswerScore(int answerId, int scoreChange)
+        {
+            var context = _questionRepository.GetContext() as DevCommunityContext;
+            var answer = context.Answers.FirstOrDefault(a => a.AnswerId == answerId);
+            
+            if (answer != null)
+            {
+                answer.Score += scoreChange;
+                context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật lượt xem cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem mới của câu hỏi</returns>
+        public int UpdateViewCount(int questionId)
+        {
+            var question = _questionRepository.GetById(questionId);
+            if (question == null)
+                throw new ArgumentException("Question not found");
+            
+            // Tăng lượt xem
+            question.ViewCount = (question.ViewCount ?? 0) + 1;
+            _questionRepository.Update(question);
+            _questionRepository.Save();
+            
+            return question.ViewCount ?? 0;
+        }
+        
+        /// <summary>
+        /// Lấy số lượt xem hiện tại cho câu hỏi
+        /// </summary>
+        /// <param name="questionId">ID của câu hỏi</param>
+        /// <returns>Số lượt xem hiện tại</returns>
+        public int GetViewCount(int questionId)
+        {
+            var question = _questionRepository.GetById(questionId);
+            if (question == null)
+                throw new ArgumentException("Question not found");
+            
+            return question.ViewCount ?? 0;
         }
     }
 }

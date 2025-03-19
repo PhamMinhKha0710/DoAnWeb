@@ -1,0 +1,48 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="tags-pattern" patternUnits="userSpaceOnUse" width="100" height="100" viewBox="0 0 100 100">
+      <!-- Geometric patterns -->
+      <circle cx="10" cy="10" r="2" fill="#ffffff" fill-opacity="0.3" />
+      <circle cx="50" cy="10" r="1.5" fill="#ffffff" fill-opacity="0.2" />
+      <circle cx="90" cy="10" r="2" fill="#ffffff" fill-opacity="0.3" />
+      <circle cx="10" cy="50" r="1.5" fill="#ffffff" fill-opacity="0.2" />
+      <circle cx="50" cy="50" r="2" fill="#ffffff" fill-opacity="0.3" />
+      <circle cx="90" cy="50" r="1.5" fill="#ffffff" fill-opacity="0.2" />
+      <circle cx="10" cy="90" r="2" fill="#ffffff" fill-opacity="0.3" />
+      <circle cx="50" cy="90" r="1.5" fill="#ffffff" fill-opacity="0.2" />
+      <circle cx="90" cy="90" r="2" fill="#ffffff" fill-opacity="0.3" />
+      
+      <!-- Decorative elements -->
+      <path d="M25,25 L35,25 L35,35 L25,35 Z" fill="#ffffff" fill-opacity="0.15" />
+      <path d="M65,65 L75,65 L75,75 L65,75 Z" fill="#ffffff" fill-opacity="0.15" />
+      <path d="M65,25 A10,10 0 0,1 75,35" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1" fill="none" />
+      <path d="M25,65 A10,10 0 0,1 35,75" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1" fill="none" />
+      
+      <!-- Hashtag-like pattern elements -->
+      <path d="M30,30 L35,30 L35,25 L40,25 L40,30 L45,30 L45,35 L40,35 L40,40 L35,40 L35,35 L30,35 Z" fill="#ffffff" fill-opacity="0.12" />
+      <path d="M70,60 L75,60 L75,55 L80,55 L80,60 L85,60 L85,65 L80,65 L80,70 L75,70 L75,65 L70,65 Z" fill="#ffffff" fill-opacity="0.12" />
+      <path d="M20,80 L25,80 L25,75 L30,75 L30,80 L35,80 L35,85 L30,85 L30,90 L25,90 L25,85 L20,85 Z" fill="#ffffff" fill-opacity="0.12" />
+      
+      <!-- Diagonal lines -->
+      <line x1="0" y1="0" x2="100" y2="100" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.07" />
+      <line x1="25" y1="0" x2="100" y2="75" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.07" />
+      <line x1="50" y1="0" x2="100" y2="50" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.07" />
+      <line x1="75" y1="0" x2="100" y2="25" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.07" />
+      
+      <line x1="0" y1="25" x2="75" y2="100" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.07" />
+      <line x1="0" y1="50" x2="50" y2="100" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.07" />
+      <line x1="0" y1="75" x2="25" y2="100" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.07" />
+      
+      <!-- Diamond shape in background -->
+      <path d="M50,15 L85,50 L50,85 L15,50 Z" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.1" fill="none" />
+      
+      <!-- Small circles for decoration -->
+      <circle cx="15" cy="15" r="1" fill="#ffffff" fill-opacity="0.4" />
+      <circle cx="85" cy="15" r="1" fill="#ffffff" fill-opacity="0.4" />
+      <circle cx="15" cy="85" r="1" fill="#ffffff" fill-opacity="0.4" />
+      <circle cx="85" cy="85" r="1" fill="#ffffff" fill-opacity="0.4" />
+    </pattern>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#tags-pattern)" />
+</svg> 

@@ -1,29 +1,24 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System;
 
-namespace DoAnWeb.Models
+namespace DoAnWeb.Models;
+
+public partial class ConversationParticipant
 {
-    /// <summary>
-    /// Represents a participant in a conversation
-    /// </summary>
-    public class ConversationParticipant
-    {
-        [Key]
-        public int ParticipantId { get; set; }
-        
-        public int ConversationId { get; set; }
-        
-        public int UserId { get; set; }
-        
-        public bool IsArchived { get; set; }
-        
-        public bool IsMuted { get; set; }
-        
-        // Navigation properties
-        [ForeignKey("ConversationId")]
-        public virtual Conversation Conversation { get; set; }
-        
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
-    }
+    public int ParticipantId { get; set; }
+
+    public int ConversationId { get; set; }
+
+    public int UserId { get; set; }
+
+    public DateTime JoinedAt { get; set; }
+
+    public bool IsAdmin { get; set; }
+
+    public bool IsArchived { get; set; }
+
+    public bool IsMuted { get; set; }
+
+    public virtual Conversation Conversation { get; set; } = null!;
+
+    public virtual User User { get; set; } = null!;
 } 

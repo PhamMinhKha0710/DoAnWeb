@@ -1,34 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
-namespace DoAnWeb.Models
+namespace DoAnWeb.Models;
+
+public partial class Conversation
 {
-    /// <summary>
-    /// Represents a conversation between users
-    /// </summary>
-    public class Conversation
-    {
-        [Key]
-        public int ConversationId { get; set; }
-        
-        public string Title { get; set; }
-        
-        public DateTime CreatedAt { get; set; }
-        
-        public DateTime LastActivityAt { get; set; }
-        
-        // Navigation properties
-        public virtual ICollection<Message> Messages { get; set; }
-        
-        public virtual ICollection<ConversationParticipant> Participants { get; set; }
-        
-        public Conversation()
-        {
-            Messages = new HashSet<Message>();
-            Participants = new HashSet<ConversationParticipant>();
-            CreatedAt = DateTime.UtcNow;
-            LastActivityAt = DateTime.UtcNow;
-        }
-    }
+    public int ConversationId { get; set; }
+
+    public string Title { get; set; } = null!;
+
+    public DateTime CreatedAt { get; set; }
+
+    public DateTime LastActivityAt { get; set; }
+
+    public virtual ICollection<ConversationParticipant> Participants { get; set; } = new List<ConversationParticipant>();
+
+    public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
 } 
