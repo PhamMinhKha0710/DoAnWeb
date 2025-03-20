@@ -53,25 +53,25 @@
                                         <input type="hidden" asp-for="AvatarUrl" id="avatar-url-field" />
                                         <input type="hidden" name="RemoveAvatar" id="remove-avatar-field" value="false" />
                                         <p class="small text-muted mb-2">Profile visibility: <span class="fw-medium text-success">Public</span></p>
-                                        <p class="small text-muted">Member since: <span class="fw-medium">@DateTime.Now.AddMonths(-3).ToString("MMM yyyy")</span></p>
+                                        <p class="small text-muted">Member since: <span class="fw-medium">@(Model.MemberSince?.ToString("MMM yyyy") ?? DateTime.Now.AddMonths(-3).ToString("MMM yyyy"))</span></p>
                                         
                                         <div class="profile-stats mt-4">
                                             <div class="row g-2">
                                                 <div class="col-4">
                                                     <div class="profile-stat">
-                                                        <div class="stat-value">15</div>
+                                                        <div class="stat-value">@Model.PostCount</div>
                                                         <div class="stat-label">Posts</div>
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
                                                     <div class="profile-stat">
-                                                        <div class="stat-value">142</div>
+                                                        <div class="stat-value">@Model.CommentCount</div>
                                                         <div class="stat-label">Comments</div>
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
                                                     <div class="profile-stat">
-                                                        <div class="stat-value">24</div>
+                                                        <div class="stat-value">@Model.TagCount</div>
                                                         <div class="stat-label">Tags</div>
                                                     </div>
                                                 </div>
@@ -358,6 +358,85 @@
     </div>
 </div>
 
+<!-- Gitea Integration Section -->
+<div class="account-card mt-4">
+    <div class="account-header">
+        <h4 class="account-title">Gitea Integration</h4>
+        <p class="account-subtitle">Manage your Gitea account connection</p>
+    </div>
+    
+    <div class="account-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-git fs-1 text-success me-3"></i>
+                    <div>
+                        <h5 class="mb-1">Gitea Account Connection</h5>
+                        <p class="text-muted small mb-0">
+                            @if (!string.IsNullOrEmpty(Model.GiteaUsername))
+                            {
+                                <span>Connected to Gitea as <strong>@Model.GiteaUsername</strong></span>
+                            }
+                            else
+                            {
+                                <span>Not connected to Gitea</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="alert alert-light border">
+                    <div class="d-flex">
+                        <div class="me-3 text-primary fs-4">
+                            <i class="bi bi-info-circle"></i>
+                        </div>
+                        <div>
+                            <strong>About Gitea Integration</strong>
+                            <p class="small mb-0 mt-1">
+                                Connecting your Gitea account allows you to share code, collaborate on projects,
+                                and showcase your repositories directly in your profile and posts.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-center justify-content-end">
+                @if (!string.IsNullOrEmpty(Model.GiteaUsername))
+                {
+                    <form asp-action="UnlinkGiteaAccount" method="post">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-x-circle me-2"></i> Unlink Account
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-action="LinkGiteaAccount" class="btn btn-success">
+                        <i class="bi bi-git me-2"></i> Connect Gitea Account
+                    </a>
+                }
+            </div>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.GiteaUsername))
+        {
+            <div class="mt-4 p-3 border rounded">
+                <h6><i class="bi bi-clock-history me-2"></i>Last Login Activity</h6>
+                <p class="mb-0">
+                    @if (Model.LastLoginDate.HasValue)
+                    {
+                        <span>Last login: <strong>@Model.LastLoginDate.Value.ToString("MMM dd, yyyy HH:mm")</strong></span>
+                    }
+                    else
+                    {
+                        <span>No login activity recorded</span>
+                    }
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     
@@ -374,6 +453,7 @@
             const useUrlBtn = document.getElementById('use-url-btn');
             
             console.log('Profile page scripts initialized');
+            console.log('Current avatar URL:', '@Model.AvatarUrl');
             
             // Force enctype to multipart/form-data
             const profileForm = document.querySelector('form[asp-action="Profile"]');
@@ -383,6 +463,8 @@
                 
                 // Debug form submit
                 profileForm.addEventListener('submit', function(e) {
+                    console.log('Form is being submitted');
+                    
                     // Check if file is selected
                     if (profileImageUpload.files && profileImageUpload.files.length > 0) {
                         const file = profileImageUpload.files[0];
@@ -391,9 +473,25 @@
                         console.log('Submitting form without file. Avatar URL:', avatarUrlField.value);
                         console.log('Remove avatar flag:', removeAvatarField.value);
                     }
+                    
+                    // Ensure the form has the right enctype before submission
+                    if (profileForm.getAttribute('enctype') !== 'multipart/form-data') {
+                        console.warn('Form enctype is not multipart/form-data, setting it now');
+                        profileForm.setAttribute('enctype', 'multipart/form-data');
+                    }
                 });
             } else {
                 console.error('Profile form not found!');
+            }
+            
+            // Prevent browser caching of profile image
+            if (profileImagePreview && profileImagePreview.src) {
+                // Add cache-busting parameter if it's a local image
+                if (profileImagePreview.src.includes('/uploads/profiles/') && !profileImagePreview.src.includes('?t=')) {
+                    const cacheBuster = '?t=' + new Date().getTime();
+                    profileImagePreview.src = profileImagePreview.src.split('?')[0] + cacheBuster;
+                    console.log('Added cache-busting to profile image URL:', profileImagePreview.src);
+                }
             }
             
             triggerFileUpload.addEventListener('click', function() {

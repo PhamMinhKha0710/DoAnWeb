@@ -1,0 +1,139 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Web;
+using Microsoft.Extensions.Configuration;
+
+namespace DoAnWeb.GitIntegration
+{
+    public class GiteaService : IGiteaIntegrationService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly string _baseUrl;
+        private readonly JsonSerializerOptions _jsonOptions;
+
+        public GiteaService(HttpClient httpClient, IConfiguration configuration)
+        {
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _baseUrl = _configuration["GiteaSettings:ApiUrl"];
+            _jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+        }
+
+        public async Task<string> CreateAccessTokenAsync(string username, string password, string tokenName)
+        {
+            var authBytes = Encoding.ASCII.GetBytes($"{username}:{password}");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
+
+            var requestData = new
+            {
+                name = tokenName,
+                scopes = new[] { "repo", "admin:org", "user" }
+            };
+
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/users/{username}/tokens", requestData);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to create access token: {response.StatusCode}");
+            }
+
+            var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>(_jsonOptions);
+            return tokenResponse.Sha1;
+        }
+
+        public async Task<bool> CreateUserAsync(string username, string email, string password, string fullName)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", _configuration["GiteaSettings:AdminToken"]);
+
+            var requestData = new
+            {
+                username = username,
+                password = password,
+                email = email,
+                full_name = fullName,
+                must_change_password = false
+            };
+
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/admin/users", requestData);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<RepositoryResponse> CreateRepositoryAsync(string ownerUsername, string accessToken, string repoName, string description, bool isPrivate)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken);
+
+            var requestData = new
+            {
+                name = repoName,
+                description = description,
+                private = isPrivate,
+                auto_init = true,
+                readme = "Default"
+            };
+
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/user/repos", requestData);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to create repository: {response.StatusCode}");
+            }
+
+            var repoResponse = await response.Content.ReadFromJsonAsync<RepositoryResponse>(_jsonOptions);
+            return repoResponse;
+        }
+
+        public async Task<List<RepositoryResponse>> GetUserRepositoriesAsync(string username, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken);
+            var response = await _httpClient.GetAsync($"{_baseUrl}/users/{username}/repos");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to get user repositories: {response.StatusCode}");
+            }
+
+            var repos = await response.Content.ReadFromJsonAsync<List<RepositoryResponse>>(_jsonOptions);
+            return repos;
+        }
+
+        public async Task<FileContentResponse> GetFileContentAsync(string ownerUsername, string repoName, string filePath, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken);
+            var encodedPath = HttpUtility.UrlEncode(filePath);
+            var response = await _httpClient.GetAsync($"{_baseUrl}/repos/{ownerUsername}/{repoName}/contents/{encodedPath}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to get file content: {response.StatusCode}");
+            }
+
+            var content = await response.Content.ReadFromJsonAsync<FileContentResponse>(_jsonOptions);
+            return content;
+        }
+
+        public async Task<List<RepositoryResponse>> SearchRepositoriesAsync(string keyword, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", accessToken ?? _configuration["GiteaSettings:AdminToken"]);
+            var encodedKeyword = HttpUtility.UrlEncode(keyword);
+            var response = await _httpClient.GetAsync($"{_baseUrl}/repos/search?q={encodedKeyword}&limit=50");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to search repositories: {response.StatusCode}");
+            }
+
+            var searchResult = await response.Content.ReadFromJsonAsync<SearchRepositoryResponse>(_jsonOptions);
+            return searchResult.Data;
+        }
+    }
+}

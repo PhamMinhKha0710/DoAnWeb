@@ -264,7 +264,7 @@ public partial class DevCommunityContext : DbContext
             entity.HasIndex(e => e.Email, "UQ__Users__A9D105348AA87732").IsUnique();
 
             entity.Property(e => e.AvatarUrl).HasMaxLength(255);
-            entity.Property(e => e.Bio).HasMaxLength(500);
+            entity.Property(e => e.Bio).HasColumnName("bio");
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -278,7 +278,7 @@ public partial class DevCommunityContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.LastLoginDate)
                 .HasColumnType("datetime")
-                .IsRequired(false);
+                .HasColumnName("last_login_date");
                 
             // New security columns
             entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
@@ -290,6 +290,14 @@ public partial class DevCommunityContext : DbContext
             entity.Property(e => e.LastPasswordChangeDate).HasColumnType("datetime");
             entity.Property(e => e.PasswordResetToken).HasMaxLength(128);
             entity.Property(e => e.PasswordResetTokenExpiry).HasColumnType("datetime");
+
+            entity.Property(e => e.GiteaUsername)
+                .HasMaxLength(50)
+                .HasColumnName("gitea_username");
+            
+            entity.Property(e => e.GiteaToken)
+                .HasMaxLength(255)
+                .HasColumnName("gitea_token");
 
             entity.HasMany(d => d.Roles).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(

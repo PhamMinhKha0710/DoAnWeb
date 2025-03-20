@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using DoAnWeb.Models;
+using DoAnWeb.ViewModels;
 
 namespace DoAnWeb.Services
 {
@@ -48,5 +50,8 @@ namespace DoAnWeb.Services
         
         // Generate verification token for email
         string GenerateEmailVerificationToken(int userId);
+        
+        // New profile method
+        ProfileViewModel GetUserProfile(int userId);
     }
 }

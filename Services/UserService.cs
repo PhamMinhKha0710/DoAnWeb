@@ -1,5 +1,6 @@
 using DoAnWeb.Models;
 using DoAnWeb.Repositories;
+using DoAnWeb.ViewModels;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,10 +9,20 @@ namespace DoAnWeb.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IPostRepository? _postRepository;
+        private readonly ICommentRepository _commentRepository;
+        private readonly IPasswordHashService _passwordHashService;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(
+            IUserRepository userRepository, 
+            ICommentRepository commentRepository, 
+            IPasswordHashService passwordHashService,
+            IPostRepository? postRepository = null)
         {
             _userRepository = userRepository;
+            _postRepository = postRepository;
+            _commentRepository = commentRepository;
+            _passwordHashService = passwordHashService;
         }
 
         public IEnumerable<User> GetAllUsers()
@@ -50,8 +61,9 @@ namespace DoAnWeb.Services
             if (!IsPasswordComplex(password))
                 throw new ArgumentException("Password does not meet complexity requirements. It must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters.");
 
-            // Hash password
-            user.PasswordHash = HashPassword(password);
+            // Hash password using the new service
+            user.PasswordHash = _passwordHashService.HashPassword(password);
+            user.HashType = _passwordHashService.GetDefaultHashType();
 
             // Set creation date
             user.CreatedDate = DateTime.Now;
@@ -116,9 +128,23 @@ namespace DoAnWeb.Services
             if (user == null)
                 return null;
 
-            // Check if password is correct
-            if (!VerifyPassword(password, user.PasswordHash))
+            // Check if password is correct using appropriate hash algorithm
+            if (!_passwordHashService.VerifyPassword(password, user.PasswordHash, user.HashType))
                 return null;
+
+            // Check if hash algorithm needs upgrade
+            if (_passwordHashService.NeedsUpgrade(user.HashType))
+            {
+                // Nâng cấp hash mật khẩu sang phương thức mới an toàn hơn
+                user.PasswordHash = _passwordHashService.HashPassword(password);
+                user.HashType = _passwordHashService.GetDefaultHashType();
+                user.UpdatedDate = DateTime.Now;
+                user.LastPasswordChangeDate = DateTime.Now;
+                
+                // Cập nhật người dùng
+                _userRepository.Update(user);
+                _userRepository.Save();
+            }
 
             // Authentication successful
             return user;
@@ -132,89 +158,6 @@ namespace DoAnWeb.Services
         public bool EmailExists(string email)
         {
             return _userRepository.EmailExists(email);
-        }
-
-        // Helper methods for password hashing
-        private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
-            }
-        }
-
-        private bool VerifyPassword(string password, string hash)
-        {
-            var passwordHash = HashPassword(password);
-            return passwordHash == hash;
-        }
-
-        public bool ChangePassword(int userId, string currentPassword, string newPassword)
-        {
-            // Validate input
-            if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
-                return false;
-                
-            // Get user
-            var user = _userRepository.GetById(userId);
-            if (user == null)
-                return false;
-                
-            // Verify current password
-            if (!VerifyPassword(currentPassword, user.PasswordHash))
-                return false;
-            
-            // Account verification check - Ensure the user's email is verified
-            if (!user.IsEmailVerified)
-                throw new InvalidOperationException("You must verify your email address before changing your password. Please check your email for a verification link.");
-            
-            // Additional security check - Ensure the account is not locked
-            if (user.IsLocked)
-                throw new InvalidOperationException("Your account is currently locked. Please contact support to unlock your account before changing your password.");
-            
-            // Password complexity validation
-            if (!IsPasswordComplex(newPassword))
-                throw new ArgumentException("New password does not meet security requirements. Please ensure it contains at least 8 characters, including uppercase, lowercase, numbers, and special characters.");
-            
-            // Ensure new password is different from the current one
-            if (VerifyPassword(newPassword, user.PasswordHash))
-                throw new ArgumentException("New password must be different from your current password.");
-            
-            // Update password
-            user.PasswordHash = HashPassword(newPassword);
-            user.UpdatedDate = DateTime.Now;
-            user.LastPasswordChangeDate = DateTime.Now;
-            
-            // Record password change in security log (if you have such functionality)
-            // LogSecurityEvent(userId, "PasswordChanged", "User changed their password");
-            
-            _userRepository.Update(user);
-            _userRepository.Save();
-            
-            return true;
-        }
-        
-        public bool DeleteAccount(int userId, string password)
-        {
-            // Validate input
-            if (string.IsNullOrEmpty(password))
-                return false;
-                
-            // Get user
-            var user = _userRepository.GetById(userId);
-            if (user == null)
-                return false;
-                
-            // Verify password
-            if (!VerifyPassword(password, user.PasswordHash))
-                return false;
-            
-            // Delete user
-            _userRepository.Delete(userId);
-            _userRepository.Save();
-            
-            return true;
         }
 
         // Helper method to check password complexity
@@ -240,6 +183,74 @@ namespace DoAnWeb.Services
             if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
                 return false;
                 
+            return true;
+        }
+
+        public bool ChangePassword(int userId, string currentPassword, string newPassword)
+        {
+            // Validate input
+            if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
+                return false;
+                
+            // Get user
+            var user = _userRepository.GetById(userId);
+            if (user == null)
+                return false;
+                
+            // Verify current password using appropriate hash algorithm
+            if (!_passwordHashService.VerifyPassword(currentPassword, user.PasswordHash, user.HashType))
+                return false;
+            
+            // Account verification check - Ensure the user's email is verified
+            if (!user.IsEmailVerified)
+                throw new InvalidOperationException("You must verify your email address before changing your password. Please check your email for a verification link.");
+            
+            // Additional security check - Ensure the account is not locked
+            if (user.IsLocked)
+                throw new InvalidOperationException("Your account is currently locked. Please contact support to unlock your account before changing your password.");
+            
+            // Password complexity validation
+            if (!IsPasswordComplex(newPassword))
+                throw new ArgumentException("New password does not meet security requirements. Please ensure it contains at least 8 characters, including uppercase, lowercase, numbers, and special characters.");
+            
+            // Ensure new password is different from the current one
+            if (_passwordHashService.VerifyPassword(newPassword, user.PasswordHash, user.HashType))
+                throw new ArgumentException("New password must be different from your current password.");
+            
+            // Update password with modern hash
+            user.PasswordHash = _passwordHashService.HashPassword(newPassword);
+            user.HashType = _passwordHashService.GetDefaultHashType();
+            user.UpdatedDate = DateTime.Now;
+            user.LastPasswordChangeDate = DateTime.Now;
+            
+            // Record password change in security log (if you have such functionality)
+            // LogSecurityEvent(userId, "PasswordChanged", "User changed their password");
+            
+            _userRepository.Update(user);
+            _userRepository.Save();
+            
+            return true;
+        }
+        
+        public bool DeleteAccount(int userId, string password)
+        {
+            // Validate input
+            if (string.IsNullOrEmpty(password))
+                return false;
+                
+            // Get user
+            var user = _userRepository.GetById(userId);
+            if (user == null)
+                return false;
+                
+            // Verify password using appropriate hash algorithm
+            if (!_passwordHashService.VerifyPassword(password, user.PasswordHash, user.HashType))
+                return false;
+            
+            // Delete user
+            _userRepository.Delete(userId);
+            _userRepository.Save();
+            
             return true;
         }
 
@@ -319,6 +330,38 @@ namespace DoAnWeb.Services
                 .Replace("=", "");
             
             return token;
+        }
+
+        public ProfileViewModel GetUserProfile(int userId)
+        {
+            var user = _userRepository.GetById(userId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            // Tạm thời trả về 0 cho postCount - lớp Post chưa được đăng ký trong DbContext
+            // var postCount = _postRepository.GetPostCountByUserId(userId);
+            var postCount = 0; // Không sử dụng PostRepository vì chưa có bảng Posts trong database
+            var commentCount = _commentRepository.GetCommentCountByUserId(userId);
+            var tagCount = 0; // Implement if you have a way to count tags created by user
+
+            return new ProfileViewModel
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Email,
+                DisplayName = user.DisplayName,
+                Bio = user.Bio ?? string.Empty,
+                AvatarUrl = user.AvatarUrl ?? string.Empty,
+                PostCount = postCount,
+                CommentCount = commentCount,
+                TagCount = tagCount,
+                MemberSince = user.CreatedDate,
+                // Add Gitea information and last login date
+                GiteaUsername = user.GiteaUsername,
+                LastLoginDate = user.LastLoginDate
+            };
         }
     }
 }

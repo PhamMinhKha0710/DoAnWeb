@@ -171,7 +171,7 @@
                             <h5 class="mb-0 fw-bold">Recent Repositories</h5>
                             <p class="text-muted small mb-0">Latest code repositories from the community</p>
                         </div>
-                        <a asp-controller="Repositories" asp-action="Create" class="btn btn-primary btn-sm">Create Repository</a>
+                        <a asp-controller="Repository" asp-action="Create" class="btn btn-primary btn-sm">Create Repository</a>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -183,7 +183,7 @@
                                 <div class="list-group-item repo-item p-3">
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="bi bi-git me-2 fs-4 text-primary"></i>
-                                        <h5 class="mb-0"><a asp-controller="Repositories" asp-action="Details" asp-route-id="@repo.RepositoryId" class="repo-title">@repo.RepositoryName</a></h5>
+                                        <h5 class="mb-0"><a asp-controller="Repository" asp-action="Details" asp-route-id="@repo.RepositoryId" class="repo-title">@repo.RepositoryName</a></h5>
                                         <span class="badge bg-secondary ms-2">@repo.Visibility</span>
                                     </div>
                                     <p class="mb-3 repo-description">@(repo.Description ?? "No description available")</p>
@@ -215,12 +215,12 @@
                             <i class="bi bi-git fs-1 text-muted mb-3"></i>
                             <h5>No repositories found</h5>
                             <p class="text-muted mb-3">Create your first repository to share code with the community!</p>
-                            <a asp-controller="Repositories" asp-action="Create" class="btn btn-primary">Create Repository</a>
+                            <a asp-controller="Repository" asp-action="Create" class="btn btn-primary">Create Repository</a>
                         </div>
                     }
                 </div>
                 <div class="card-footer bg-transparent text-center">
-                    <a asp-controller="Repositories" asp-action="Index" class="text-decoration-none">View all repositories <i class="bi bi-arrow-right"></i></a>
+                    <a asp-controller="Repository" asp-action="Index" class="text-decoration-none">View all repositories <i class="bi bi-arrow-right"></i></a>
                 </div>
             </div>
         </div>

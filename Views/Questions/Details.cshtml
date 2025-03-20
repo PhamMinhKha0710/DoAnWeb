@@ -102,11 +102,10 @@
                                                     <div class="comment-meta">
                                                         <span class="comment-author">@(comment.User?.DisplayName ?? "Unknown user")</span>
                                                         <span class="mx-1">•</span>
-                                                        <span class="comment-date" title="@comment.CreatedDate?.ToString("g")">
-                                                            @(comment.CreatedDate.HasValue ? (DateTime.Now - comment.CreatedDate.Value).TotalDays < 1 ? 
-                                                                comment.CreatedDate.Value.ToString("HH:mm") : 
-                                                                comment.CreatedDate.Value.ToString("dd/MM/yyyy HH:mm")
-                                                              : "unknown date")
+                                                        <span class="comment-date" title="@comment.CreatedDate.ToString("g")">
+                                                            @((DateTime.Now - comment.CreatedDate).TotalDays < 1 ? 
+                                                                comment.CreatedDate.ToString("HH:mm") : 
+                                                                comment.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
                                                         </span>
                                                     </div>
                                                 </div>
@@ -343,11 +342,10 @@
                                                                 <div class="comment-meta">
                                                                     <span class="comment-author">@(comment.User?.DisplayName ?? "Unknown user")</span>
                                                                     <span class="mx-1">•</span>
-                                                                    <span class="comment-date" title="@comment.CreatedDate?.ToString("g")">
-                                                                        @(comment.CreatedDate.HasValue ? (DateTime.Now - comment.CreatedDate.Value).TotalDays < 1 ? 
-                                                                            comment.CreatedDate.Value.ToString("HH:mm") : 
-                                                                            comment.CreatedDate.Value.ToString("dd/MM/yyyy HH:mm")
-                                                                          : "unknown date")
+                                                                    <span class="comment-date" title="@comment.CreatedDate.ToString("g")">
+                                                                        @((DateTime.Now - comment.CreatedDate).TotalDays < 1 ? 
+                                                                            comment.CreatedDate.ToString("HH:mm") : 
+                                                                            comment.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
                                                                     </span>
                                                                 </div>
                                                             </div>

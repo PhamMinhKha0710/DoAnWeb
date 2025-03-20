@@ -1,0 +1,249 @@
+@model DoAnWeb.ViewModels.MyRepositoriesViewModel
+
+@{
+    ViewData["Title"] = "My Repositories";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-person-workspace text-primary me-2"></i>
+            My Repositories
+        </h1>
+        <a asp-action="Create" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Create Repository
+        </a>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" id="local-tab" data-bs-toggle="tab" href="#local">
+                        <i class="bi bi-database"></i> DevCommunity Repositories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="gitea-tab" data-bs-toggle="tab" href="#gitea">
+                        <i class="bi bi-git"></i> Gitea Repositories
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="local">
+                    @if (Model.DevCommunityRepositories.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Visibility</th>
+                                        <th>Default Branch</th>
+                                        <th>Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var repo in Model.DevCommunityRepositories)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="fw-bold text-decoration-none">
+                                                    @repo.RepositoryName
+                                                </a>
+                                                <div class="small text-muted">
+                                                    @(string.IsNullOrEmpty(repo.Description) ? "No description" : repo.Description)
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if (repo.Visibility == "Private")
+                                                {
+                                                    <span class="badge bg-danger">Private</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">Public</span>
+                                                }
+                                            </td>
+                                            <td>@repo.DefaultBranch</td>
+                                            <td>@repo.UpdatedDate?.ToShortDateString()</td>
+                                            <td>
+                                                <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            You don't have any repositories in DevCommunity yet.
+                        </div>
+                    }
+                </div>
+                <div class="tab-pane fade" id="gitea">
+                    @if (Model.GiteaRepositories.Any())
+                    {
+                        <div class="row">
+                            @foreach (var repo in Model.GiteaRepositories)
+                            {
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <a href="@repo.HtmlUrl" target="_blank" class="text-decoration-none">
+                                                    @repo.Name
+                                                </a>
+                                            </h5>
+                                            
+                                            <p class="card-text mt-3">
+                                                @(string.IsNullOrEmpty(repo.Description) ? "No description provided" : repo.Description)
+                                            </p>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <div>
+                                                    <span class="badge bg-secondary me-2">@repo.DefaultBranch</span>
+                                                    @if (repo.Private)
+                                                    {
+                                                        <span class="badge bg-danger">Private</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">Public</span>
+                                                    }
+                                                </div>
+                                                <small class="text-muted">
+                                                    Updated: @repo.UpdatedAt.ToShortDateString()
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="btn-group w-100">
+                                                <a href="@repo.HtmlUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                <a href="@repo.HtmlUrl/issues" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-exclamation-circle"></i> Issues
+                                                </a>
+                                                <a href="@repo.HtmlUrl/commits/@repo.DefaultBranch" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-clock-history"></i> Commits
+                                                </a>
+                                                <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-download"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item copy-url" href="#" 
+                                                               data-url="@repo.CloneUrl" onclick="copyUrl(event, '@repo.CloneUrl')">
+                                                                <i class="bi bi-clipboard me-2"></i> Copy HTTPS URL
+                                                            </a>
+                                                        </li>
+                                                        @if (!string.IsNullOrEmpty(repo.SshUrl))
+                                                        {
+                                                            <li>
+                                                                <a class="dropdown-item copy-url" href="#" 
+                                                                   data-url="@repo.SshUrl" onclick="copyUrl(event, '@repo.SshUrl')">
+                                                                    <i class="bi bi-clipboard me-2"></i> Copy SSH URL
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            You don't have any repositories in Gitea yet.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="bi bi-lightbulb"></i> Repository Tips
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="bi bi-git text-success me-2"></i> Working with Git</h6>
+                    <ul class="small">
+                        <li>Clone your repository: <code>git clone [URL]</code></li>
+                        <li>Create and switch to a new branch: <code>git checkout -b [branch-name]</code></li>
+                        <li>Commit changes: <code>git commit -m "Descriptive message"</code></li>
+                        <li>Push to remote: <code>git push origin [branch-name]</code></li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="bi bi-people text-success me-2"></i> Collaboration</h6>
+                    <ul class="small">
+                        <li>Fork repositories to contribute to others' projects</li>
+                        <li>Use issues to track bugs and feature requests</li>
+                        <li>Create pull requests to propose changes</li>
+                        <li>Review code by commenting on specific lines</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyUrl(e, url) {
+            e.preventDefault();
+            
+            // Create a temporary input element
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            
+            // Select and copy the content
+            tempInput.select();
+            document.execCommand('copy');
+            
+            // Remove the temporary element
+            document.body.removeChild(tempInput);
+            
+            // Show a temporary alert
+            alert('URL copied to clipboard!');
+        }
+    </script>
+} 

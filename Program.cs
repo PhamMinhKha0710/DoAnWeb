@@ -3,6 +3,7 @@ using DoAnWeb.Hubs;
 using DoAnWeb.Models;
 using DoAnWeb.Repositories;
 using DoAnWeb.Services;
+using DoAnWeb.GitIntegration;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using System.IO.Compression;
@@ -33,6 +34,8 @@ builder.Services.AddScoped<IUserSavedItemRepository, UserSavedItemRepository>();
 builder.Services.AddScoped<IRepository<Vote>, Repository<Vote>>();
 builder.Services.AddScoped<IRepository<Answer>, Repository<Answer>>();
 builder.Services.AddScoped<IRepository<Tag>, Repository<Tag>>();
+// builder.Services.AddScoped<IPostRepository, PostRepository>(); // Tạm thời bỏ đăng ký PostRepository vì không có DbSet tương ứng
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 
 // ✅ 3. Service Registration
 // Register business logic services using dependency injection
@@ -42,6 +45,14 @@ builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 builder.Services.AddScoped<IAnswerService, AnswerService>();
 builder.Services.AddScoped<IQuestionRealTimeService, QuestionRealTimeService>();
 builder.Services.AddScoped<IMarkdownService, MarkdownService>();
+
+// Register password hash service
+builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
+
+// Register Gitea integration services
+builder.Services.AddHttpClient<IGiteaIntegrationService, SimpleGiteaService>();
+builder.Services.AddScoped<IGiteaUserSyncService, GiteaUserSyncService>();
+builder.Services.AddScoped<IGiteaRepositoryService, GiteaRepositoryService>();
 
 // Register notification services
 builder.Services.AddSingleton<NotificationBackgroundService>();
@@ -82,6 +93,17 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 // ✅ 6. Memory Cache
 // Add in-memory caching for frequently accessed data
 builder.Services.AddMemoryCache();
+
+// Đăng ký IHttpContextAccessor để truy cập HttpContext trong view
+builder.Services.AddHttpContextAccessor();
+
+// Thêm dịch vụ Session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // ✅ 7. Authentication
 // Configure cookie-based authentication
@@ -189,6 +211,9 @@ app.UseRouting();
 
 // Enable CORS (must be between UseRouting and UseAuthorization)
 app.UseCors("CorsPolicy");
+
+// Sử dụng Session
+app.UseSession();
 
 // Enable authentication and authorization
 app.UseAuthentication();

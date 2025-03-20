@@ -10,7 +10,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li class="breadcrumb-item"><a asp-action="Index">Repositories</a></li>
+                    <li class="breadcrumb-item"><a asp-area="" asp-controller="Repository" asp-action="Index">Repositories</a></li>
                     <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.RepositoryId">@Model.Repository?.RepositoryName</a></li>
                     <li class="breadcrumb-item"><a asp-action="Files" asp-route-id="@Model.RepositoryId">Files</a></li>
                     <li class="breadcrumb-item"><a asp-action="ViewFile" asp-route-id="@Model.RepositoryId" asp-route-fileId="@Model.FileId">@Model.FilePath</a></li>

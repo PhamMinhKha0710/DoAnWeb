@@ -1,0 +1,62 @@
+@model DoAnWeb.ViewModels.CreateRepositoryViewModel
+
+@{
+    ViewData["Title"] = "Create New Repository";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>Create New Repository</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Choose a name for your repository. It should be clear, concise, and descriptive.
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                A good description helps others understand your project's purpose.
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input asp-for="IsPrivate" class="form-check-input" />
+                            <label asp-for="IsPrivate" class="form-check-label"></label>
+                            <div class="form-text text-muted">
+                                Private repositories are only visible to you and people you explicitly share with.
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            A Git repository will be created to store your code. You'll be able to push code using Git commands.
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-success">Create Repository</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 
