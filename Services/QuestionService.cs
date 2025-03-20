@@ -82,25 +82,64 @@ namespace DoAnWeb.Services
 
             if (question != null)
             {
-                // Load comments for the question
-                var questionComments = _context.Comments
-                    .Include(c => c.User)
-                    .Where(c => c.QuestionId == questionId && c.AnswerId == null)
-                    .OrderBy(c => c.CreatedDate)
-                    .ToList();
-                
-                question.Comments = questionComments;
-
-                // Load comments for each answer
-                foreach (var answer in question.Answers)
+                try
                 {
-                    var answerComments = _context.Comments
+                    // Load comments for the question
+                    var questionComments = _context.Comments
                         .Include(c => c.User)
-                        .Where(c => c.AnswerId == answer.AnswerId)
+                        .Where(c => c.QuestionId == questionId && c.AnswerId == null)
+                        .AsEnumerable() // Chuyển về bộ nhớ trước khi xử lý để xử lý null an toàn
+                        .Select(c => new Comment
+                        {
+                            CommentId = c.CommentId,
+                            Body = c.Body ?? string.Empty, // Xử lý null cho chuỗi
+                            CreatedDate = c.CreatedDate,
+                            UserId = c.UserId,
+                            User = c.User,
+                            QuestionId = c.QuestionId,
+                            AnswerId = c.AnswerId,
+                            TargetType = c.TargetType ?? string.Empty, // Xử lý null cho chuỗi
+                            TargetId = c.TargetId
+                        })
                         .OrderBy(c => c.CreatedDate)
                         .ToList();
                     
-                    answer.Comments = answerComments;
+                    question.Comments = questionComments;
+
+                    // Load comments for each answer
+                    foreach (var answer in question.Answers)
+                    {
+                        var answerComments = _context.Comments
+                            .Include(c => c.User)
+                            .Where(c => c.AnswerId == answer.AnswerId)
+                            .AsEnumerable() // Chuyển về bộ nhớ trước khi xử lý để xử lý null an toàn
+                            .Select(c => new Comment
+                            {
+                                CommentId = c.CommentId,
+                                Body = c.Body ?? string.Empty, // Xử lý null cho chuỗi
+                                CreatedDate = c.CreatedDate,
+                                UserId = c.UserId,
+                                User = c.User,
+                                QuestionId = c.QuestionId,
+                                AnswerId = c.AnswerId,
+                                TargetType = c.TargetType ?? string.Empty, // Xử lý null cho chuỗi
+                                TargetId = c.TargetId
+                            })
+                            .OrderBy(c => c.CreatedDate)
+                            .ToList();
+                        
+                        answer.Comments = answerComments;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi và trả về câu hỏi mà không có comments
+                    Console.WriteLine($"Error loading comments: {ex.Message}");
+                    question.Comments = new List<Comment>();
+                    foreach (var answer in question.Answers)
+                    {
+                        answer.Comments = new List<Comment>();
+                    }
                 }
             }
 

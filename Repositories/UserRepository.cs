@@ -11,7 +11,12 @@ namespace DoAnWeb.Repositories
 
         public User GetByUsername(string username)
         {
-            return _dbSet.FirstOrDefault(u => u.Username == username);
+            return _dbSet
+                .Include(u => u.Questions)
+                .Include(u => u.Answers)
+                .Include(u => u.Votes)
+                .AsSplitQuery()
+                .FirstOrDefault(u => u.Username == username);
         }
 
         public User GetByEmail(string email)

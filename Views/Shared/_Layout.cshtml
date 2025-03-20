@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -432,7 +435,7 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Repositories" asp-action="Index">Repositories</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Repository" asp-action="Index">Repositories</a>
                         </li>
                     </ul>
                     
@@ -543,7 +546,7 @@
         <div class="row">
             @{
                 var currentController = ViewContext.RouteData.Values["Controller"].ToString();
-                var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repositories" || currentController == "Tags" || currentController == "Users";
+                var showSidebar = currentController == "Home" || currentController == "Questions" || currentController == "Repository" || currentController == "Tags" || currentController == "Users";
             }
             
             @if (showSidebar)
@@ -562,7 +565,7 @@
                         <a class="nav-link text-dark d-flex align-items-center @(currentController == "Users" ? "active" : "")" asp-area="" asp-controller="Users" asp-action="Index">
                             <i class="bi bi-people me-2"></i> User
                         </a>
-                         <a class="nav-link text-dark d-flex align-items-center @(currentController == "Repositories" ? "active" : "")" asp-area="" asp-controller="Repositories" asp-action="Index">
+                         <a class="nav-link text-dark d-flex align-items-center @(currentController == "Repository" ? "active" : "")" asp-area="" asp-controller="Repository" asp-action="Index">
                             <i class="bi-display"></i>  Repositories
                         </a>
                         <a class="nav-link text-dark d-flex align-items-center @(currentController == "Account" && ViewContext.RouteData.Values["Action"].ToString() == "Saves" ? "active" : "")" asp-area="" asp-controller="Account" asp-action="Saves">
@@ -573,6 +576,26 @@
                 </div>
                 <div class="col-md-10">
                     <main role="main" class="pb-3">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var securityUpgrade = Context.Session.GetString("SecurityUpgrade");
+                            var lastLogin = Context.Session.GetString("LastLogin");
+                            
+                            if (!string.IsNullOrEmpty(securityUpgrade) && securityUpgrade == "PBKDF2" && 
+                                !string.IsNullOrEmpty(lastLogin) && DateTime.TryParse(lastLogin, out var loginDate) && 
+                                (DateTime.Now - loginDate).TotalMinutes < 5)
+                            {
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-shield-check me-2"></i>
+                                    <strong>Bảo mật tài khoản của bạn đã được nâng cấp!</strong> Chúng tôi đã tự động cập nhật phương thức bảo vệ mật khẩu của bạn sang một chuẩn an toàn hơn.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                
+                                Context.Session.Remove("SecurityUpgrade");
+                                Context.Session.Remove("LastLogin");
+                            }
+                        }
+                        
                         @RenderBody()
                     </main>
                 </div>

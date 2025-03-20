@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnWeb.Models;
 
@@ -13,6 +14,9 @@ public partial class User
     public string Email { get; set; } = null!;
 
     public string PasswordHash { get; set; } = null!;
+
+    // Thuộc tính để theo dõi loại thuật toán hash được sử dụng
+    public string HashType { get; set; } = "BCRYPT";
 
     public string DisplayName { get; set; } = null!;
 
@@ -50,6 +54,10 @@ public partial class User
     public string? PasswordResetToken { get; set; }
     
     public DateTime? PasswordResetTokenExpiry { get; set; }
+    
+    public string? GiteaUsername { get; set; }
+    
+    public string? GiteaToken { get; set; }
     
     public int Reputation
     {

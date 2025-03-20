@@ -9,16 +9,19 @@ using DoAnWeb.ViewModels;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
+using DoAnWeb.GitIntegration;
 
 namespace DoAnWeb.Controllers
 {
     public class AccountController : Controller
     {
         private readonly IUserService _userService;
+        private readonly IGiteaUserSyncService _giteaUserSyncService;
 
-        public AccountController(IUserService userService)
+        public AccountController(IUserService userService, IGiteaUserSyncService giteaUserSyncService)
         {
             _userService = userService;
+            _giteaUserSyncService = giteaUserSyncService;
         }
 
         [HttpGet]
@@ -77,31 +80,58 @@ namespace DoAnWeb.Controllers
 
                 if (user != null)
                 {
-                    // Create claims
+                    // Cập nhật thời gian đăng nhập cuối cùng của người dùng
+                    user.LastLoginDate = DateTime.Now;
+                    _userService.UpdateUser(user);
+
+                    // Tạo các claims cho xác thực
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, user.Username),
                         new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                        new Claim("DisplayName", user.DisplayName),
-                        new Claim("IsEmailVerified", user.IsEmailVerified.ToString().ToLower())
+                        new Claim(ClaimTypes.Email, user.Email),
+                        new Claim("DisplayName", user.DisplayName)
                     };
 
-                    // Create identity
+                    // Thêm claim cho các vai trò (roles)
+                    if (user.Roles != null)
+                    {
+                        foreach (var role in user.Roles)
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
+                        }
+                    }
+
+                    // Đặt thời gian hiệu lực cho cookie
+                    var authProperties = new AuthenticationProperties
+                    {
+                        IsPersistent = model.RememberMe,
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(model.RememberMe ? 30 : 1)
+                    };
+
+                    // Tạo cookie xác thực
                     var claimsIdentity = new ClaimsIdentity(claims, "CookieAuth");
+                    await HttpContext.SignInAsync("CookieAuth", new ClaimsPrincipal(claimsIdentity), authProperties);
 
-                    // Sign in
-                    await HttpContext.SignInAsync("CookieAuth", new ClaimsPrincipal(claimsIdentity));
+                    // Lưu thông tin người dùng vào Session để hiển thị thông báo nâng cấp bảo mật
+                    HttpContext.Session.SetString("LastLogin", DateTime.Now.ToString());
+                    HttpContext.Session.SetString("SecurityUpgrade", user.HashType);
 
-                    // Redirect to return URL or home page
-                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                        return Redirect(returnUrl);
-                    else
-                        return RedirectToAction("Index", "Home", new { area = string.Empty });
+                    // Nếu returnUrl không hợp lệ, chuyển hướng đến trang chủ
+                    if (!Url.IsLocalUrl(returnUrl))
+                    {
+                        return RedirectToAction(nameof(HomeController.Index), "Home");
+                    }
+                    
+                    return Redirect(returnUrl);
                 }
-
-                ModelState.AddModelError("", "Invalid username or password");
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Tên đăng nhập hoặc mật khẩu không chính xác.");
+                }
             }
 
+            // If we got this far, something failed, redisplay form
             return View(model);
         }
 
@@ -116,28 +146,19 @@ namespace DoAnWeb.Controllers
         [HttpGet]
         public IActionResult Profile()
         {
-            // Get current user ID from claims
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                return RedirectToAction("Login", "Account", new { area = string.Empty });
-
-            // Get user from database
-            var user = _userService.GetUserById(userId);
-            if (user == null)
-                return RedirectToAction("Login", "Account", new { area = string.Empty });
-
-            // Create view model
-            var model = new ProfileViewModel
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
             {
-                UserId = user.UserId,
-                Username = user.Username,
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                Bio = user.Bio,
-                AvatarUrl = user.AvatarUrl
-            };
+                return RedirectToAction("Login");
+            }
 
-            return View(model);
+            var profileViewModel = _userService.GetUserProfile(userId);
+            if (profileViewModel == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            return View(profileViewModel);
         }
 
         [HttpPost]
@@ -281,20 +302,26 @@ namespace DoAnWeb.Controllers
                     throw new ArgumentException("Only JPG, PNG, and GIF files are allowed.");
                 }
 
+                // Get application base path
+                var basePath = Directory.GetCurrentDirectory();
+                Console.WriteLine($"Application base path: {basePath}");
+                
                 // Create directories
-                var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var wwwrootPath = Path.Combine(basePath, "wwwroot");
                 Console.WriteLine($"wwwrootPath: {wwwrootPath}");
-                Console.WriteLine($"Directory exists: {Directory.Exists(wwwrootPath)}");
+                
+                // Verify wwwroot exists
+                if (!Directory.Exists(wwwrootPath))
+                {
+                    Console.WriteLine($"ERROR: wwwroot directory not found at: {wwwrootPath}");
+                    throw new DirectoryNotFoundException($"wwwroot directory not found: {wwwrootPath}");
+                }
                 
                 var uploadsFolder = Path.Combine(wwwrootPath, "uploads");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Console.WriteLine($"Creating directory: {uploadsFolder}");
                     Directory.CreateDirectory(uploadsFolder);
-                }
-                else
-                {
-                    Console.WriteLine($"Directory already exists: {uploadsFolder}");
                 }
                 
                 var profilesFolder = Path.Combine(uploadsFolder, "profiles");
@@ -303,24 +330,34 @@ namespace DoAnWeb.Controllers
                     Console.WriteLine($"Creating directory: {profilesFolder}");
                     Directory.CreateDirectory(profilesFolder);
                 }
-                else
-                {
-                    Console.WriteLine($"Directory already exists: {profilesFolder}");
-                }
 
-                // Generate unique filename
-                var uniqueFileName = $"{userId}_{Guid.NewGuid()}{extension}";
+                // Generate unique filename with timestamp to avoid caching issues
+                var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                var uniqueFileName = $"{userId}_{timestamp}_{Guid.NewGuid().ToString().Substring(0, 8)}{extension}";
                 var filePath = Path.Combine(profilesFolder, uniqueFileName);
                 Console.WriteLine($"Will save file to: {filePath}");
 
                 // Save the file
                 try 
                 {
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                     {
                         Console.WriteLine("Copying file to stream...");
                         await profileImage.CopyToAsync(fileStream);
+                        await fileStream.FlushAsync();
                         Console.WriteLine("File saved successfully");
+                    }
+                    
+                    // Verify file was created
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        Console.WriteLine($"ERROR: File was not created at path: {filePath}");
+                        throw new IOException($"Failed to create file at: {filePath}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"File exists check: {System.IO.File.Exists(filePath)}");
+                        Console.WriteLine($"File size: {new FileInfo(filePath).Length} bytes");
                     }
                 }
                 catch (Exception ex)
@@ -339,8 +376,8 @@ namespace DoAnWeb.Controllers
                         Console.WriteLine($"Current avatar URL: {user.AvatarUrl}");
                         if (user.AvatarUrl.Contains("/uploads/profiles/"))
                         {
-                            var oldImagePath = user.AvatarUrl.Replace("/uploads/profiles/", "");
-                            var oldFilePath = Path.Combine(profilesFolder, oldImagePath);
+                            var oldImageName = Path.GetFileName(user.AvatarUrl);
+                            var oldFilePath = Path.Combine(profilesFolder, oldImageName);
                             Console.WriteLine($"Checking for old file: {oldFilePath}");
                             
                             if (System.IO.File.Exists(oldFilePath))
@@ -370,8 +407,8 @@ namespace DoAnWeb.Controllers
                     Console.WriteLine($"WARNING: Error cleaning up old profile image: {ex.Message}");
                 }
 
-                // Return the relative URL
-                var avatarUrl = $"/uploads/profiles/{uniqueFileName}";
+                // Return the relative URL with a timestamp query parameter to prevent browser caching
+                var avatarUrl = $"/uploads/profiles/{uniqueFileName}?t={timestamp}";
                 Console.WriteLine($"Returning avatar URL: {avatarUrl}");
                 Console.WriteLine("---ProcessProfileImageUpload completed successfully---");
                 return avatarUrl;
@@ -565,6 +602,83 @@ namespace DoAnWeb.Controllers
                 TempData["ErrorMessage"] = $"An error occurred: {ex.Message}";
             }
 
+            return RedirectToAction("Profile");
+        }
+
+        [Authorize]
+        public IActionResult LinkGiteaAccount()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Login");
+            }
+            
+            // Display the linking page
+            return View();
+        }
+        
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LinkGiteaAccount(LinkGiteaViewModel model)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Login");
+            }
+            
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            
+            try
+            {
+                // Sử dụng EnsureGiteaUserAsync để liên kết tài khoản
+                var result = await _giteaUserSyncService.EnsureGiteaUserAsync(userId);
+                
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = $"Successfully linked to Gitea with username {result.Username}";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    ModelState.AddModelError("", $"Failed to link Gitea account: {result.ErrorMessage}");
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error: {ex.Message}");
+                return View(model);
+            }
+        }
+        
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public IActionResult UnlinkGiteaAccount()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Login");
+            }
+            
+            var user = _userService.GetUserById(userId);
+            if (user != null)
+            {
+                // Xóa thông tin Gitea từ tài khoản người dùng
+                user.GiteaUsername = null;
+                user.GiteaToken = null;
+                _userService.UpdateUser(user);
+                
+                TempData["SuccessMessage"] = "Successfully unlinked Gitea account";
+            }
+            
             return RedirectToAction("Profile");
         }
     }

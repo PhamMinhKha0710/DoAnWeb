@@ -1,4 +1,0 @@
-Msg 207, Level 16, State 1, Server DESKTOP-TQFDM4P\SQLEXPRESS, Line 30
-Invalid column name 'QuestionId'.
-Msg 207, Level 16, State 1, Server DESKTOP-TQFDM4P\SQLEXPRESS, Line 41
-Invalid column name 'AnswerId'.

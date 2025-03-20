@@ -1,0 +1,200 @@
+@model DoAnWeb.ViewModels.RepositoryDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Repository.RepositoryName;
+}
+
+<div class="container mt-4">
+    @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex align-items-center mb-4">
+        <a asp-action="Index" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i> Back to Repositories
+        </a>
+        <h1 class="mb-0">@Model.Repository.RepositoryName</h1>
+        @if (Model.Repository.Visibility == "Private")
+        {
+            <span class="badge bg-danger ms-2">Private</span>
+        }
+        else
+        {
+            <span class="badge bg-success ms-2">Public</span>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Repository Information
+                    </h5>
+                    @if (Model.IsGiteaRepository)
+                    {
+                        <a href="http://localhost:3000/@Model.GiteaUsername/@Model.RepositoryName" 
+                           target="_blank" class="btn btn-primary btn-sm">
+                            <i class="bi bi-box-arrow-up-right"></i> Open in Gitea
+                        </a>
+                    }
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        @if (string.IsNullOrEmpty(Model.Repository.Description))
+                        {
+                            <span class="text-muted">No description provided</span>
+                        }
+                        else
+                        {
+                            @Model.Repository.Description
+                        }
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+                        <div>
+                            <span class="text-muted">Default Branch:</span> 
+                            <span class="badge bg-secondary">@Model.Repository.DefaultBranch</span>
+                        </div>
+                        <div>
+                            <span class="text-muted">Created:</span> 
+                            @Model.Repository.CreatedDate?.ToShortDateString()
+                        </div>
+                        <div>
+                            <span class="text-muted">Last Updated:</span> 
+                            @Model.Repository.UpdatedDate?.ToShortDateString()
+                        </div>
+                    </div>
+                </div>
+                @if (Model.IsGiteaRepository)
+                {
+                    <div class="card-footer bg-light">
+                        <div class="small text-muted mb-2">Clone this repository</div>
+                        <div class="input-group">
+                            <span class="input-group-text">HTTPS</span>
+                            <input type="text" class="form-control" id="cloneUrl" 
+                                   value="http://localhost:3000/@Model.GiteaUsername/@Model.RepositoryName" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('cloneUrl')">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2 small">
+                            <a href="http://localhost:3000/@Model.GiteaUsername/@Model.RepositoryName/issues" 
+                               target="_blank" class="text-decoration-none me-3">
+                                <i class="bi bi-exclamation-circle"></i> Issues
+                            </a>
+                            <a href="http://localhost:3000/@Model.GiteaUsername/@Model.RepositoryName/pulls" 
+                               target="_blank" class="text-decoration-none me-3">
+                                <i class="bi bi-git"></i> Pull Requests
+                            </a>
+                            <a href="http://localhost:3000/@Model.GiteaUsername/@Model.RepositoryName/wiki" 
+                               target="_blank" class="text-decoration-none">
+                                <i class="bi bi-book"></i> Wiki
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-code-square"></i> README
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsGiteaRepository)
+                    {
+                        <div class="readme-content">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                README content is available in the Gitea repository. Click the "Open in Gitea" button to view it.
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            No README file found for this repository.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person"></i> Owner
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(Model.Repository.Owner?.AvatarUrl))
+                        {
+                            <img src="@Model.Repository.Owner.AvatarUrl" class="rounded-circle me-3" style="width: 64px; height: 64px;" alt="Owner Avatar">
+                        }
+                        else
+                        {
+                            <div class="rounded-circle me-3 bg-secondary d-flex align-items-center justify-content-center text-white" 
+                                 style="width: 64px; height: 64px;">
+                                <i class="bi bi-person fs-3"></i>
+                            </div>
+                        }
+                        <div>
+                            <h5 class="mb-0">@Model.Repository.Owner?.DisplayName</h5>
+                            <p class="text-muted mb-0">@Model.Repository.Owner?.Username</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> About Repositories
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Repositories in DevCommunity are powered by Gitea, an open-source Git service.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Create and store code</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Track changes with Git</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Collaborate with others</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Manage issues and pull requests</li>
+                    </ul>
+                    <a href="https://docs.gitea.io/en-us/" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+                        Learn more about Gitea
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            
+            // Show a temporary tooltip or alert
+            alert('Clone URL copied to clipboard!');
+        }
+    </script>
+} 

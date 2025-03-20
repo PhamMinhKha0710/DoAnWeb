@@ -33,5 +33,17 @@ namespace DoAnWeb.ViewModels
         
         // Property to handle avatar removal
         public bool RemoveAvatar { get; set; } = false;
+        
+        // User statistics for profile page
+        public int PostCount { get; set; } = 0;
+        public int CommentCount { get; set; } = 0;
+        public int TagCount { get; set; } = 0;
+        public int Reputation { get; set; } = 0;
+        public DateTime? MemberSince { get; set; }
+        
+        // Gitea integration properties
+        public string? GiteaUsername { get; set; }
+        public bool HasGiteaAccount => !string.IsNullOrEmpty(GiteaUsername);
+        public DateTime? LastLoginDate { get; set; }
     }
 }

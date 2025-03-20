@@ -1,0 +1,71 @@
+@model DoAnWeb.ViewModels.LinkGiteaViewModel
+
+@{
+    ViewData["Title"] = "Link Gitea Account";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-git me-2"></i>Link Gitea Account
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
+                    
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex">
+                            <div class="me-3 fs-1 text-primary">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <div>
+                                <h5>Link your DevCommunity account to Gitea</h5>
+                                <p class="mb-0">
+                                    By linking your account to Gitea, you'll be able to:
+                                </p>
+                                <ul class="mt-2">
+                                    <li>Create and manage repositories directly from DevCommunity</li>
+                                    <li>Share your code snippets in questions and answers</li>
+                                    <li>Showcase your repositories on your profile</li>
+                                    <li>Collaborate with other developers more easily</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form asp-action="LinkGiteaAccount" method="post">
+                        <input type="hidden" asp-for="ReturnUrl" />
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" asp-for="ConfirmLink" id="confirmLink" />
+                            <label class="form-check-label" for="confirmLink">
+                                I confirm that I want to create a linked Gitea account
+                            </label>
+                        </div>
+                        
+                        <div class="alert alert-light border">
+                            <p class="mb-0"><strong>Note:</strong> A new Gitea account will be created and linked to your DevCommunity account. You will use your DevCommunity credentials to access both platforms.</p>
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-git me-2"></i>Link Account
+                            </button>
+                            <a asp-action="Profile" class="btn btn-outline-secondary mt-2">
+                                <i class="bi bi-arrow-left me-2"></i>Return to Profile
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
