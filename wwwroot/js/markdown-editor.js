@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const markdownTextarea = document.getElementById('Body');
     if (!markdownTextarea) return;
     
+    // Cấu hình Marked.js nếu được tải
+    setupMarkedRenderer();
+    
     // Create toolbar container
     const toolbarContainer = document.createElement('div');
     toolbarContainer.className = 'markdown-toolbar border rounded p-2 mb-2 bg-light';
@@ -75,18 +78,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /**
      * Cleans up any HTML content in the textarea
-     * This prevents HTML code from being displayed directly
+     * This prevents HTML code from being displayed directly by converting it to a code block if necessary
      */
     function cleanupTextareaContent() {
         if (!markdownTextarea) return;
         
-        // Check if the content looks like HTML (contains HTML tags)
+        // Lấy nội dung hiện tại của textarea
         const content = markdownTextarea.value;
-        if (content.includes('<div') || content.includes('<span') || 
-            content.includes('<form') || content.includes('@await')) {
-            
-            // If it contains Razor syntax or HTML, escape it as code block
-            if (content.includes('@await') || content.includes('@{') || content.includes('@model')) {
+        
+        // Nếu đã là code block, không cần xử lý
+        if (content.startsWith('```') && content.endsWith('```')) {
+            return;
+        }
+        
+        // Kiểm tra xem có phải là HTML không
+        const isHtml = content.trim().startsWith('<!DOCTYPE') || 
+                      content.trim().startsWith('<html') ||
+                      content.includes('@model') ||
+                      content.includes('@using') ||
+                      content.includes('@addTagHelper') ||
+                      (content.includes('<') && content.includes('</') && 
+                        (content.includes('<div') || content.includes('<span') || 
+                         content.includes('<p>') || content.includes('<h1>') || 
+                         content.includes('<ul>') || content.includes('<a ') ||
+                         content.includes('<head') || content.includes('<body')));
+        
+        // Nếu là Razor syntax hoặc HTML, chuyển đổi thành code block
+        if (isHtml) {
+            if (content.includes('@await') || content.includes('@{') || content.includes('@model') || content.includes('@using')) {
                 markdownTextarea.value = '```cshtml\n' + content + '\n```';
             } else if (content.match(/<[a-z][\s\S]*>/i)) {
                 markdownTextarea.value = '```html\n' + content + '\n```';
@@ -114,103 +133,197 @@ document.addEventListener('DOMContentLoaded', function() {
             // Store original markdown text to preserve formatting
             markdownTextarea.setAttribute('data-original-content', markdownTextarea.value);
             
-            // Convert markdown to HTML
-            const markdownText = markdownTextarea.value;
-            let html = '';
+            // Lưu trữ nội dung gốc (không qua xử lý) để đảm bảo không bị mất định dạng
+            const rawContent = markdownTextarea.value;
             
-            
-            if (typeof marked !== 'undefined') {
-                // Configure marked.js options to properly handle code blocks
-                marked.setOptions({
-                    highlight: function(code, lang) {
-                        // If Prism is available, use it for syntax highlighting
-                        if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
-                            return Prism.highlight(code, Prism.languages[lang], lang);
-                        }
-                        return code;
-                    },
-                    breaks: true,
-                    gfm: true
-                });
+            try {
+                // Kiểm tra và xử lý trước nếu là HTML hoặc Razor
+                let processedContent = preprocessCodeBlocks(rawContent);
                 
-                // Use marked.js if available
-                html = marked.parse(markdownText);
-            } else {
-                // Simple fallback
-                html = markdownText
-                    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-                    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-                    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                    .replace(/`(.+?)`/g, '<code>$1</code>')
-                    .replace(/```([a-z]*)?\n([\s\S]+?)```/g, function(match, lang, code) {
-                        return '<pre><code class="language-' + (lang || 'plaintext') + '">' + code + '</code></pre>';
-                    })
-                    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
-                    .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" class="img-fluid">')
-                    .replace(/^- (.+)$/gm, '<li>$1</li>')
-                    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-                    .replace(/(<li>.+<\/li>\n)+/g, '<ul>$&</ul>')
-                    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
-            }
-            
-            previewContainer.innerHTML = html;
-            
-            // Add syntax highlighting to code blocks
-            if (typeof Prism !== 'undefined') {
-                Prism.highlightAllUnder(previewContainer);
-            }
-            
-            // Preserve code formatting for all code blocks
-            const codeBlocks = previewContainer.querySelectorAll('pre code, code');
-            codeBlocks.forEach(block => {
-                // Ensure code blocks maintain their original formatting
-                block.style.whiteSpace = 'pre';
-                block.style.tabSize = '4';
-                block.style.MozTabSize = '4';
+                // Kiểm tra nếu là HTML thuần túy hoặc Razor chưa được bọc trong code block
+                const isRawHtml = (
+                    rawContent.trim().startsWith('<!DOCTYPE') || 
+                    rawContent.trim().startsWith('<html') ||
+                    rawContent.includes('@model') ||
+                    rawContent.includes('@using') ||
+                    rawContent.includes('@addTagHelper') ||
+                    (rawContent.includes('<') && rawContent.includes('</') && 
+                     (rawContent.includes('<div') || rawContent.includes('<span') || 
+                      rawContent.includes('<p>') || rawContent.includes('<h1>') || 
+                      rawContent.includes('<ul>') || rawContent.includes('<a') ||
+                      rawContent.includes('<head') || rawContent.includes('<body')))
+                ) && !rawContent.trim().startsWith('```');
                 
-                // Apply theme-specific styling
-                if (document.documentElement.getAttribute('data-theme') === 'dark') {
-                    block.style.backgroundColor = '#334155';
-                    block.style.color = '#e2e8f0';
-                } else {
-                    block.style.backgroundColor = '#f1f5f9';
-                    block.style.color = '#334155';
+                if (isRawHtml) {
+                    // Tự động bọc HTML trong code block nếu chưa được bọc
+                    if (rawContent.includes('@model') || rawContent.includes('@using') || 
+                        rawContent.includes('@{') || rawContent.includes('@addTagHelper')) {
+                        processedContent = '```cshtml\n' + rawContent + '\n```';
+                    } else {
+                        processedContent = '```html\n' + rawContent + '\n```';
+                    }
                 }
-            });
-            
-            // Ensure the submit button and form container remain visible
-            if (submitButton) {
-                submitButton.setAttribute('style', 'display: inline-block !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; position: relative !important; pointer-events: auto !important; cursor: pointer !important;');
-            }
-            
-            if (formContainer) {
-                formContainer.setAttribute('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; position: relative !important;');
+                
+                // Convert markdown to HTML using marked.js
+                let html = '';
+                if (typeof marked !== 'undefined') {
+                    marked.setOptions({
+                        breaks: true,
+                        gfm: true,
+                        pedantic: false,
+                        smartLists: true,
+                        smartypants: false,
+                        xhtml: false
+                    });
+                    html = marked.parse(processedContent);
+                } else {
+                    // Fallback nếu marked.js không có sẵn
+                    html = processedContent
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/```(\w*)\n([\s\S]+?)```/g, function(match, lang, code) {
+                            return '<pre><code class="language-' + lang + '">' + code + '</code></pre>';
+                        });
+                }
+                
+                // Create a temporary container to process the HTML
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = html;
+                tempContainer.className = 'markdown-preview';
+                
+                // Apply special processing to code blocks
+                postProcessCodeBlocks(tempContainer);
+                
+                // Update the preview with the processed HTML
+                previewContainer.innerHTML = tempContainer.innerHTML;
+                
+                // If there's a submit button, keep it visible in preview mode
+                if (submitButton && formContainer) {
+                    const clonedFormContainer = formContainer.cloneNode(true);
+                    previewContainer.appendChild(clonedFormContainer);
+                }
+                
+                // Kích hoạt syntax highlighting nếu Prism có sẵn
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightAllUnder(previewContainer);
+                }
+            } catch (error) {
+                console.error('Error in markdown preview:', error);
+                previewContainer.innerHTML = '<div class="alert alert-danger">Error rendering preview: ' + error.message + '</div>';
+                previewContainer.innerHTML += '<pre class="border p-3 bg-light">' + rawContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
             }
         } else {
-            // Show editor
+            // Switch back to edit mode
             previewContainer.classList.add('d-none');
             markdownTextarea.classList.remove('d-none');
             previewBtn.innerHTML = '<i class="bi bi-eye"></i> Preview';
             
-            // Remove preview mode class
+            // Remove the preview active class
             document.body.classList.remove('markdown-preview-active');
             
-            // Restore original content if it was stored
-            if (markdownTextarea.hasAttribute('data-original-content')) {
-                markdownTextarea.value = markdownTextarea.getAttribute('data-original-content');
-            }
-            
-            // Ensure the submit button and form container remain visible
-            if (submitButton) {
-                submitButton.setAttribute('style', 'display: inline-block !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; position: relative !important; pointer-events: auto !important; cursor: pointer !important;');
-            }
-            
-            if (formContainer) {
-                formContainer.setAttribute('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important; z-index: 9999 !important; position: relative !important;');
+            // Restore the original content to prevent formatting loss
+            const originalContent = markdownTextarea.getAttribute('data-original-content');
+            if (originalContent) {
+                markdownTextarea.value = originalContent;
             }
         }
+    }
+    
+    /**
+     * Xử lý trước các code block để bảo toàn định dạng
+     */
+    function preprocessCodeBlocks(markdown) {
+        if (!markdown) return markdown;
+        
+        // Kiểm tra xem có phải là HTML hoặc Razor không
+        if (markdown.trim().startsWith('<!DOCTYPE') || 
+            markdown.trim().startsWith('<html') ||
+            markdown.includes('@model') ||
+            markdown.includes('@using') ||
+            markdown.includes('@addTagHelper') ||
+            (markdown.includes('<') && markdown.includes('</') && 
+              (markdown.includes('<div') || markdown.includes('<span') || 
+               markdown.includes('<p>') || markdown.includes('<h1>') || 
+               markdown.includes('<ul>') || markdown.includes('<a') ||
+               markdown.includes('<head') || markdown.includes('<body')))
+           ) {
+            // Nếu là HTML hoặc Razor, bọc nó trong code block thích hợp nếu chưa được bọc
+            if (!markdown.trim().startsWith('```')) {
+                if (markdown.includes('@model') || markdown.includes('@using') || 
+                    markdown.includes('@{') || markdown.includes('@addTagHelper')) {
+                    return '```cshtml\n' + markdown + '\n```';
+                } else {
+                    return '```html\n' + markdown + '\n```';
+                }
+            }
+        }
+        
+        // Giữ nguyên ký tự khoảng trắng và tab trong code blocks
+        return markdown.replace(/```([a-z]*)?(\r?\n)([\s\S]*?)```/g, (match, lang, newline, code) => {
+            // Đảm bảo giữ nguyên định dạng code
+            return '```' + (lang || '') + newline + code + '```';
+        });
+    }
+    
+    /**
+     * Xử lý sau các code block để đảm bảo định dạng hiển thị đúng
+     */
+    function postProcessCodeBlocks(container) {
+        const codeBlocks = container.querySelectorAll('pre code');
+        codeBlocks.forEach(block => {
+            // Đảm bảo code blocks giữ nguyên định dạng
+            block.style.whiteSpace = 'pre';
+            block.style.tabSize = '4';
+            block.style.MozTabSize = '4';
+            block.style.OTabSize = '4';
+            block.style.display = 'block';
+            block.style.overflowX = 'auto';
+            block.style.wordBreak = 'keep-all';
+            block.style.wordWrap = 'normal';
+            block.style.overflowWrap = 'normal';
+            block.style.padding = '0';
+            
+            // Thêm class cho PrismJS nếu chưa có
+            if (!block.classList.contains('language-')) {
+                block.classList.add('language-plaintext');
+            }
+            
+            // Xử lý đặc biệt cho HTML và CSHTML code blocks
+            if (block.classList.contains('language-html') || block.classList.contains('language-cshtml')) {
+                // Đảm bảo tất cả các ký tự đặc biệt được escape đúng
+                if (!block.getAttribute('processed-html')) {
+                    const content = block.innerHTML;
+                    // Kiểm tra xem HTML đã được escape chưa
+                    if (content.indexOf('&lt;') === -1 && content.indexOf('<') !== -1) {
+                        block.innerHTML = content
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;');
+                    }
+                    block.setAttribute('processed-html', 'true');
+                }
+            }
+            
+            // Thêm attribut data-preserve-whitespace để CSS có thể nhận diện
+            block.setAttribute('data-preserve-whitespace', 'true');
+            
+            // Đặt thuộc tính quan trọng
+            const parent = block.parentElement;
+            if (parent && parent.tagName.toLowerCase() === 'pre') {
+                parent.style.whiteSpace = 'pre';
+                parent.style.tabSize = '4';
+                parent.style.overflow = 'auto';
+                
+                // Thêm thuộc tính data-language nếu có thể
+                const langMatch = block.className.match(/language-(\w+)/);
+                if (langMatch && langMatch[1] && langMatch[1] !== 'plaintext') {
+                    parent.setAttribute('data-language', langMatch[1]);
+                }
+                
+                // Đảm bảo các thuộc tính CSS quan trọng được áp dụng
+                parent.style.cssText += '; white-space: pre !important; tab-size: 4 !important; -moz-tab-size: 4 !important; -o-tab-size: 4 !important; overflow-x: auto !important; word-break: normal !important; word-wrap: normal !important; overflow-wrap: normal !important;';
+                block.style.cssText += '; white-space: pre !important; tab-size: 4 !important; -moz-tab-size: 4 !important; -o-tab-size: 4 !important; word-break: normal !important; word-wrap: normal !important; overflow-wrap: normal !important;';
+            }
+        });
     }
     
     /**
@@ -396,5 +509,49 @@ document.addEventListener('DOMContentLoaded', function() {
         markdownTextarea.value.includes('@{') || 
         markdownTextarea.value.includes('@model')) {
         cleanupTextareaContent();
+    }
+    
+    /**
+     * Cấu hình Marked.js Renderer để xử lý đặc biệt các code block
+     */
+    function setupMarkedRenderer() {
+        if (typeof marked === 'undefined') return;
+        
+        // Tạo một renderer tùy chỉnh
+        const renderer = new marked.Renderer();
+        
+        // Ghi đè phương thức code để xử lý code block đặc biệt
+        renderer.code = function(code, language) {
+            // Đảm bảo xuống dòng và khoảng trắng được giữ nguyên
+            const escapedCode = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            
+            const languageClass = language ? `language-${language}` : 'language-plaintext';
+            const dataAttr = language ? ` data-language="${language}"` : '';
+            
+            return `<pre${dataAttr}><code class="${languageClass}" style="white-space: pre !important; tab-size: 4 !important; -moz-tab-size: 4 !important; -o-tab-size: 4 !important; word-break: keep-all !important; word-wrap: normal !important; overflow-wrap: normal !important;">${escapedCode}</code></pre>`;
+        };
+        
+        // Áp dụng cấu hình cho Marked
+        marked.setOptions({
+            renderer: renderer,
+            highlight: function(code, lang) {
+                // If Prism is available, use it for syntax highlighting
+                if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
+                    return Prism.highlight(code, Prism.languages[lang], lang);
+                }
+                return code;
+            },
+            breaks: true,
+            gfm: true,
+            pedantic: false,
+            smartLists: true,
+            smartypants: false,
+            xhtml: false
+        });
     }
 });

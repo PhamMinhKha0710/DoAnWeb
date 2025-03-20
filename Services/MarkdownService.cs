@@ -157,20 +157,6 @@ namespace DoAnWeb.Services
     }
 
     /// <summary>
-    /// Renderer tùy chỉnh cho code blocks thông thường
-    /// </summary>
-    public class CustomCodeBlockRenderer : HtmlObjectRenderer<CodeBlock>
-    {
-        protected override void Write(HtmlRenderer renderer, CodeBlock obj)
-        {
-            // Sử dụng class general cho code blocks không có info string
-            renderer.Write("<pre><code class=\"language-plaintext\">");
-            renderer.WriteLeafRawLines(obj, true, true);
-            renderer.Write("</code></pre>");
-        }
-    }
-
-    /// <summary>
     /// Renderer tùy chỉnh cho fenced code blocks (```language)
     /// </summary>
     public class CustomFencedCodeBlockRenderer : HtmlObjectRenderer<FencedCodeBlock>
@@ -182,9 +168,29 @@ namespace DoAnWeb.Services
             // Nếu có xác định ngôn ngữ, đặt thuộc tính data-language
             string languageAttr = string.IsNullOrWhiteSpace(obj.Info) ? "" : $" data-language=\"{obj.Info.ToLowerInvariant()}\"";
             
-            // Render với class language cho Prism.js
-            renderer.Write($"<pre{languageAttr}><code class=\"{languageClass}\">");
+            // Render với class language cho Prism.js và thêm thuộc tính style để bảo toàn định dạng
+            renderer.Write($"<pre{languageAttr} style=\"white-space: pre !important; overflow-x: auto; tab-size: 4 !important;\"><code class=\"{languageClass}\" style=\"white-space: pre !important; tab-size: 4 !important; -moz-tab-size: 4 !important; -o-tab-size: 4 !important; word-break: keep-all !important; word-wrap: normal !important; overflow-wrap: normal !important;\" data-preserve-whitespace=\"true\">");
+            
+            // Sử dụng WriteLeafRawLines với tham số escapeHtml=true để giữ nguyên định dạng nhưng vẫn escape các ký tự HTML
             renderer.WriteLeafRawLines(obj, true, true);
+            
+            renderer.Write("</code></pre>");
+        }
+    }
+
+    /// <summary>
+    /// Renderer tùy chỉnh cho code blocks thông thường
+    /// </summary>
+    public class CustomCodeBlockRenderer : HtmlObjectRenderer<CodeBlock>
+    {
+        protected override void Write(HtmlRenderer renderer, CodeBlock obj)
+        {
+            // Sử dụng class general cho code blocks không có info string và thêm các thuộc tính style
+            renderer.Write("<pre style=\"white-space: pre !important; overflow-x: auto; tab-size: 4 !important;\"><code class=\"language-plaintext\" style=\"white-space: pre !important; tab-size: 4 !important; -moz-tab-size: 4 !important; -o-tab-size: 4 !important; word-break: keep-all !important; word-wrap: normal !important; overflow-wrap: normal !important;\" data-preserve-whitespace=\"true\">");
+            
+            // Sử dụng WriteLeafRawLines với tham số escapeHtml=true để giữ nguyên định dạng nhưng vẫn escape các ký tự HTML
+            renderer.WriteLeafRawLines(obj, true, true);
+            
             renderer.Write("</code></pre>");
         }
     }

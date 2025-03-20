@@ -357,6 +357,7 @@ namespace DoAnWeb.Services
                 PostCount = postCount,
                 CommentCount = commentCount,
                 TagCount = tagCount,
+                Reputation = user.Reputation,
                 MemberSince = user.CreatedDate,
                 // Add Gitea information and last login date
                 GiteaUsername = user.GiteaUsername,

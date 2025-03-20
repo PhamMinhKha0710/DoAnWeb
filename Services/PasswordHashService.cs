@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using BCrypt.Net;
 
 namespace DoAnWeb.Services
 {
@@ -12,7 +13,7 @@ namespace DoAnWeb.Services
     public interface IPasswordHashService
     {
         /// <summary>
-        /// Tạo hash từ mật khẩu sử dụng thuật toán mặc định (PBKDF2)
+        /// Tạo hash từ mật khẩu sử dụng thuật toán mặc định (BCrypt)
         /// </summary>
         string HashPassword(string password);
         
@@ -37,36 +38,21 @@ namespace DoAnWeb.Services
         // Các loại hash được hỗ trợ
         public const string HASH_TYPE_SHA256 = "SHA256";
         public const string HASH_TYPE_PBKDF2 = "PBKDF2";
+        public const string HASH_TYPE_BCRYPT = "BCRYPT";
         
         // Số vòng lặp đối với PBKDF2 (tăng số này sẽ làm cho việc băm mật khẩu chậm hơn)
         private const int PBKDF2_ITERATIONS = 10000;
+
+        // WorkFactor cho BCrypt (giá trị từ 10-16 là phổ biến, 12 là khuyến nghị)
+        private const int BCRYPT_WORK_FACTOR = 12;
         
         /// <summary>
-        /// Băm mật khẩu sử dụng PBKDF2 với salt
+        /// Băm mật khẩu sử dụng BCrypt với salt tự động
         /// </summary>
         public string HashPassword(string password)
         {
-            // Tạo salt ngẫu nhiên
-            byte[] salt = new byte[16];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-            
-            // Sử dụng PBKDF2 với SHA256 để tạo hash mật khẩu
-            byte[] hash = KeyDerivation.Pbkdf2(
-                password: password,
-                salt: salt,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: PBKDF2_ITERATIONS,
-                numBytesRequested: 32);
-            
-            // Kết hợp salt và hash thành một chuỗi
-            byte[] combinedBytes = new byte[16 + 32];
-            Array.Copy(salt, 0, combinedBytes, 0, 16);
-            Array.Copy(hash, 0, combinedBytes, 16, 32);
-            
-            return Convert.ToBase64String(combinedBytes);
+            // Sử dụng BCrypt để hash mật khẩu (tự động tạo và nhúng salt)
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: BCRYPT_WORK_FACTOR);
         }
         
         /// <summary>
@@ -81,6 +67,9 @@ namespace DoAnWeb.Services
                     
                 case HASH_TYPE_PBKDF2:
                     return VerifyPasswordPBKDF2(password, storedHash);
+                    
+                case HASH_TYPE_BCRYPT:
+                    return VerifyPasswordBCrypt(password, storedHash);
                     
                 default:
                     // Mặc định sử dụng SHA256 cho các tài khoản cũ
@@ -143,6 +132,23 @@ namespace DoAnWeb.Services
                 return false;
             }
         }
+
+        /// <summary>
+        /// Xác thực mật khẩu với BCrypt
+        /// </summary>
+        private bool VerifyPasswordBCrypt(string password, string storedHash)
+        {
+            try
+            {
+                // BCrypt tự xử lý việc trích xuất salt và tính toán hash
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+            catch
+            {
+                // Nếu có bất kỳ lỗi nào xảy ra trong quá trình xác thực
+                return false;
+            }
+        }
         
         /// <summary>
         /// So sánh hai mảng byte theo thời gian không đổi
@@ -163,8 +169,8 @@ namespace DoAnWeb.Services
         /// </summary>
         public bool NeedsUpgrade(string hashType)
         {
-            // Nếu không phải PBKDF2, cần nâng cấp
-            return hashType != HASH_TYPE_PBKDF2;
+            // Nếu không phải BCRYPT, cần nâng cấp
+            return hashType != HASH_TYPE_BCRYPT;
         }
         
         /// <summary>
@@ -172,7 +178,7 @@ namespace DoAnWeb.Services
         /// </summary>
         public string GetDefaultHashType()
         {
-            return HASH_TYPE_PBKDF2;
+            return HASH_TYPE_BCRYPT;
         }
     }
 } 

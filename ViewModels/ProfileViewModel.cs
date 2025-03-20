@@ -38,6 +38,7 @@ namespace DoAnWeb.ViewModels
         public int PostCount { get; set; } = 0;
         public int CommentCount { get; set; } = 0;
         public int TagCount { get; set; } = 0;
+        public int Reputation { get; set; } = 0;
         public DateTime? MemberSince { get; set; }
         
         // Gitea integration properties

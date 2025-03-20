@@ -16,7 +16,7 @@ public partial class User
     public string PasswordHash { get; set; } = null!;
 
     // Thuộc tính để theo dõi loại thuật toán hash được sử dụng
-    public string HashType { get; set; } = "SHA256";
+    public string HashType { get; set; } = "BCRYPT";
 
     public string DisplayName { get; set; } = null!;
 

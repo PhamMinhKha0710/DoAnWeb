@@ -549,11 +549,15 @@ namespace DoAnWeb.Controllers
                     if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                         return RedirectToAction("Login", "Account");
 
+                    // Bảo toàn định dạng code trong nội dung markdown
+                    // Thay thế các ký tự đặc biệt chỉ trong các code block
+                    string preservedBody = PreserveCodeFormatting(model.Body);
+
                     // Create question - store raw markdown content
                     var question = new Question
                     {
                         Title = model.Title,
-                        Body = model.Body, // Store the raw markdown
+                        Body = preservedBody, // Lưu nội dung đã được xử lý
                         UserId = userId,
                         CreatedDate = DateTime.UtcNow,
                         UpdatedDate = DateTime.UtcNow,
@@ -627,6 +631,29 @@ namespace DoAnWeb.Controllers
         }
 
         /// <summary>
+        /// Phương thức hỗ trợ để bảo toàn định dạng code trong nội dung Markdown
+        /// </summary>
+        private string PreserveCodeFormatting(string markdown)
+        {
+            if (string.IsNullOrEmpty(markdown))
+                return markdown;
+
+            // Regex tìm kiếm các code block có định dạng ```language ... ```
+            var codeBlockRegex = new System.Text.RegularExpressions.Regex(@"```([a-z]*)?(\r?\n)([\s\S]*?)```");
+            
+            // Thay thế nội dung của mỗi code block để đảm bảo giữ nguyên định dạng
+            return codeBlockRegex.Replace(markdown, match =>
+            {
+                var language = match.Groups[1].Value; // Ngôn ngữ (nếu có)
+                var newline = match.Groups[2].Value; // Ký tự xuống dòng
+                var code = match.Groups[3].Value; // Nội dung code
+                
+                // Trả về code block nguyên bản
+                return $"```{language}{newline}{code}```";
+            });
+        }
+
+        /// <summary>
         /// Displays the form for editing an existing question
         /// Requires user authentication and must be the question owner
         /// </summary>
@@ -672,43 +699,36 @@ namespace DoAnWeb.Controllers
             {
                 try
                 {
-                    // Check if current user is the owner
-                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                    if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                    {
-                        return RedirectToAction("Login", "Account");
-                    }
-
+                    // Get question from database
                     var question = _questionService.GetQuestionById(model.QuestionId);
-                    if (question == null)
-                    {
-                        return NotFound();
-                    }
-
-                    if (userId != question.UserId)
+                    
+                    // Verify ownership
+                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                    if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId) || question.UserId != userId)
                     {
                         return Forbid();
                     }
-
-                    // Update question properties
+                    
+                    // Bảo toàn định dạng code trong nội dung markdown
+                    string preservedBody = PreserveCodeFormatting(model.Body);
+                    
+                    // Update question
                     question.Title = model.Title;
-                    question.Body = model.Body;
+                    question.Body = preservedBody; // Lưu nội dung đã được xử lý
                     question.UpdatedDate = DateTime.UtcNow;
-
+                    
                     // Process tags
                     List<string> tagList = null;
-                    if (!string.IsNullOrEmpty(model.Tags))
+                    if (!string.IsNullOrWhiteSpace(model.Tags))
                     {
                         tagList = model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
                             .Select(t => t.Trim())
                             .Where(t => !string.IsNullOrEmpty(t))
                             .ToList();
                     }
-
-                    // Update the question
+                    
                     _questionService.UpdateQuestion(question, tagList);
-
-                    TempData["SuccessMessage"] = "Question updated successfully";
+                    
                     return RedirectToAction(nameof(Details), new { id = question.QuestionId });
                 }
                 catch (Exception ex)
@@ -716,7 +736,7 @@ namespace DoAnWeb.Controllers
                     ModelState.AddModelError("", $"Error updating question: {ex.Message}");
                 }
             }
-
+            
             return View(model);
         }
     }

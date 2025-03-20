@@ -1,6 +1,6 @@
 # Hướng dẫn nâng cấp hệ thống xác thực mật khẩu
 
-Tài liệu này mô tả các bước đã thực hiện để nâng cấp hệ thống xác thực mật khẩu từ thuật toán SHA-256 đơn giản sang thuật toán PBKDF2 an toàn hơn, đồng thời bảo đảm khả năng đăng nhập tương thích với các tài khoản cũ.
+Tài liệu này mô tả các bước đã thực hiện để nâng cấp hệ thống xác thực mật khẩu từ thuật toán SHA-256 đơn giản sang thuật toán BCrypt an toàn hơn, đồng thời bảo đảm khả năng đăng nhập tương thích với các tài khoản cũ.
 
 ## Tổng quan về các thay đổi
 
@@ -24,13 +24,14 @@ Tài liệu này mô tả các bước đã thực hiện để nâng cấp hệ
 2. `UserService.Authenticate` tìm người dùng theo username
 3. Xác thực mật khẩu dựa trên giá trị của trường `HashType`:
    - SHA256: Dùng thuật toán SHA-256 đơn giản (cho tài khoản cũ)
-   - PBKDF2: Dùng thuật toán PBKDF2 với salt (cho tài khoản mới)
-4. Nếu đăng nhập thành công và thuật toán băm là loại cũ (SHA256), tự động nâng cấp mật khẩu sang thuật toán PBKDF2 an toàn hơn
+   - PBKDF2: Dùng thuật toán PBKDF2 với salt (cho tài khoản cũ hơn)
+   - BCRYPT: Dùng thuật toán BCrypt với salt tích hợp (cho tài khoản mới)
+4. Nếu đăng nhập thành công và thuật toán băm là loại cũ (SHA256 hoặc PBKDF2), tự động nâng cấp mật khẩu sang thuật toán BCrypt an toàn hơn
 
 ### Đăng ký tài khoản mới
 
-1. Tất cả tài khoản mới được tạo sẽ sử dụng thuật toán PBKDF2 với salt
-2. Trường `HashType` sẽ được đặt thành "PBKDF2"
+1. Tất cả tài khoản mới được tạo sẽ sử dụng thuật toán BCrypt với salt tích hợp
+2. Trường `HashType` sẽ được đặt thành "BCRYPT"
 
 ## Cách triển khai
 
@@ -41,19 +42,31 @@ Tài liệu này mô tả các bước đã thực hiện để nâng cấp hệ
        HashType NVARCHAR(50) NOT NULL DEFAULT 'SHA256';
    ```
 
-2. Khởi động lại ứng dụng để áp dụng các thay đổi code
+2. Cài đặt thư viện BCrypt.NET:
+   ```
+   dotnet add package BCrypt.Net-Next
+   ```
+
+3. Khởi động lại ứng dụng để áp dụng các thay đổi code
 
 ## Phương thức băm mật khẩu mới
 
-Thuật toán PBKDF2 được triển khai với các đặc điểm sau:
-- Sử dụng thuật toán HMACSHA256
-- 10.000 vòng lặp để làm chậm các cuộc tấn công bằng vét cạn
-- Salt ngẫu nhiên 16 byte cho mỗi mật khẩu
-- Chiều dài hash 32 byte
-- Salt và hash được lưu cùng nhau trong một chuỗi Base64
+Thuật toán BCrypt được triển khai với các đặc điểm sau:
+- Tự động tạo và quản lý salt cho mỗi mật khẩu
+- WorkFactor 12 (có thể điều chỉnh để cân bằng giữa bảo mật và hiệu suất)
+- Chống lại các tấn công brute-force và rainbow table
+- Tự điều chỉnh theo sự phát triển của phần cứng (qua việc điều chỉnh WorkFactor)
+- Salt được nhúng trực tiếp trong hash, không cần lưu trữ riêng
+
+## Lợi ích của BCrypt so với PBKDF2 và SHA-256
+
+- **Thiết kế đặc biệt cho mật khẩu**: BCrypt được tạo ra với mục đích chuyên biệt để hash mật khẩu
+- **Chống tấn công GPU**: BCrypt yêu cầu nhiều bộ nhớ, làm giảm hiệu quả của tấn công bằng GPU
+- **Tham số điều chỉnh (WorkFactor)**: Dễ dàng điều chỉnh độ phức tạp theo thời gian
+- **Tích hợp salt**: Tự động xử lý việc tạo và lưu trữ salt, giảm rủi ro lỗi triển khai
 
 ## Lưu ý về bảo mật
 
-- Thuật toán SHA-256 đơn giản (không salt) vẫn được hỗ trợ cho các tài khoản cũ
-- Khi người dùng đăng nhập thành công, hệ thống sẽ tự động nâng cấp mật khẩu sang định dạng mới
+- Thuật toán SHA-256 đơn giản (không salt) và PBKDF2 vẫn được hỗ trợ cho các tài khoản cũ
+- Khi người dùng đăng nhập thành công, hệ thống sẽ tự động nâng cấp mật khẩu sang định dạng BCrypt mới
 - Nên khuyến khích người dùng đổi mật khẩu nếu họ chưa đăng nhập sau khi nâng cấp 
