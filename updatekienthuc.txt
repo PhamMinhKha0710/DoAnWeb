@@ -390,3 +390,7 @@ Trong QuestionsController.cs, dòng mã cũ tự động tăng lượt xem đã 
 Thay vào đó, việc tăng lượt xem được xử lý hoàn toàn thông qua ViewCountHub.cs và JavaScript, kích hoạt chỉ khi người dùng cuộn đến giữa trang.
 Tính năng này hoạt động chính xác theo yêu cầu của bạn - chỉ tăng lượt xem khi người dùng thực sự đọc nội dung (lướt đến giữa trang) thay vì chỉ đơn giản là bấm vào link.
 Bạn có thể kiểm tra bằng cách bấm vào một câu hỏi, quan sát số lượt xem ban đầu, sau đó lướt xuống giữa trang và xem số lượt xem tăng lên.
+
+
+
+##tăng cường bảo bật bằng auth gg, github, cập nhật gitea tạo repo quản lí dự án, log gitea cập nhật các repo theo lượt reques
