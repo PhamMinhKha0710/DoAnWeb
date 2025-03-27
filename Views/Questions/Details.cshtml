@@ -10,9 +10,19 @@
     <link rel="stylesheet" href="~/css/code-blocks.css" />
     <link rel="stylesheet" href="~/css/comment-styles.css" />
     <link rel="stylesheet" href="~/css/attachment-styles.css" />
+    <link rel="stylesheet" href="~/css/vote-styles.css" />
+    <link rel="stylesheet" href="~/css/toast-notifications.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
+    
+    <!-- Add metadata for question ID (used by voting system) -->
+    <meta name="question-id" content="@Model.QuestionId" />
 }
+
+<!-- Hidden form for CSRF token that JavaScript can access -->
+<form id="csrf-form" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
 
 <div class="container">
     <div class="row mb-4">
@@ -51,7 +61,7 @@
                     <div class="d-flex justify-content-between mb-3">
                         <div class="question-stats d-flex gap-2">
                             <span class="badge bg-primary rounded-pill px-3 py-2">
-                                <i class="bi bi-arrow-up-circle me-1"></i> @Model.Score votes
+                                <i class="bi bi-arrow-up-circle me-1"></i> <span class="vote-count" data-id="@Model.QuestionId" data-type="question">@Model.Score</span> votes
                             </span>
                             <span class="badge bg-secondary rounded-pill px-3 py-2">
                                 <i class="bi bi-eye me-1"></i> <span class="view-count">@Model.ViewCount</span> views
@@ -247,30 +257,31 @@
                     
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between align-items-center">
                             <div class="action-buttons">
                                 @{
                                     bool hasUpvoted = Model.UserVoteType == "up";
                                     bool hasDownvoted = Model.UserVoteType == "down";
                                 }
-                                <form asp-action="Vote" method="post" class="d-inline vote-form">
-                                    <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <input type="hidden" name="voteType" value="@(hasUpvoted ? "remove" : "up")" class="vote-type-input" />
-                                    <button type="submit" class="btn @(hasUpvoted ? "btn-primary" : "btn-outline-success") btn-sm vote-button @(hasUpvoted ? "active" : "")">
-                                        <i class="bi @(hasUpvoted ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> @(hasUpvoted ? "Upvoted" : "Upvote")
+                                <button onclick="vote(@Model.QuestionId, 'question', 'up')" 
+                                        class="btn @(hasUpvoted ? "btn-primary" : "btn-outline-success") btn-sm vote-button vote-btn-up @(hasUpvoted ? "active" : "")"
+                                        data-id="@Model.QuestionId" data-type="question">
+                                    <i class="bi @(hasUpvoted ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> 
+                                    <span>@(hasUpvoted ? "Upvoted" : "Upvote")</span>
                                     </button>
-                                </form>
-                                <form asp-action="Vote" method="post" class="d-inline vote-form">
-                                    <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <input type="hidden" name="voteType" value="@(hasDownvoted ? "remove" : "down")" class="vote-type-input" />
-                                    <button type="submit" class="btn @(hasDownvoted ? "btn-danger" : "btn-outline-danger") btn-sm vote-button @(hasDownvoted ? "active-downvote" : "")">
-                                        <i class="bi @(hasDownvoted ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> @(hasDownvoted ? "Downvoted" : "Downvote")
+                                
+                                <button onclick="vote(@Model.QuestionId, 'question', 'down')" 
+                                        class="btn @(hasDownvoted ? "btn-danger" : "btn-outline-danger") btn-sm vote-button vote-btn-down @(hasDownvoted ? "active-downvote" : "")"
+                                        data-id="@Model.QuestionId" data-type="question">
+                                    <i class="bi @(hasDownvoted ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> 
+                                    <span>@(hasDownvoted ? "Downvoted" : "Downvote")</span>
                                     </button>
-                                </form>
+                                
                                 <form asp-controller="SavedItems" asp-action="SaveQuestion" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <button type="submit" class="btn btn-outline-primary btn-sm @(Model.IsSaved ? "saved" : "")" title="@(Model.IsSaved ? "Unsave this question" : "Save this question")">
-                                        <i class="bi @(Model.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> @(Model.IsSaved ? "Question saved" : "Save question")
+                                    <button type="submit" class="btn btn-outline-primary btn-sm @(Model.IsSaved ? "saved" : "") vote-button" title="@(Model.IsSaved ? "Unsave this question" : "Save this question")">
+                                        <i class="bi @(Model.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> 
+                                        <span>@(Model.IsSaved ? "Saved" : "Save")</span>
                                     </button>
                                 </form>
                             </div>
@@ -306,7 +317,7 @@
                                 <div class="d-flex justify-content-between mb-3">
                                     <div class="vote-section d-flex gap-2">
                                         <span class="badge bg-secondary rounded-pill px-3 py-2">
-                                            <i class="bi bi-arrow-up-circle me-1"></i> @answer.Score votes
+                                            <i class="bi bi-arrow-up-circle me-1"></i> <span class="vote-count" data-id="@answer.AnswerId" data-type="answer">@answer.Score</span> votes
                                         </span>
                                     </div>
                                     <small class="text-muted">
@@ -451,26 +462,25 @@
                                                     bool hasUpvotedAnswer = answer.UserVoteType == "up";
                                                     bool hasDownvotedAnswer = answer.UserVoteType == "down";
                                                 }
-                                                <form asp-action="VoteAnswer" method="post" class="d-inline vote-form">
-                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
-                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                    <input type="hidden" name="voteType" value="@(hasUpvotedAnswer ? "remove" : "up")" class="vote-type-input" />
-                                                    <button type="submit" class="btn @(hasUpvotedAnswer ? "btn-primary" : "btn-outline-success") btn-sm vote-button @(hasUpvotedAnswer ? "active" : "")">
-                                                        <i class="bi @(hasUpvotedAnswer ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> @(hasUpvotedAnswer ? "Upvoted" : "Upvote")
+                                                <button onclick="vote(@answer.AnswerId, 'answer', 'up')" 
+                                                        class="btn @(hasUpvotedAnswer ? "btn-primary" : "btn-outline-success") btn-sm vote-button vote-btn-up @(hasUpvotedAnswer ? "active" : "")"
+                                                        data-id="@answer.AnswerId" data-type="answer">
+                                                    <i class="bi @(hasUpvotedAnswer ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> 
+                                                    <span>@(hasUpvotedAnswer ? "Upvoted" : "Upvote")</span>
                                                     </button>
-                                                </form>
-                                                <form asp-action="VoteAnswer" method="post" class="d-inline vote-form">
-                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
-                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                    <input type="hidden" name="voteType" value="@(hasDownvotedAnswer ? "remove" : "down")" class="vote-type-input" />
-                                                    <button type="submit" class="btn @(hasDownvotedAnswer ? "btn-danger" : "btn-outline-danger") btn-sm vote-button @(hasDownvotedAnswer ? "active-downvote" : "")">
-                                                        <i class="bi @(hasDownvotedAnswer ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> @(hasDownvotedAnswer ? "Downvoted" : "Downvote")
+                                                
+                                                <button onclick="vote(@answer.AnswerId, 'answer', 'down')" 
+                                                        class="btn @(hasDownvotedAnswer ? "btn-danger" : "btn-outline-danger") btn-sm vote-button vote-btn-down @(hasDownvotedAnswer ? "active-downvote" : "")"
+                                                        data-id="@answer.AnswerId" data-type="answer">
+                                                    <i class="bi @(hasDownvotedAnswer ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> 
+                                                    <span>@(hasDownvotedAnswer ? "Downvoted" : "Downvote")</span>
                                                     </button>
-                                                </form>
+                                                
                                                 <form asp-controller="SavedItems" asp-action="SaveAnswer" method="post" class="d-inline">
                                                     <input type="hidden" name="id" value="@answer.AnswerId" />
-                                                    <button type="submit" class="btn btn-outline-primary btn-sm @(answer.IsSaved ? "saved" : "")" title="@(answer.IsSaved ? "Unsave this answer" : "Save this answer")">
-                                                        <i class="bi @(answer.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> @(answer.IsSaved ? "Answer saved" : "Save answer")
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm @(answer.IsSaved ? "saved" : "") vote-button" title="@(answer.IsSaved ? "Unsave this answer" : "Save this answer")">
+                                                        <i class="bi @(answer.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> 
+                                                        <span>@(answer.IsSaved ? "Saved" : "Save")</span>
                                                     </button>
                                                 </form>
                                                 @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString() && !answer.IsAccepted)
@@ -478,8 +488,8 @@
                                                     <form asp-action="AcceptAnswer" method="post" class="d-inline">
                                                         <input type="hidden" name="answerId" value="@answer.AnswerId" />
                                                         <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                        <button type="submit" class="btn btn-outline-success btn-sm">
-                                                            <i class="bi bi-check-circle"></i> Accept
+                                                        <button type="submit" class="btn btn-outline-success btn-sm vote-button">
+                                                            <i class="bi bi-check-circle"></i> <span>Accept</span>
                                                         </button>
                                                     </form>
                                                 }
@@ -553,7 +563,6 @@
 
 
 @section Scripts {
-    <!-- SignalR core library -->
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     
     <!-- View Counter Script -->
@@ -596,6 +605,12 @@
     <!-- Image preview handler script -->
     <script src="~/js/image-preview-handler.js"></script>
     
+    <!-- Vote handler script -->
+    <script src="~/js/vote-handler.js"></script>
+    
+    <!-- Vote notification handler script -->
+    <script src="~/js/vote-notification-handler.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Prism for syntax highlighting
@@ -610,3 +625,6 @@
         });
     </script>
 }
+
+<!-- Toast Notifications Container -->
+<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>

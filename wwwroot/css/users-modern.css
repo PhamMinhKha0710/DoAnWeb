@@ -414,20 +414,29 @@
 
 /* User profile page styles */
 .user-profile-container {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1.5rem 0;
+  position: relative;
+  z-index: 5;
+  margin-bottom: 6rem;
 }
 
 .user-profile-header {
-  background: linear-gradient(135deg, var(--user-primary) 0%, var(--user-secondary) 100%);
-  border-radius: var(--user-border-radius);
-  overflow: hidden;
   position: relative;
-  padding: 3rem;
+  background: linear-gradient(135deg, var(--user-primary) 0%, var(--user-primary-dark) 100%);
+  border-radius: var(--user-border-radius-lg);
+  padding: 2.5rem;
   margin-bottom: 2rem;
   color: white;
   box-shadow: var(--user-shadow);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.user-profile-header:hover {
+  box-shadow: var(--user-shadow-lg);
+  transform: translateY(-5px);
 }
 
 .user-profile-header::before {
@@ -437,31 +446,40 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='smallGrid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='rgba(255, 255, 255, 0.15)' stroke-width='0.5'/%3E%3C/pattern%3E%3Cpattern id='grid' width='80' height='80' patternUnits='userSpaceOnUse'%3E%3Crect width='80' height='80' fill='url(%23smallGrid)'/%3E%3Cpath d='M 80 0 L 0 0 0 80' fill='none' stroke='rgba(255, 255, 255, 0.2)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)' /%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='smallGrid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='rgba(255, 255, 255, 0.1)' stroke-width='0.5'/%3E%3C/pattern%3E%3Cpattern id='grid' width='80' height='80' patternUnits='userSpaceOnUse'%3E%3Crect width='80' height='80' fill='url(%23smallGrid)'/%3E%3Cpath d='M 80 0 L 0 0 0 80' fill='none' stroke='rgba(255, 255, 255, 0.15)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)' /%3E%3C/svg%3E");
   opacity: 0.2;
   z-index: 0;
 }
 
 .user-profile-info {
   position: relative;
-  z-index: 1;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2rem;
+  z-index: 1;
 }
 
 .user-profile-avatar {
   position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
 }
 
 .user-profile-avatar img {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  border: 5px solid white;
-  box-shadow: var(--user-shadow);
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.user-profile-avatar img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 .user-profile-avatar .status-badge {
@@ -470,14 +488,28 @@
   right: 5px;
   width: 32px;
   height: 32px;
+  background-color: var(--success);
   border-radius: 50%;
-  background-color: #4caf50;
-  border: 3px solid white;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 3px solid white;
   color: white;
-  font-size: 1rem;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
 }
 
 .user-profile-details {
@@ -485,16 +517,25 @@
 }
 
 .user-profile-name {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin: 0 0 0.25rem 0;
-  letter-spacing: -0.5px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .user-profile-username {
-  font-size: 1.2rem;
-  opacity: 0.8;
-  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 1rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .user-profile-badges {
@@ -505,14 +546,23 @@
 }
 
 .user-profile-badge {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
   border-radius: 50px;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: var(--user-transition);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: white;
+  backdrop-filter: blur(5px);
+  transition: all 0.2s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.user-profile-badge:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
 
 .user-profile-badge i {
@@ -520,196 +570,240 @@
 }
 
 .user-profile-badge.highlight {
-  background-color: white;
-  color: var(--user-primary);
+  background-color: var(--user-secondary);
+  color: white;
 }
 
 .user-profile-bio {
-  max-width: 600px;
-  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 100%;
   line-height: 1.6;
-  opacity: 0.9;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .user-profile-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-left: auto;
+  align-self: center;
 }
 
 .user-profile-action-btn {
+  border: none;
   background-color: white;
   color: var(--user-primary);
-  border: none;
-  border-radius: 50px;
   padding: 0.75rem 1.5rem;
+  border-radius: 50px;
   font-weight: 600;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: var(--user-transition);
   cursor: pointer;
-  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: var(--user-shadow-sm);
 }
 
 .user-profile-action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--user-shadow);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 .user-profile-action-btn.outline {
   background-color: transparent;
-  border: 2px solid white;
+  border: 2px solid rgba(255, 255, 255, 0.5);
   color: white;
 }
 
 .user-profile-action-btn.outline:hover {
   background-color: rgba(255, 255, 255, 0.1);
+  border-color: white;
 }
 
-/* Stats cards */
+/* Statistics Card */
 .user-profile-stats-card {
   background-color: white;
-  border-radius: var(--user-border-radius);
-  box-shadow: var(--user-shadow-sm);
+  border-radius: var(--user-border-radius-lg);
   overflow: hidden;
-  transition: var(--user-transition);
-  height: 100%;
+  box-shadow: var(--user-shadow-sm);
+  transition: all 0.3s ease;
   border: 1px solid var(--user-gray-200);
+  height: 100%;
+  position: relative;
+  z-index: 10;
+  margin-bottom: 2rem;
 }
 
 .user-profile-stats-card:hover {
+  transform: translateY(-5px);
   box-shadow: var(--user-shadow);
-  transform: translateY(-3px);
 }
 
 .user-profile-stats-header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--user-gray-200);
 }
 
 .user-profile-stats-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--user-gray-900);
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--user-gray-900);
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .user-profile-stats-title i {
   color: var(--user-primary);
-  margin-right: 0.75rem;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 .user-profile-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 0.5rem;
+  padding: 1.25rem;
 }
 
 .user-profile-stat-item {
-  background-color: var(--user-gray-100);
-  border-radius: var(--user-border-radius-sm);
-  padding: 1.25rem;
   text-align: center;
-  transition: var(--user-transition);
+  padding: 1rem;
+  border-radius: var(--user-border-radius-sm);
+  background-color: var(--user-gray-100);
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .user-profile-stat-item:hover {
   background-color: var(--user-primary-light);
+  transform: translateY(-3px);
 }
 
 .user-profile-stat-value {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--user-primary);
-  margin: 0 0 0.5rem 0;
+  margin-bottom: 0.25rem;
+  line-height: 1;
 }
 
 .user-profile-stat-label {
-  color: var(--user-gray-700);
-  font-weight: 600;
-  margin: 0;
+  font-size: 0.85rem;
+  color: var(--user-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-/* Tags card */
+/* Tags */
 .user-profile-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 1.5rem;
+  gap: 0.5rem;
+  padding: 1.25rem;
 }
 
 .user-profile-tag {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   background-color: var(--user-gray-100);
   border-radius: 50px;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
   color: var(--user-gray-800);
-  transition: var(--user-transition);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .user-profile-tag:hover {
   background-color: var(--user-primary-light);
   color: var(--user-primary);
   transform: translateY(-2px);
+  box-shadow: var(--user-shadow-sm);
 }
 
 .user-profile-tag-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
   background-color: var(--user-primary);
   color: white;
   border-radius: 50px;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   margin-left: 0.5rem;
+  padding: 0 0.5rem;
 }
 
-/* Activity list */
+/* Activity Feed */
 .user-profile-activity {
   background-color: white;
-  border-radius: var(--user-border-radius);
-  box-shadow: var(--user-shadow-sm);
+  border-radius: var(--user-border-radius-lg);
   overflow: hidden;
+  box-shadow: var(--user-shadow-sm);
   border: 1px solid var(--user-gray-200);
   height: 100%;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 10;
+  margin-bottom: 2rem;
+}
+
+.user-profile-activity:hover {
+  box-shadow: var(--user-shadow);
+  transform: translateY(-3px);
 }
 
 .user-profile-activity-header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--user-gray-200);
 }
 
 .user-profile-activity-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--user-gray-900);
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--user-gray-900);
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .user-profile-activity-title i {
   color: var(--user-primary);
-  margin-right: 0.75rem;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 .user-profile-activity-list {
+  list-style: none;
   padding: 0;
   margin: 0;
-  list-style: none;
 }
 
 .user-profile-activity-item {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--user-gray-200);
-  transition: var(--user-transition);
+  transition: all 0.3s ease;
 }
 
 .user-profile-activity-item:last-child {
@@ -718,6 +812,7 @@
 
 .user-profile-activity-item:hover {
   background-color: var(--user-gray-100);
+  transform: translateX(5px);
 }
 
 .user-profile-activity-content {
@@ -728,14 +823,14 @@
 .user-profile-activity-icon {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  flex-shrink: 0;
   background-color: var(--user-primary-light);
   color: var(--user-primary);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  flex-shrink: 0;
 }
 
 .user-profile-activity-info {
@@ -743,15 +838,15 @@
 }
 
 .user-profile-activity-title {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  margin: 0 0 0.25rem 0;
+  margin-bottom: 0.25rem;
 }
 
 .user-profile-activity-title a {
   color: var(--user-gray-900);
   text-decoration: none;
-  transition: var(--user-transition);
+  transition: color 0.2s ease;
 }
 
 .user-profile-activity-title a:hover {
@@ -760,8 +855,10 @@
 
 .user-profile-activity-date {
   font-size: 0.85rem;
-  color: var(--user-gray-600);
-  margin: 0;
+  color: var(--user-gray-500);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .user-profile-activity-empty {
@@ -780,33 +877,68 @@
 }
 
 .user-profile-activity-empty-text {
-  color: var(--user-gray-600);
-  font-size: 1.1rem;
-  margin: 0;
+  color: var(--user-gray-500);
+  font-size: 1rem;
 }
 
-/* Animations */
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .user-profile-stats-card,
+  .user-profile-activity {
+    background-color: var(--grey-800);
+    border-color: var(--grey-700);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .user-profile-stats-header,
+  .user-profile-activity-header {
+    border-color: var(--grey-700);
+  }
+  
+  .user-profile-stats-title,
+  .user-profile-activity-title {
+    color: var(--white);
+  }
+  
+  .user-profile-stat-item {
+    background-color: var(--grey-700);
+  }
+  
+  .user-profile-stat-item:hover {
+    background-color: var(--grey-600);
+  }
+  
+  .user-profile-stat-label {
+    color: var(--grey-400);
+  }
+  
+  .user-profile-tag {
+    background-color: var(--grey-700);
+    color: var(--grey-300);
+  }
+  
+  .user-profile-tag:hover {
+    background-color: var(--grey-600);
+    color: var(--white);
+  }
+  
+  .user-profile-activity-item {
+    border-color: var(--grey-700);
+  }
+  
+  .user-profile-activity-item:hover {
+    background-color: var(--grey-750);
+  }
+  
+  .user-profile-activity-title a {
+    color: var(--grey-200);
+  }
+  
+  .user-profile-activity-date {
+    color: var(--grey-500);
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Responsive styles */
+/* Responsive adjustments */
 @media (max-width: 991px) {
   .user-profile-info {
     flex-direction: column;
@@ -823,46 +955,23 @@
   }
   
   .user-profile-bio {
-    max-width: 100%;
     margin-left: auto;
     margin-right: auto;
   }
   
   .user-profile-actions {
     margin-left: 0;
-    width: 100%;
-    justify-content: center;
-    margin-top: 1.5rem;
-  }
-
-  .users-search-container {
-    padding: 1rem;
-  }
-  
-  .users-filter-buttons {
-    justify-content: center;
+    margin-top: 1rem;
   }
 }
 
 @media (max-width: 767px) {
-  .users-header {
-    padding: 2.5rem 1.5rem;
-  }
-  
-  .users-title {
-    font-size: 2.25rem;
-  }
-  
-  .users-grid {
-    grid-template-columns: 1fr;
-  }
-  
   .user-profile-header {
     padding: 2rem 1.5rem;
   }
   
   .user-profile-name {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .user-profile-avatar img {
@@ -871,46 +980,35 @@
   }
   
   .user-profile-stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .users-sort-tabs {
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-  }
-  
-  .users-sort-tab {
-    white-space: nowrap;
-    padding: 0.5rem 0.75rem;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 576px) {
-  .user-card-header {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .user-avatar,
-  .user-avatar-placeholder {
-    margin-right: 0;
-    margin-bottom: 1rem;
+  .user-profile-avatar {
+    width: 100px;
+    height: 100px;
   }
   
   .user-profile-avatar .status-badge {
     width: 24px;
     height: 24px;
-    font-size: 0.75rem;
+    font-size: 12px;
   }
   
   .user-profile-badges {
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
   }
   
   .user-profile-actions {
     flex-direction: column;
+    width: 100%;
+  }
+  
+  .user-profile-action-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -972,5 +1070,118 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
+  }
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Ensure row layout is not overflowing */
+.row.g-4 {
+  margin-bottom: 5rem;
+  position: relative;
+  z-index: 5;
+}
+
+/* Adjust for potential footer overlap */
+@media (max-width: 991.98px) {
+  .user-profile-container {
+    margin-bottom: 8rem;
+  }
+  
+  .user-profile-stats-card,
+  .user-profile-activity {
+    margin-bottom: 2.5rem;
+  }
+}
+
+/* Fix for unusually long text content */
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Add some nice hover effects */
+.user-profile-action-btn {
+  transition: all 0.3s ease;
+}
+
+.user-profile-action-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.user-profile-avatar img {
+  transition: all 0.3s ease;
+}
+
+.user-profile-avatar img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Animations for different profile sections on load */
+.user-profile-header {
+  animation: fadeInDown 0.8s ease-out;
+}
+
+.user-profile-stats-card {
+  animation: fadeInUp 0.8s ease-out 0.2s backwards;
+}
+
+.user-profile-activity {
+  animation: fadeInUp 0.8s ease-out 0.4s backwards;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 } 

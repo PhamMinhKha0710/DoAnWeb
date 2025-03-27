@@ -7,297 +7,440 @@
  * - Profile
  */
 
-/* Common Account Page Styles */
+/* Account Pages Styles
+-------------------------------------------------- */
+
+/* Main layout for account pages */
 .account-page {
-    min-height: calc(100vh - 60px);
-    background-color: #f8f9fa;
-    padding: 2rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 4rem);
+  background-color: var(--grey-50);
+  padding: 2rem 1rem;
 }
 
 .account-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .account-card {
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
+  background-color: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Account header */
 .account-header {
-    padding: 1.5rem 1.5rem 0;
-    text-align: center;
+  padding: 2rem 2rem 1rem;
+  text-align: center;
 }
 
 .account-title {
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--grey-900);
 }
 
 .account-subtitle {
-    color: #6c757d;
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--grey-500);
+  font-size: 1rem;
 }
 
+/* Account form styling */
 .account-body {
-    padding: 1.5rem;
+  padding: 1rem 2rem 2rem;
+  flex: 1;
 }
 
-.account-footer {
-    padding: 1.5rem;
-    border-top: 1px solid #f0f0f0;
-}
-
-/* Form Elements */
 .account-form-group {
-    position: relative;
-    margin-bottom: 1.25rem;
+  position: relative;
+  margin-bottom: 1.5rem;
 }
 
 .account-form-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6c757d;
-    z-index: 2;
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: var(--grey-400);
+  font-size: 1.25rem;
+  z-index: 2;
 }
 
 .account-form-control {
-    padding-left: 2.5rem;
-    height: 48px;
-    border-radius: 8px;
-    border: 1px solid #dce0e5;
-    background-color: #f8f9fa;
-    transition: all 0.2s ease;
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--grey-800);
+  background-color: var(--white);
+  background-clip: padding-box;
+  border: 1px solid var(--grey-300);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease-in-out;
 }
 
 .account-form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-    background-color: #fff;
+  color: var(--grey-900);
+  background-color: var(--white);
+  border-color: var(--primary);
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(61, 90, 241, 0.25);
 }
 
-/* Buttons */
+.account-form-control::placeholder {
+  color: var(--grey-400);
+}
+
 .account-submit-btn {
-    height: 48px;
-    border-radius: 8px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    font-size: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
 }
 
 .account-submit-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-/* Social Login */
+/* Account footer */
+.account-footer {
+  padding: 1.5rem 2rem;
+  background-color: var(--grey-50);
+  border-top: 1px solid var(--grey-200);
+  text-align: center;
+}
+
+/* Social login buttons */
 .social-login {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .social-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1.25rem;
-    border-radius: 8px;
-    font-weight: 500;
-    color: #fff;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.social-btn.google {
-    background-color: #db4437;
-}
-
-.social-btn.github {
-    background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
 
 .social-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    color: #fff;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-/* Register Page Specific Styles */
+.social-btn.google {
+  background-color: #DB4437;
+  color: white;
+}
+
+.social-btn.github {
+  background-color: #333;
+  color: white;
+}
+
+.social-btn i {
+  margin-right: 0.5rem;
+}
+
+/* Register page benefits */
 .register-benefits {
-    margin-top: 2rem;
+  margin-top: 2rem;
 }
 
 .benefit-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-    text-align: left;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
 .benefit-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  margin-right: 1rem;
+  flex-shrink: 0;
 }
 
-/* Profile Page Specific Styles */
-.profile-page {
-    background-color: #f8f9fa;
+/* Password reset and forgot password pages */
+.password-requirements {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--grey-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--grey-200);
 }
 
-.profile-image-section {
-    padding: 0.5rem;
+.password-requirements h6 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
 }
 
-.profile-image-container {
-    position: relative;
-    width: 160px;
-    height: 160px;
-    margin: 0 auto;
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
+.password-requirements h6 i {
+  margin-right: 0.5rem;
+  color: var(--primary);
 }
 
-.profile-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: all 0.3s ease;
+.password-requirements ul {
+  margin: 0;
+  padding-left: 1.5rem;
 }
 
-.profile-image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: all 0.3s ease;
+.password-requirements li {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--grey-600);
 }
 
-.profile-image-overlay i {
-    color: #fff;
-    font-size: 2rem;
+/* Profile page */
+.profile-section {
+  margin-bottom: 2rem;
 }
 
-.profile-image-container:hover .profile-image-overlay {
-    opacity: 1;
+.profile-section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--grey-800);
 }
 
-.profile-image-container:hover .profile-image {
-    transform: scale(1.05);
+.profile-section-title i {
+  margin-right: 0.75rem;
+  color: var(--primary);
 }
 
-.profile-stats {
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    padding: 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.profile-avatar-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1.5rem;
 }
 
-.profile-stat {
-    padding: 0.5rem 0;
-    border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.avatar-upload-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: var(--primary);
+  color: white;
+  border-radius: 50%;
+  border: 2px solid var(--white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.avatar-upload-btn:hover {
+  background-color: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.stats-card {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--white);
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-value {
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: #0d6efd;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.75rem;
-    color: #6c757d;
+  font-size: 0.875rem;
+  color: var(--grey-500);
+  margin-top: 0.25rem;
 }
 
-/* Account Security Styles */
-.security-settings {
-    margin: 0;
+/* Account verification */
+.verification-card {
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-.security-item {
-    padding: 1.25rem;
-    border-radius: 8px;
-    background-color: #fff;
-    margin-bottom: 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
+.verification-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 50%;
 }
 
-.security-item:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.verification-icon.success {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: var(--success);
 }
 
-.security-item:last-child {
-    margin-bottom: 0;
+.verification-icon.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
 }
 
-.toggle-password {
-    cursor: pointer;
+.verification-icon i {
+  font-size: 2.5rem;
+}
+
+/* Delete account */
+.delete-account-section {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.delete-account-title {
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.delete-account-title i {
+  margin-right: 0.5rem;
+}
+
+/* Connected accounts */
+.connected-account-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1rem;
+  border: 1px solid var(--grey-200);
+  transition: all 0.2s ease;
+}
+
+.connected-account-item:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.connected-account-info {
+  display: flex;
+  align-items: center;
+}
+
+.connected-account-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: var(--grey-100);
+  border-radius: 50%;
+  margin-right: 1rem;
+}
+
+.connected-account-icon i {
+  font-size: 1.25rem;
+  color: var(--grey-700);
+}
+
+.connected-account-name {
+  font-weight: 600;
+}
+
+.connected-account-username {
+  font-size: 0.875rem;
+  color: var(--grey-500);
 }
 
 /* Responsive adjustments */
-@media (max-width: 992px) {
-    .account-card {
-        margin-bottom: 1.5rem;
-    }
+@media (max-width: 767.98px) {
+  .account-container {
+    padding: 0;
+  }
+  
+  .account-card {
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  .social-login {
+    flex-direction: column;
+  }
 }
 
-@media (max-width: 768px) {
-    .account-page {
-        padding: 1rem 0;
-    }
-    
-    .social-login {
-        flex-direction: column;
-    }
-    
-    .social-btn {
-        width: 100%;
-    }
-    
-    .profile-image-container {
-        width: 120px;
-        height: 120px;
-    }
+/* Animation effects */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
 }
 
 /* Login Page Specific Styles */
 @media (min-width: 992px) {
-    .login-right-bg {
-        background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 2rem;
-        color: white;
-    }
+  .login-right-bg {
+    background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    color: white;
+  }
 } 

@@ -681,5 +681,361 @@ namespace DoAnWeb.Controllers
             
             return RedirectToAction("Profile");
         }
+
+        // Methods for Google and GitHub authentication
+
+        [HttpGet]
+        public IActionResult ExternalLogin(string provider, string returnUrl = null, string isRegistration = null)
+        {
+            // Request a redirect to the external login provider
+            var redirectUrl = Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl, isRegistration = isRegistration });
+            var properties = new AuthenticationProperties 
+            { 
+                RedirectUri = redirectUrl,
+                Items = { 
+                    ["returnUrl"] = returnUrl,
+                    ["isRegistration"] = isRegistration ?? "false"
+                },
+                AllowRefresh = true
+            };
+            return Challenge(properties, provider);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null, string isRegistration = null)
+        {
+            returnUrl = returnUrl ?? Url.Content("~/");
+            bool isRegistrationFlow = !string.IsNullOrEmpty(isRegistration) && isRegistration.ToLower() == "true";
+
+            if (remoteError != null)
+            {
+                TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
+                return isRegistrationFlow
+                    ? RedirectToAction(nameof(Register))
+                    : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+            }
+
+            // Debug: Log start of authentication process
+            Console.WriteLine("--- Starting external authentication callback ---");
+            Console.WriteLine($"Is registration flow: {isRegistrationFlow}");
+
+            // Get the login information from the external provider
+            var info = await HttpContext.AuthenticateAsync("Google");
+            if (info == null || info.Principal == null)
+            {
+                // Try GitHub
+                Console.WriteLine("Google authentication failed or not found, trying GitHub...");
+                info = await HttpContext.AuthenticateAsync("GitHub");
+            }
+            
+            if (info?.Principal == null)
+            {
+                Console.WriteLine("ERROR: Failed to authenticate with any external provider");
+                TempData["ErrorMessage"] = "Error loading external login information.";
+                return isRegistrationFlow
+                    ? RedirectToAction(nameof(Register))
+                    : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+            }
+
+            // Debug: Log authentication details
+            Console.WriteLine($"Successfully authenticated with provider: {info.Principal.Identity?.AuthenticationType}");
+            Console.WriteLine("Claims received from provider:");
+            foreach (var claim in info.Principal.Claims)
+            {
+                Console.WriteLine($"  {claim.Type} = {claim.Value}");
+            }
+
+            // Get information from the external login provider
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+            var providerId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var provider = info.Properties.Items.ContainsKey("LoginProvider") 
+                ? info.Properties.Items["LoginProvider"] 
+                : (info.Principal.Identity?.AuthenticationType ?? "External");
+
+            // GitHub might not include email in standard claims, check additional claims
+            if (string.IsNullOrEmpty(email) && provider == "GitHub")
+            {
+                // Try to find email in GitHub-specific claims
+                email = info.Principal.FindFirstValue("urn:github:email");
+                
+                if (string.IsNullOrEmpty(email))
+                {
+                    // Look through all claims to find email
+                    foreach (var claim in info.Principal.Claims)
+                    {
+                        if (claim.Type.EndsWith("emailaddress", StringComparison.OrdinalIgnoreCase) ||
+                            claim.Type.Contains("email", StringComparison.OrdinalIgnoreCase))
+                        {
+                            email = claim.Value;
+                            break;
+                        }
+                        
+                        // Debug: Log all claims to see what's available
+                        Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
+                    }
+                }
+                
+                // Last resort: Create a placeholder email using GitHub username
+                if (string.IsNullOrEmpty(email))
+                {
+                    var githubUsername = info.Principal.FindFirstValue("urn:github:login") ?? 
+                                        info.Principal.FindFirstValue("login") ??
+                                        providerId;
+                    
+                    if (!string.IsNullOrEmpty(githubUsername))
+                    {
+                        Console.WriteLine($"Creating placeholder email for GitHub user: {githubUsername}");
+                        email = $"{githubUsername}@users.noreply.github.com";
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(email))
+            {
+                Console.WriteLine("ERROR: Unable to retrieve email from provider claims");
+                TempData["ErrorMessage"] = "Unable to get email from external provider.";
+                return isRegistrationFlow
+                    ? RedirectToAction(nameof(Register))
+                    : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+            }
+
+            // Look for existing user by email
+            var user = _userService.GetUserByEmail(email);
+
+            // Check if this is a registration attempt for an existing email
+            if (isRegistrationFlow && user != null)
+            {
+                Console.WriteLine($"Registration attempt with existing email: {email}");
+                TempData["ErrorMessage"] = $"An account with the email {email} already exists. Please use the login page instead.";
+                return RedirectToAction(nameof(Register));
+            }
+
+            // If user doesn't exist, create new user
+            if (user == null)
+            {
+                // Generate username based on email
+                var username = email.Split('@')[0];
+                var baseUsername = username;
+                int counter = 1;
+
+                // Ensure username is unique
+                while (_userService.GetUserByUsername(username) != null)
+                {
+                    username = $"{baseUsername}{counter++}";
+                }
+
+                // Try to get avatar URL from Google or GitHub claims
+                string avatarUrl = null;
+                
+                // Google uses "picture" claim
+                if (provider == "Google")
+                {
+                    avatarUrl = info.Principal.FindFirstValue("picture");
+                }
+                // GitHub uses various claims, but we'll check some common ones
+                else if (provider == "GitHub")
+                {
+                    avatarUrl = info.Principal.FindFirstValue("urn:github:avatar_url") 
+                        ?? info.Principal.FindFirstValue("avatar_url");
+                }
+
+                user = new User
+                {
+                    Username = username,
+                    Email = email,
+                    DisplayName = name ?? username,
+                    IsEmailVerified = true, // Email is already verified through the provider
+                    CreatedDate = DateTime.Now,
+                    UpdatedDate = DateTime.Now,
+                    AvatarUrl = avatarUrl, // Set avatar URL if available
+                    // Generate a random password since they won't use it
+                    PasswordHash = Guid.NewGuid().ToString("N")
+                };
+
+                try
+                {
+                    _userService.CreateExternalUser(user);
+                    Console.WriteLine($"Created new user via external provider: {email}");
+                    
+                    if (isRegistrationFlow)
+                    {
+                        TempData["SuccessMessage"] = "Your account has been successfully created! You may now log in.";
+                        return RedirectToAction(nameof(Login));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error creating user: {ex.Message}");
+                    TempData["ErrorMessage"] = $"Error creating account: {ex.Message}";
+                    return isRegistrationFlow
+                        ? RedirectToAction(nameof(Register))
+                        : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+                }
+            }
+            else if (isRegistrationFlow)
+            {
+                // Shouldn't reach here because of the earlier check, but just in case
+                TempData["ErrorMessage"] = $"An account with the email {email} already exists. Please use the login page instead.";
+                return RedirectToAction(nameof(Register));
+            }
+
+            // Update user's last login date
+            user.LastLoginDate = DateTime.Now;
+            _userService.UpdateUser(user);
+
+            // Create claims for authentication
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("DisplayName", user.DisplayName)
+            };
+
+            // Add role claims
+            if (user.Roles != null)
+            {
+                foreach (var role in user.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
+                }
+            }
+
+            // Add provider information
+            claims.Add(new Claim("ExternalProvider", provider));
+
+            // Set cookie properties
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
+            };
+
+            // Create the authentication cookie
+            var claimsIdentity = new ClaimsIdentity(claims, "CookieAuth");
+            await HttpContext.SignInAsync("CookieAuth", new ClaimsPrincipal(claimsIdentity), authProperties);
+
+            return RedirectToLocal(returnUrl);
+        }
+
+        private IActionResult RedirectToLocal(string returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Generate reset token (returns null if email doesn't exist)
+                var token = _userService.GeneratePasswordResetToken(model.Email);
+                
+                if (token != null)
+                {
+                    // Build reset link for email
+                    var resetUrl = Url.Action("ResetPassword", "Account", 
+                        new { email = model.Email, token = token }, 
+                        protocol: HttpContext.Request.Scheme);
+                    
+                    // Log the reset URL for debugging (in a real app, this would be sent via email)
+                    Console.WriteLine($"Password reset link generated: {resetUrl}");
+                    Console.WriteLine($"This should be emailed to: {model.Email}");
+                    
+                    // Display a generic success message to prevent user enumeration
+                    TempData["SuccessMessage"] = "If your email exists in our system, you will receive a password reset link shortly.";
+                    
+                    // TODO: In a production application, this is where you would send an email
+                    // For demonstration purposes, we'll just return a success message
+                    
+                    // Display the reset link in the success message (ONLY FOR DEMONSTRATION)
+                    // In a real application, you would NOT show this to the user but send it via email
+                    TempData["SuccessMessage"] = $"For demonstration purposes, here is your reset link: <a href='{resetUrl}'>Reset Password</a>";
+                    
+                    return View("ForgotPasswordConfirmation");
+                }
+                
+                // Display a generic success message even if email doesn't exist to prevent user enumeration
+                TempData["SuccessMessage"] = "If your email exists in our system, you will receive a password reset link shortly.";
+                return View("ForgotPasswordConfirmation");
+            }
+            
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                TempData["ErrorMessage"] = "Invalid password reset link.";
+                return RedirectToAction("Login");
+            }
+            
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+            
+            // Validate token
+            if (!_userService.ValidatePasswordResetToken(email, token))
+            {
+                TempData["ErrorMessage"] = "The password reset link has expired or is invalid.";
+                return RedirectToAction("Login");
+            }
+            
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            
+            // Reset password
+            var result = _userService.ResetPassword(model.Email, model.Token, model.Password);
+            
+            if (result)
+            {
+                Console.WriteLine($"Password successfully reset for user: {model.Email}");
+                return RedirectToAction("ResetPasswordConfirmation");
+            }
+            
+            // If we got this far, reset failed
+            TempData["ErrorMessage"] = "Password reset failed. The link may have expired or is invalid.";
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
+        }
     }
 }

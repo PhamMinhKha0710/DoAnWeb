@@ -147,6 +147,23 @@
                                             </div>
                                         </div>
                                         
+                                        <!-- External Authentication Status -->
+                                        @if (User.FindFirst("ExternalProvider") != null)
+                                        {
+                                            <div class="col-12">
+                                                <div class="alert alert-info d-flex align-items-center">
+                                                    <i class="bi bi-shield-check me-2 fs-5"></i>
+                                                    <div class="flex-grow-1">
+                                                        <strong>External Authentication</strong>
+                                                        <p class="mb-0 small">
+                                                            Your account is linked to @User.FindFirst("ExternalProvider")?.Value. 
+                                                            You can sign in using your @User.FindFirst("ExternalProvider")?.Value account.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        
                                         <div class="col-12">
                                             <label class="form-label">Profile Picture</label>
                                             <div class="alert alert-light border">

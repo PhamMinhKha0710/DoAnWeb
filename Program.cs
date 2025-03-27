@@ -113,6 +113,21 @@ builder.Services.AddAuthentication("CookieAuth")
         options.Cookie.Name = "DevCommunityAuth";
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+        options.CallbackPath = "/account/signin-google";
+        options.SaveTokens = true;
+    })
+    .AddGitHub(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:GitHub:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:GitHub:ClientSecret"];
+        options.CallbackPath = "/account/github-signin";
+        options.SaveTokens = true;
+        options.Scope.Add("user:email");
     });
 
 // ✅ 8. SignalR

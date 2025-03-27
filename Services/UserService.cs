@@ -45,6 +45,32 @@ namespace DoAnWeb.Services
             return _userRepository.GetByEmail(email);
         }
 
+        public void CreateExternalUser(User user)
+        {
+            // Validate user data
+            if (string.IsNullOrEmpty(user.Email))
+                throw new ArgumentException("Email is required");
+
+            if (string.IsNullOrEmpty(user.Username))
+                throw new ArgumentException("Username is required");
+
+            if (_userRepository.UsernameExists(user.Username))
+                throw new ArgumentException("Username already exists");
+
+            if (_userRepository.EmailExists(user.Email))
+                throw new ArgumentException("Email already exists");
+
+            // Set user properties for external login
+            user.CreatedDate = DateTime.Now;
+            user.UpdatedDate = DateTime.Now;
+            user.IsEmailVerified = true; // Email is verified through external provider
+            user.HashType = "EXTERNAL"; // Mark that this is an external login
+
+            // Add the user
+            _userRepository.Add(user);
+            _userRepository.Save();
+        }
+
         public void CreateUser(User user, string password)
         {
             // Validate user data
@@ -363,6 +389,84 @@ namespace DoAnWeb.Services
                 GiteaUsername = user.GiteaUsername,
                 LastLoginDate = user.LastLoginDate
             };
+        }
+
+        public string GeneratePasswordResetToken(string email)
+        {
+            // Get user by email
+            var user = _userRepository.GetByEmail(email);
+            if (user == null)
+                return null;
+            
+            // Generate a unique token
+            byte[] tokenData = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(tokenData);
+            }
+            
+            // Convert to base64 string and remove any non-alphanumeric characters
+            string token = Convert.ToBase64String(tokenData)
+                .Replace("/", "_")
+                .Replace("+", "-")
+                .Replace("=", "");
+            
+            // Save token and expiry to user record
+            user.PasswordResetToken = token;
+            user.PasswordResetTokenExpiry = DateTime.Now.AddHours(24); // Token valid for 24 hours
+            
+            // Update user
+            _userRepository.Update(user);
+            _userRepository.Save();
+            
+            return token;
+        }
+
+        public bool ValidatePasswordResetToken(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+                return false;
+            
+            // Get user by email
+            var user = _userRepository.GetByEmail(email);
+            if (user == null || user.PasswordResetToken != token)
+                return false;
+            
+            // Check if token has expired
+            if (!user.PasswordResetTokenExpiry.HasValue || user.PasswordResetTokenExpiry.Value < DateTime.Now)
+                return false;
+            
+            return true;
+        }
+
+        public bool ResetPassword(string email, string token, string newPassword)
+        {
+            // Validate token
+            if (!ValidatePasswordResetToken(email, token))
+                return false;
+            
+            // Validate password complexity
+            if (!IsPasswordComplex(newPassword))
+                return false;
+            
+            // Get user
+            var user = _userRepository.GetByEmail(email);
+            
+            // Update password with modern hash
+            user.PasswordHash = _passwordHashService.HashPassword(newPassword);
+            user.HashType = _passwordHashService.GetDefaultHashType();
+            user.UpdatedDate = DateTime.Now;
+            user.LastPasswordChangeDate = DateTime.Now;
+            
+            // Clear reset token
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+            
+            // Update user
+            _userRepository.Update(user);
+            _userRepository.Save();
+            
+            return true;
         }
     }
 }

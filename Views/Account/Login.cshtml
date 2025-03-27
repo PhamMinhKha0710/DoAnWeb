@@ -56,7 +56,7 @@
                                     <input asp-for="RememberMe" class="form-check-input" />
                                     <label asp-for="RememberMe" class="form-check-label">Remember me</label>
                                 </div>
-                                <a href="#" class="text-decoration-none">Forgot password?</a>
+                                <a asp-action="ForgotPassword" class="text-decoration-none">Forgot password?</a>
                             </div>
                             
                             <button type="submit" class="btn btn-primary account-submit-btn w-100">
@@ -64,10 +64,10 @@
                             </button>
                             
                             <div class="social-login">
-                                <a href="#" class="social-btn google">
+                                <a href="@Url.Action("ExternalLogin", "Account", new { provider = "Google", returnUrl = ViewData["ReturnUrl"] })" class="social-btn google">
                                     <i class="bi bi-google"></i> Google
                                 </a>
-                                <a href="#" class="social-btn github">
+                                <a href="@Url.Action("ExternalLogin", "Account", new { provider = "GitHub", returnUrl = ViewData["ReturnUrl"] })" class="social-btn github">
                                     <i class="bi bi-github"></i> GitHub
                                 </a>
                             </div>
