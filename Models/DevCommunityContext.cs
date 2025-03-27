@@ -23,6 +23,8 @@ public partial class DevCommunityContext : DbContext
 
     public virtual DbSet<ConversationParticipant> ConversationParticipants { get; set; }
 
+    public virtual DbSet<ExternalLogin> ExternalLogins { get; set; }
+
     public virtual DbSet<Message> Messages { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
@@ -333,6 +335,23 @@ public partial class DevCommunityContext : DbContext
                 .HasForeignKey(d => d.AnswerId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Votes__AnswerId__01142BA2");
+        });
+
+        modelBuilder.Entity<ExternalLogin>(entity =>
+        {
+            entity.HasKey(e => e.ExternalLoginId).HasName("PK__External__77860B2A12345678");
+
+            entity.Property(e => e.Provider).HasMaxLength(50);
+            entity.Property(e => e.ProviderKey).HasMaxLength(128);
+            entity.Property(e => e.ProviderDisplayName).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__ExternalL__UserI__12345678");
         });
 
         modelBuilder.Entity<UserSavedItem>(entity =>

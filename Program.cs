@@ -8,9 +8,18 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using System.IO.Compression;
 using DoAnWeb.Utils;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using AspNet.Security.OAuth.GitHub;
 
 // Create the web application builder
 var builder = WebApplication.CreateBuilder(args);
+
+// Add User Secrets configuration in Development
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
 
 // ✅ 1. Database Configuration
 // Read connection string from appsettings.json
@@ -45,6 +54,7 @@ builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 builder.Services.AddScoped<IAnswerService, AnswerService>();
 builder.Services.AddScoped<IQuestionRealTimeService, QuestionRealTimeService>();
 builder.Services.AddScoped<IMarkdownService, MarkdownService>();
+builder.Services.AddScoped<IExternalLoginService, ExternalLoginService>();
 
 // Register password hash service
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
@@ -107,12 +117,31 @@ builder.Services.AddSession(options =>
 
 // ✅ 7. Authentication
 // Configure cookie-based authentication
-builder.Services.AddAuthentication("CookieAuth")
-    .AddCookie("CookieAuth", options =>
+builder.Services.AddAuthentication(options => 
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.Cookie.Name = "DevCommunityAuth";
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromDays(1);
+    })
+    .AddGoogle(options => 
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+        options.CallbackPath = "/signin-google";
+        options.SaveTokens = true;
+    })
+    .AddGitHub(options => 
+    {
+        options.ClientId = builder.Configuration["Authentication:GitHub:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:GitHub:ClientSecret"];
+        options.CallbackPath = "/signin-github";
+        options.SaveTokens = true;
     });
 
 // ✅ 8. SignalR

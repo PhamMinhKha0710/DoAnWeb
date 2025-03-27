@@ -10,6 +10,11 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using DoAnWeb.GitIntegration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using AspNet.Security.OAuth.GitHub;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 
 namespace DoAnWeb.Controllers
 {
@@ -17,11 +22,16 @@ namespace DoAnWeb.Controllers
     {
         private readonly IUserService _userService;
         private readonly IGiteaUserSyncService _giteaUserSyncService;
+        private readonly IExternalLoginService _externalLoginService;
 
-        public AccountController(IUserService userService, IGiteaUserSyncService giteaUserSyncService)
+        public AccountController(
+            IUserService userService, 
+            IGiteaUserSyncService giteaUserSyncService,
+            IExternalLoginService externalLoginService)
         {
             _userService = userService;
             _giteaUserSyncService = giteaUserSyncService;
+            _externalLoginService = externalLoginService;
         }
 
         [HttpGet]
@@ -681,5 +691,239 @@ namespace DoAnWeb.Controllers
             
             return RedirectToAction("Profile");
         }
+
+        // Phương thức để khởi tạo đăng nhập với Google
+        [HttpGet]
+        public IActionResult GoogleLogin(string returnUrl = null)
+        {
+            returnUrl = returnUrl ?? Url.Content("~/");
+            // Lưu returnUrl để sử dụng sau khi xác thực
+            TempData["ReturnUrl"] = returnUrl;
+            
+            var redirectUrl = Url.Action("GoogleResponse", "Account");
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, "Google");
+        }
+        
+        // Phương thức nhận callback từ Google sau khi xác thực
+        [HttpGet]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            try
+            {
+                // Lấy thông tin người dùng từ Google
+                var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                
+                if (!result.Succeeded)
+                {
+                    TempData["ErrorMessage"] = "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Sử dụng service để xử lý thông tin đăng nhập
+                var user = await _externalLoginService.ProcessExternalLoginAsync(result.Principal, "Google");
+                
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "Không thể xử lý thông tin đăng nhập từ Google.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Đăng nhập người dùng
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                    new Claim(ClaimTypes.Email, user.Email)
+                };
+                
+                // Thêm claim cho các vai trò (roles)
+                if (user.Roles != null)
+                {
+                    foreach (var role in user.Roles)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
+                    }
+                }
+                
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+                
+                // Thiết lập thời gian hiệu lực của cookie
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
+                };
+                
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme, 
+                    principal, 
+                    authProperties);
+                
+                // Chuyển hướng về trang đã yêu cầu trước đó hoặc trang chủ
+                var returnUrl = TempData["ReturnUrl"]?.ToString();
+                if (string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl))
+                {
+                    returnUrl = Url.Action("Index", "Home");
+                }
+                
+                return Redirect(returnUrl);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Đã xảy ra lỗi khi đăng nhập bằng Google: {ex.Message}";
+                return RedirectToAction("Login");
+            }
+        }
+        
+        // Phương thức để khởi tạo đăng nhập với GitHub
+        [HttpGet]
+        public IActionResult GitHubLogin(string returnUrl = null)
+        {
+            returnUrl = returnUrl ?? Url.Content("~/");
+            // Lưu returnUrl để sử dụng sau khi xác thực
+            TempData["ReturnUrl"] = returnUrl;
+            
+            var redirectUrl = Url.Action("GitHubResponse", "Account");
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, "GitHub");
+        }
+        
+        // Phương thức nhận callback từ GitHub sau khi xác thực
+        [HttpGet]
+        public async Task<IActionResult> GitHubResponse()
+        {
+            try
+            {
+                // Lấy thông tin người dùng từ GitHub
+                var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                
+                if (!result.Succeeded)
+                {
+                    TempData["ErrorMessage"] = "Đăng nhập bằng GitHub thất bại. Vui lòng thử lại.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Sử dụng service để xử lý thông tin đăng nhập
+                var user = await _externalLoginService.ProcessExternalLoginAsync(result.Principal, "GitHub");
+                
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "Không thể xử lý thông tin đăng nhập từ GitHub.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Đăng nhập người dùng
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                    new Claim(ClaimTypes.Email, user.Email)
+                };
+                
+                // Thêm claim cho các vai trò (roles)
+                if (user.Roles != null)
+                {
+                    foreach (var role in user.Roles)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
+                    }
+                }
+                
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+                
+                // Thiết lập thời gian hiệu lực của cookie
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
+                };
+                
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme, 
+                    principal, 
+                    authProperties);
+                
+                // Chuyển hướng về trang đã yêu cầu trước đó hoặc trang chủ
+                var returnUrl = TempData["ReturnUrl"]?.ToString();
+                if (string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl))
+                {
+                    returnUrl = Url.Action("Index", "Home");
+                }
+                
+                return Redirect(returnUrl);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Đã xảy ra lỗi khi đăng nhập bằng GitHub: {ex.Message}";
+                return RedirectToAction("Login");
+            }
+        }
+
+        // Phương thức để lấy danh sách các external logins của người dùng
+        [HttpGet]
+        [Authorize]
+        public IActionResult GetExternalLogins()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return Json(new List<object>());
+            }
+            
+            var externalLogins = _externalLoginService.GetExternalLogins(userId);
+            var result = externalLogins.Select(el => new
+            {
+                provider = el.Provider,
+                providerKey = el.ProviderKey,
+                providerDisplayName = el.ProviderDisplayName,
+                createdDate = el.CreatedDate
+            });
+            
+            return Json(result);
+        }
+        
+        // Phương thức để xóa external login
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public IActionResult RemoveExternalLogin([FromBody] RemoveExternalLoginViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.Provider))
+            {
+                return Json(new { success = false, message = "Provider is required" });
+            }
+            
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return Json(new { success = false, message = "User not found" });
+            }
+            
+            // Kiểm tra xem có còn phương thức đăng nhập nào khác không
+            var externalLogins = _externalLoginService.GetExternalLogins(userId);
+            if (externalLogins.Count() <= 1)
+            {
+                // Kiểm tra xem người dùng có mật khẩu không
+                var user = _userService.GetUserById(userId);
+                if (user != null && string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "You cannot remove your only login method. Please set a password first." 
+                    });
+                }
+            }
+            
+            var result = _externalLoginService.RemoveExternalLogin(userId, model.Provider);
+            return Json(new { success = result });
+        }
+    }
+    
+    public class RemoveExternalLoginViewModel
+    {
+        public string Provider { get; set; }
     }
 }

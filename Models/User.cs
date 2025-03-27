@@ -164,4 +164,6 @@ public partial class User
     public virtual ICollection<Vote> Votes { get; set; } = new List<Vote>();
 
     public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
+    
+    public virtual ICollection<ExternalLogin> ExternalLogins { get; set; } = new List<ExternalLogin>();
 }

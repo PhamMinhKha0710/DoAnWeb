@@ -442,6 +442,75 @@
     </div>
 </div>
 
+<!-- External Authentication Section -->
+<div class="account-card mt-4">
+    <div class="account-header">
+        <h4 class="account-title">External Authentication</h4>
+        <p class="account-subtitle">Manage your external login providers</p>
+    </div>
+    
+    <div class="account-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-google fs-1 text-danger me-3"></i>
+                    <div>
+                        <h5 class="mb-1">Google Account</h5>
+                        <p class="text-muted small mb-0" id="googleStatus">
+                            Checking status...
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex align-items-center justify-content-end">
+                <button type="button" id="googleConnectBtn" class="btn btn-danger">
+                    <i class="bi bi-google me-2"></i> Connect Google Account
+                </button>
+                <button type="button" id="googleDisconnectBtn" class="btn btn-outline-danger d-none">
+                    <i class="bi bi-x-circle me-2"></i> Disconnect
+                </button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-github fs-1 text-dark me-3"></i>
+                    <div>
+                        <h5 class="mb-1">GitHub Account</h5>
+                        <p class="text-muted small mb-0" id="githubStatus">
+                            Checking status...
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex align-items-center justify-content-end">
+                <button type="button" id="githubConnectBtn" class="btn btn-dark">
+                    <i class="bi bi-github me-2"></i> Connect GitHub Account
+                </button>
+                <button type="button" id="githubDisconnectBtn" class="btn btn-outline-dark d-none">
+                    <i class="bi bi-x-circle me-2"></i> Disconnect
+                </button>
+            </div>
+        </div>
+        
+        <div class="alert alert-light border mt-4">
+            <div class="d-flex">
+                <div class="me-3 text-primary fs-4">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <strong>About External Authentication</strong>
+                    <p class="small mb-0 mt-1">
+                        Connecting external accounts allows you to sign in using your existing accounts without a password.
+                        You can connect multiple providers for convenience and added security.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     
@@ -456,6 +525,106 @@
             const removeAvatarField = document.getElementById('remove-avatar-field');
             const avatarUrlInput = document.getElementById('avatar-url-input');
             const useUrlBtn = document.getElementById('use-url-btn');
+            
+            // External login elements
+            const googleConnectBtn = document.getElementById('googleConnectBtn');
+            const googleDisconnectBtn = document.getElementById('googleDisconnectBtn');
+            const githubConnectBtn = document.getElementById('githubConnectBtn');
+            const githubDisconnectBtn = document.getElementById('githubDisconnectBtn');
+            const googleStatus = document.getElementById('googleStatus');
+            const githubStatus = document.getElementById('githubStatus');
+            
+            // Fetch external login status
+            fetchExternalLoginStatus();
+            
+            // Google login handlers
+            googleConnectBtn.addEventListener('click', function() {
+                window.location.href = '/Account/GoogleLogin?returnUrl=' + encodeURIComponent(window.location.pathname);
+            });
+            
+            googleDisconnectBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to disconnect your Google account?')) {
+                    disconnectExternalLogin('Google');
+                }
+            });
+            
+            // GitHub login handlers
+            githubConnectBtn.addEventListener('click', function() {
+                window.location.href = '/Account/GitHubLogin?returnUrl=' + encodeURIComponent(window.location.pathname);
+            });
+            
+            githubDisconnectBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to disconnect your GitHub account?')) {
+                    disconnectExternalLogin('GitHub');
+                }
+            });
+            
+            // Function to fetch external login status
+            function fetchExternalLoginStatus() {
+                fetch('/Account/GetExternalLogins')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('External logins:', data);
+                        
+                        // Update Google status
+                        const googleLogin = data.find(login => login.provider === 'Google');
+                        if (googleLogin) {
+                            googleStatus.textContent = 'Connected';
+                            googleConnectBtn.classList.add('d-none');
+                            googleDisconnectBtn.classList.remove('d-none');
+                        } else {
+                            googleStatus.textContent = 'Not connected';
+                            googleConnectBtn.classList.remove('d-none');
+                            googleDisconnectBtn.classList.add('d-none');
+                        }
+                        
+                        // Update GitHub status
+                        const githubLogin = data.find(login => login.provider === 'GitHub');
+                        if (githubLogin) {
+                            githubStatus.textContent = 'Connected';
+                            githubConnectBtn.classList.add('d-none');
+                            githubDisconnectBtn.classList.remove('d-none');
+                        } else {
+                            githubStatus.textContent = 'Not connected';
+                            githubConnectBtn.classList.remove('d-none');
+                            githubDisconnectBtn.classList.add('d-none');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching external logins:', error);
+                        googleStatus.textContent = 'Status unavailable';
+                        githubStatus.textContent = 'Status unavailable';
+                    });
+            }
+            
+            // Function to disconnect external login
+            function disconnectExternalLogin(provider) {
+                fetch('/Account/RemoveExternalLogin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ provider: provider })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Failed to disconnect external login');
+                })
+                .then(data => {
+                    if (data.success) {
+                        fetchExternalLoginStatus();
+                    } else {
+                        alert('Failed to disconnect external login: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error disconnecting external login:', error);
+                    alert('An error occurred while disconnecting your ' + provider + ' account. Please try again later.');
+                });
+            }
             
             console.log('Profile page scripts initialized');
             console.log('Current avatar URL:', '@Model.AvatarUrl');
