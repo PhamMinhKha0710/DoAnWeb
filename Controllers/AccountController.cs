@@ -10,6 +10,12 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using DoAnWeb.GitIntegration;
+using System.Linq;
+using DoAnWeb.Repositories;
+using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging;
 
 namespace DoAnWeb.Controllers
 {
@@ -17,11 +23,13 @@ namespace DoAnWeb.Controllers
     {
         private readonly IUserService _userService;
         private readonly IGiteaUserSyncService _giteaUserSyncService;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IUserService userService, IGiteaUserSyncService giteaUserSyncService)
+        public AccountController(IUserService userService, IGiteaUserSyncService giteaUserSyncService, ILogger<AccountController> logger)
         {
             _userService = userService;
             _giteaUserSyncService = giteaUserSyncService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -92,6 +100,15 @@ namespace DoAnWeb.Controllers
                         new Claim(ClaimTypes.Email, user.Email),
                         new Claim("DisplayName", user.DisplayName)
                     };
+
+                    // Add Gitea information if available
+                    if (!string.IsNullOrEmpty(user.GiteaUsername))
+                    {
+                        claims.Add(new Claim("GiteaUsername", user.GiteaUsername));
+                    }
+                    
+                    // Verify email status
+                    claims.Add(new Claim("IsEmailVerified", user.IsEmailVerified.ToString()));
 
                     // Thêm claim cho các vai trò (roles)
                     if (user.Roles != null)
@@ -520,6 +537,32 @@ namespace DoAnWeb.Controllers
         }
 
         [HttpGet]
+        [Authorize]
+        public IActionResult TestSavedItems([FromServices] IUserSavedItemRepository savedItemRepository)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return RedirectToAction("Login");
+
+            // Get all saved items for current user
+            var savedItems = savedItemRepository.GetSavedItemsByUserId(userId);
+            
+            // Check if user has any saved items
+            if (!savedItems.Any())
+            {
+                // For testing, add a dummy saved item
+                savedItemRepository.SaveItem(userId, "Question", 1); // Assuming question with ID 1 exists
+                TempData["SuccessMessage"] = "Test item saved successfully!";
+            }
+            else
+            {
+                TempData["InfoMessage"] = $"You already have {savedItems.Count()} saved items.";
+            }
+            
+            return RedirectToAction("Index", "SavedItems");
+        }
+
+        [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
@@ -606,43 +649,175 @@ namespace DoAnWeb.Controllers
         }
 
         [Authorize]
-        public IActionResult LinkGiteaAccount()
+        public async Task<IActionResult> LinkGiteaAccount()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             if (userId == 0)
             {
                 return RedirectToAction("Login");
+            }
+            
+            // Check if user already has a linked account
+            var user = _userService.GetUserById(userId);
+            if (user != null && !string.IsNullOrEmpty(user.GiteaUsername) && !string.IsNullOrEmpty(user.GiteaToken))
+            {
+                // Already linked, redirect to Gitea login
+                return RedirectToAction("GiteaLogin");
             }
             
             // Display the linking page
             return View();
         }
         
+        [Authorize]
+        public async Task<IActionResult> GiteaLogin()
+        {
+            try
+            {
+                // Get current user ID
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+                if (userId == 0)
+                {
+                    TempData["ErrorMessage"] = "You need to be logged in to access Gitea.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Get user from database
+                var user = _userService.GetUserById(userId);
+                
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Check if user has Gitea account linked
+                if (string.IsNullOrEmpty(user.GiteaUsername) || string.IsNullOrEmpty(user.GiteaToken))
+                {
+                    TempData["ErrorMessage"] = "You need to link your Gitea account first.";
+                    return RedirectToAction("LinkGiteaAccount");
+                }
+                
+                // Try to get Gitea login URL
+                try
+                {
+                    // Get Gitea login URL from the service
+                    var giteaLoginUrl = await _giteaUserSyncService.GetGiteaLoginUrlAsync(userId);
+                    
+                    if (string.IsNullOrEmpty(giteaLoginUrl))
+                    {
+                        // Try to refresh the token
+                        _logger.LogWarning($"Failed to generate login URL for user {userId}, attempting to refresh Gitea account");
+                        var userResult = await _giteaUserSyncService.EnsureGiteaUserWithDetailsAsync(userId);
+                        
+                        if (!userResult.Success)
+                        {
+                            TempData["ErrorMessage"] = $"Failed to access Gitea: {userResult.ErrorMessage}";
+                            return RedirectToAction("LinkGiteaAccount");
+                        }
+                        
+                        giteaLoginUrl = await _giteaUserSyncService.GetGiteaLoginUrlAsync(userId);
+                        
+                        if (string.IsNullOrEmpty(giteaLoginUrl))
+                        {
+                            TempData["ErrorMessage"] = "Failed to generate Gitea login URL. Please try again later.";
+                            return RedirectToAction("Profile");
+                        }
+                    }
+                    
+                    // If it's already a full URL, use it directly
+                    if (giteaLoginUrl.StartsWith("http"))
+                    {
+                        return Redirect(giteaLoginUrl);
+                    }
+                    
+                    // Otherwise, it's a session ID, so construct the URL
+                    return Redirect($"http://localhost:3000?_session={giteaLoginUrl}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error logging in to Gitea for user {userId}: {ex.Message}");
+                    TempData["ErrorMessage"] = $"Error logging in to Gitea: {ex.Message}";
+                    return RedirectToAction("Profile");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error: {ex.Message}";
+                return RedirectToAction("Profile");
+            }
+        }
+
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LinkGiteaAccount(LinkGiteaViewModel model)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            if (userId == 0)
-            {
-                return RedirectToAction("Login");
-            }
-            
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-            
             try
             {
-                // Sử dụng EnsureGiteaUserAsync để liên kết tài khoản
-                var result = await _giteaUserSyncService.EnsureGiteaUserAsync(userId);
+                // Get current user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    TempData["ErrorMessage"] = "You need to be logged in.";
+                    return RedirectToAction("Login");
+                }
+                
+                var userId = userIdClaim.Value;
+                
+                // Check if we need to create a new account automatically
+                if (model.CreateNewAccount)
+                {
+                    try
+                    {
+                        // Use EnsureGiteaUserAsync which will create an account
+                        var loginUrl = await _giteaUserSyncService.EnsureGiteaUserAsync(userId);
+                        
+                        if (!string.IsNullOrEmpty(loginUrl))
+                        {
+                            TempData["SuccessMessage"] = "Successfully created and linked Gitea account";
+                            
+                            // Immediately redirect to Gitea with auto-login
+                            return RedirectToAction("GiteaLogin");
+                        }
+                        else
+                        {
+                            TempData["ErrorMessage"] = "Failed to create Gitea account. Please try linking to an existing account.";
+                            model.CreateNewAccount = false;
+                            return View(model);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Error creating Gitea account: {ex.Message}");
+                        ModelState.AddModelError("", $"Error creating account: {ex.Message}");
+                        model.CreateNewAccount = false;
+                        return View(model);
+                    }
+                }
+                
+                // If we get here, we're linking to an existing account
+                // Manual linking with provided credentials
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+                
+                if (string.IsNullOrEmpty(model.GiteaUsername) || string.IsNullOrEmpty(model.GiteaPassword))
+                {
+                    ModelState.AddModelError("", "Username and password are required for linking to an existing account");
+                    return View(model);
+                }
+                
+                var result = await _giteaUserSyncService.LinkGiteaAccountAsync(
+                    int.Parse(userId), 
+                    model.GiteaUsername, 
+                    model.GiteaPassword);
                 
                 if (result.Success)
                 {
-                    TempData["SuccessMessage"] = $"Successfully linked to Gitea with username {result.Username}";
-                    return RedirectToAction("Profile");
+                    TempData["SuccessMessage"] = $"Successfully linked to Gitea account {result.Username}";
+                    return RedirectToAction("GiteaLogin");
                 }
                 else
                 {
@@ -657,10 +832,56 @@ namespace DoAnWeb.Controllers
             }
         }
         
+        // New method to automatically create and link a Gitea account
+        [Authorize]
+        public async Task<IActionResult> AutoLinkGiteaAccount()
+        {
+            try
+            {
+                // Get current user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    TempData["ErrorMessage"] = "You need to be logged in to access Gitea.";
+                    return RedirectToAction("Login");
+                }
+                
+                var userId = int.Parse(userIdClaim.Value);
+                
+                // Automatically create and link a Gitea account
+                try
+                {
+                    var userResult = await _giteaUserSyncService.EnsureGiteaUserWithDetailsAsync(userId);
+                    
+                    if (userResult.Success)
+                    {
+                        TempData["SuccessMessage"] = "Successfully created and linked Gitea account";
+                        return RedirectToAction("GiteaLogin");
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = $"Failed to create Gitea account: {userResult.ErrorMessage}";
+                        return RedirectToAction("LinkGiteaAccount");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error creating Gitea account for user {userId}: {ex.Message}");
+                    TempData["ErrorMessage"] = $"Failed to create Gitea account: {ex.Message}";
+                    return RedirectToAction("LinkGiteaAccount");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error: {ex.Message}";
+                return RedirectToAction("Profile");
+            }
+        }
+        
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult UnlinkGiteaAccount()
+        public async Task<IActionResult> UnlinkGiteaAccount()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             if (userId == 0)
@@ -668,18 +889,374 @@ namespace DoAnWeb.Controllers
                 return RedirectToAction("Login");
             }
             
-            var user = _userService.GetUserById(userId);
-            if (user != null)
+            bool result = await _giteaUserSyncService.UnlinkGiteaAccountAsync(userId);
+            
+            if (result)
             {
-                // Xóa thông tin Gitea từ tài khoản người dùng
-                user.GiteaUsername = null;
-                user.GiteaToken = null;
-                _userService.UpdateUser(user);
-                
                 TempData["SuccessMessage"] = "Successfully unlinked Gitea account";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to unlink Gitea account";
             }
             
             return RedirectToAction("Profile");
+        }
+
+        // Methods for Google and GitHub authentication
+
+        [HttpGet]
+        public IActionResult ExternalLogin(string provider, string returnUrl = null, string isRegistration = null)
+        {
+            // Request a redirect to the external login provider
+            var redirectUrl = Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl, isRegistration = isRegistration });
+            var properties = new AuthenticationProperties 
+            { 
+                RedirectUri = redirectUrl,
+                Items = { 
+                    ["returnUrl"] = returnUrl,
+                    ["isRegistration"] = isRegistration ?? "false"
+                },
+                AllowRefresh = true
+            };
+            return Challenge(properties, provider);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null, string isRegistration = null)
+        {
+            returnUrl = returnUrl ?? Url.Content("~/");
+            bool isRegistrationFlow = !string.IsNullOrEmpty(isRegistration) && isRegistration.ToLower() == "true";
+
+            if (remoteError != null)
+            {
+                TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
+                return isRegistrationFlow
+                    ? RedirectToAction(nameof(Register))
+                    : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+            }
+
+            // Debug: Log start of authentication process
+            Console.WriteLine("--- Starting external authentication callback ---");
+            Console.WriteLine($"Is registration flow: {isRegistrationFlow}");
+
+            // Get the login information from the external provider
+            var info = await HttpContext.AuthenticateAsync("Google");
+            if (info == null || info.Principal == null)
+            {
+                // Try GitHub
+                Console.WriteLine("Google authentication failed or not found, trying GitHub...");
+                info = await HttpContext.AuthenticateAsync("GitHub");
+            }
+            
+            if (info?.Principal == null)
+            {
+                Console.WriteLine("ERROR: Failed to authenticate with any external provider");
+                TempData["ErrorMessage"] = "Error loading external login information.";
+                return isRegistrationFlow
+                    ? RedirectToAction(nameof(Register))
+                    : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+            }
+
+            // Debug: Log authentication details
+            Console.WriteLine($"Successfully authenticated with provider: {info.Principal.Identity?.AuthenticationType}");
+            Console.WriteLine("Claims received from provider:");
+            foreach (var claim in info.Principal.Claims)
+            {
+                Console.WriteLine($"  {claim.Type} = {claim.Value}");
+            }
+
+            // Get information from the external login provider
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+            var providerId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var provider = info.Properties.Items.ContainsKey("LoginProvider") 
+                ? info.Properties.Items["LoginProvider"] 
+                : (info.Principal.Identity?.AuthenticationType ?? "External");
+
+            // GitHub might not include email in standard claims, check additional claims
+            if (string.IsNullOrEmpty(email) && provider == "GitHub")
+            {
+                // Try to find email in GitHub-specific claims
+                email = info.Principal.FindFirstValue("urn:github:email");
+                
+                if (string.IsNullOrEmpty(email))
+                {
+                    // Look through all claims to find email
+                    foreach (var claim in info.Principal.Claims)
+                    {
+                        if (claim.Type.EndsWith("emailaddress", StringComparison.OrdinalIgnoreCase) ||
+                            claim.Type.Contains("email", StringComparison.OrdinalIgnoreCase))
+                        {
+                            email = claim.Value;
+                            break;
+                        }
+                        
+                        // Debug: Log all claims to see what's available
+                        Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
+                    }
+                }
+                
+                // Last resort: Create a placeholder email using GitHub username
+                if (string.IsNullOrEmpty(email))
+                {
+                    var githubUsername = info.Principal.FindFirstValue("urn:github:login") ?? 
+                                        info.Principal.FindFirstValue("login") ??
+                                        providerId;
+                    
+                    if (!string.IsNullOrEmpty(githubUsername))
+                    {
+                        Console.WriteLine($"Creating placeholder email for GitHub user: {githubUsername}");
+                        email = $"{githubUsername}@users.noreply.github.com";
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(email))
+            {
+                Console.WriteLine("ERROR: Unable to retrieve email from provider claims");
+                TempData["ErrorMessage"] = "Unable to get email from external provider.";
+                return isRegistrationFlow
+                    ? RedirectToAction(nameof(Register))
+                    : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+            }
+
+            // Look for existing user by email
+            var user = _userService.GetUserByEmail(email);
+
+            // Check if this is a registration attempt for an existing email
+            if (isRegistrationFlow && user != null)
+            {
+                Console.WriteLine($"Registration attempt with existing email: {email}");
+                TempData["ErrorMessage"] = $"An account with the email {email} already exists. Please use the login page instead.";
+                return RedirectToAction(nameof(Register));
+            }
+
+            // If user doesn't exist, create new user
+            if (user == null)
+            {
+                // Generate username based on email
+                var username = email.Split('@')[0];
+                var baseUsername = username;
+                int counter = 1;
+
+                // Ensure username is unique
+                while (_userService.GetUserByUsername(username) != null)
+                {
+                    username = $"{baseUsername}{counter++}";
+                }
+
+                // Try to get avatar URL from Google or GitHub claims
+                string avatarUrl = null;
+                
+                // Google uses "picture" claim
+                if (provider == "Google")
+                {
+                    avatarUrl = info.Principal.FindFirstValue("picture");
+                }
+                // GitHub uses various claims, but we'll check some common ones
+                else if (provider == "GitHub")
+                {
+                    avatarUrl = info.Principal.FindFirstValue("urn:github:avatar_url") 
+                        ?? info.Principal.FindFirstValue("avatar_url");
+                }
+
+                user = new User
+                {
+                    Username = username,
+                    Email = email,
+                    DisplayName = name ?? username,
+                    IsEmailVerified = true, // Email is already verified through the provider
+                    CreatedDate = DateTime.Now,
+                    UpdatedDate = DateTime.Now,
+                    AvatarUrl = avatarUrl, // Set avatar URL if available
+                    // Generate a random password since they won't use it
+                    PasswordHash = Guid.NewGuid().ToString("N")
+                };
+
+                try
+                {
+                    _userService.CreateExternalUser(user);
+                    Console.WriteLine($"Created new user via external provider: {email}");
+                    
+                    if (isRegistrationFlow)
+                    {
+                        TempData["SuccessMessage"] = "Your account has been successfully created! You may now log in.";
+                        return RedirectToAction(nameof(Login));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error creating user: {ex.Message}");
+                    TempData["ErrorMessage"] = $"Error creating account: {ex.Message}";
+                    return isRegistrationFlow
+                        ? RedirectToAction(nameof(Register))
+                        : RedirectToAction(nameof(Login), new { ReturnUrl = returnUrl });
+                }
+            }
+            else if (isRegistrationFlow)
+            {
+                // Shouldn't reach here because of the earlier check, but just in case
+                TempData["ErrorMessage"] = $"An account with the email {email} already exists. Please use the login page instead.";
+                return RedirectToAction(nameof(Register));
+            }
+
+            // Update user's last login date
+            user.LastLoginDate = DateTime.Now;
+            _userService.UpdateUser(user);
+
+            // Create claims for authentication
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("DisplayName", user.DisplayName)
+            };
+
+            // Add role claims
+            if (user.Roles != null)
+            {
+                foreach (var role in user.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role.RoleName));
+                }
+            }
+
+            // Add provider information
+            claims.Add(new Claim("ExternalProvider", provider));
+
+            // Set cookie properties
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
+            };
+
+            // Create the authentication cookie
+            var claimsIdentity = new ClaimsIdentity(claims, "CookieAuth");
+            await HttpContext.SignInAsync("CookieAuth", new ClaimsPrincipal(claimsIdentity), authProperties);
+
+            return RedirectToLocal(returnUrl);
+        }
+
+        private IActionResult RedirectToLocal(string returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Generate reset token (returns null if email doesn't exist)
+                var token = _userService.GeneratePasswordResetToken(model.Email);
+                
+                if (token != null)
+                {
+                    // Build reset link for email
+                    var resetUrl = Url.Action("ResetPassword", "Account", 
+                        new { email = model.Email, token = token }, 
+                        protocol: HttpContext.Request.Scheme);
+                    
+                    // Log the reset URL for debugging (in a real app, this would be sent via email)
+                    Console.WriteLine($"Password reset link generated: {resetUrl}");
+                    Console.WriteLine($"This should be emailed to: {model.Email}");
+                    
+                    // Display a generic success message to prevent user enumeration
+                    TempData["SuccessMessage"] = "If your email exists in our system, you will receive a password reset link shortly.";
+                    
+                    // TODO: In a production application, this is where you would send an email
+                    // For demonstration purposes, we'll just return a success message
+                    
+                    // Display the reset link in the success message (ONLY FOR DEMONSTRATION)
+                    // In a real application, you would NOT show this to the user but send it via email
+                    TempData["SuccessMessage"] = $"For demonstration purposes, here is your reset link: <a href='{resetUrl}'>Reset Password</a>";
+                    
+                    return View("ForgotPasswordConfirmation");
+                }
+                
+                // Display a generic success message even if email doesn't exist to prevent user enumeration
+                TempData["SuccessMessage"] = "If your email exists in our system, you will receive a password reset link shortly.";
+                return View("ForgotPasswordConfirmation");
+            }
+            
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                TempData["ErrorMessage"] = "Invalid password reset link.";
+                return RedirectToAction("Login");
+            }
+            
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+            
+            // Validate token
+            if (!_userService.ValidatePasswordResetToken(email, token))
+            {
+                TempData["ErrorMessage"] = "The password reset link has expired or is invalid.";
+                return RedirectToAction("Login");
+            }
+            
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            
+            // Reset password
+            var result = _userService.ResetPassword(model.Email, model.Token, model.Password);
+            
+            if (result)
+            {
+                Console.WriteLine($"Password successfully reset for user: {model.Email}");
+                return RedirectToAction("ResetPasswordConfirmation");
+            }
+            
+            // If we got this far, reset failed
+            TempData["ErrorMessage"] = "Password reset failed. The link may have expired or is invalid.";
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
         }
     }
 }

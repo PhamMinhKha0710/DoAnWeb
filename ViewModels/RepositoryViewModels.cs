@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using DoAnWeb.GitIntegration;
+using DoAnWeb.GitIntegration.Models;
 using DoAnWeb.Models;
 
 namespace DoAnWeb.ViewModels
@@ -18,6 +20,16 @@ namespace DoAnWeb.ViewModels
         public bool IsGiteaRepository { get; set; }
         public string GiteaUsername { get; set; }
         public string RepositoryName { get; set; }
+        public string Owner { get; set; }
+        public string Branch { get; set; }
+        public string CurrentPath { get; set; }
+        public string ParentPath { get; set; }
+        public bool IsOwner { get; set; }
+        public List<GiteaContent> Files { get; set; } = new List<GiteaContent>();
+        public List<GiteaBranch> AvailableBranches { get; set; } = new List<GiteaBranch>();
+        public string ReadmeContent { get; set; }
+        public string GitCloneUrl { get; set; }
+        public bool ShowOwnershipFix { get; set; }
     }
 
     public class CreateRepositoryViewModel
@@ -34,12 +46,16 @@ namespace DoAnWeb.ViewModels
 
         [Display(Name = "Private Repository")]
         public bool IsPrivate { get; set; }
+        
+        [Display(Name = "Initialize with README")]
+        public bool AutoInit { get; set; } = true;
     }
 
     public class MyRepositoriesViewModel
     {
         public IEnumerable<Repository> DevCommunityRepositories { get; set; } = new List<Repository>();
         public List<RepositoryResponse> GiteaRepositories { get; set; } = new List<RepositoryResponse>();
+        public string GiteaUsername { get; set; }
     }
 
     public class FileContentViewModel
@@ -50,6 +66,7 @@ namespace DoAnWeb.ViewModels
         public string Encoding { get; set; }
         public string Owner { get; set; }
         public string Repository { get; set; }
+        public string Branch { get; set; }
         public long Size { get; set; }
         public string HtmlUrl { get; set; }
     }

@@ -59,33 +59,35 @@ public partial class User
     
     public string? GiteaToken { get; set; }
     
+    // Trường để lưu trữ điểm uy tín của người dùng
+    public int ReputationPoints { get; set; } = 0;
+    
+    // Thuộc tính tự tính toán điểm uy tín từ nhiều nguồn
+    [NotMapped]
     public int Reputation
     {
         get
         {
-            int reputation = 0;
-            
-            // Use null check to avoid NullReferenceException
-            if (Votes != null)
-            {
-                // +10 for each upvote on answers - use Count instead of Count()
-                reputation += Votes
-                    .Count(v => v.TargetType == "Answer" && v.IsUpvote) * 10;
+            // Nếu không có các collection đã tải, trả về điểm lưu sẵn
+            if (Votes == null || Answers == null || Questions == null)
+                return ReputationPoints;
                 
-                // +5 for each upvote on questions - use Count instead of Count()
-                reputation += Votes
-                    .Count(v => v.TargetType == "Question" && v.IsUpvote) * 5;
-                
-                // -2 for each downvote - use Count instead of Count()
-                reputation += Votes
-                    .Count(v => !v.IsUpvote) * -2;
-            }
+            int reputation = ReputationPoints;
             
-            // +15 for each posted answer - use null check
-            if (Answers != null)
-            {
-                reputation += Answers.Count * 15;
-            }
+            // +10 for each upvote on answers
+            reputation += Votes
+                .Count(v => v.TargetType == "Answer" && v.IsUpvote) * 10;
+            
+            // +5 for each upvote on questions
+            reputation += Votes
+                .Count(v => v.TargetType == "Question" && v.IsUpvote) * 5;
+            
+            // -2 for each downvote
+            reputation += Votes
+                .Count(v => !v.IsUpvote) * -2;
+            
+            // +15 for each posted answer
+            reputation += Answers.Count * 15;
             
             return reputation;
         }

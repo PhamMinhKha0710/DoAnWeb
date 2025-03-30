@@ -21,6 +21,9 @@ namespace DoAnWeb.Services
         // Create user
         void CreateUser(User user, string password);
         
+        // Create user from external login (Google, GitHub)
+        void CreateExternalUser(User user);
+        
         // Update user
         void UpdateUser(User user);
         
@@ -50,6 +53,15 @@ namespace DoAnWeb.Services
         
         // Generate verification token for email
         string GenerateEmailVerificationToken(int userId);
+        
+        // Password reset methods
+        string GeneratePasswordResetToken(string email);
+        
+        // Verify that a password reset token is valid
+        bool ValidatePasswordResetToken(string email, string token);
+        
+        // Reset password using a token
+        bool ResetPassword(string email, string token, string newPassword);
         
         // New profile method
         ProfileViewModel GetUserProfile(int userId);

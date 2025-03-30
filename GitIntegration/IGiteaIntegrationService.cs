@@ -28,11 +28,56 @@ namespace DoAnWeb.GitIntegration
         /// <summary>
         /// Lấy nội dung của một file trong repository
         /// </summary>
-        Task<FileContentResponse> GetFileContentAsync(string ownerUsername, string repoName, string filePath, string accessToken);
+        Task<FileContentResponse> GetFileContentAsync(string ownerUsername, string repoName, string filePath, string accessToken, string branch = null);
+
+        /// <summary>
+        /// Get contents of a directory from a repository
+        /// </summary>
+        Task<List<Models.GiteaContent>> GetDirectoryContentsAsync(string ownerUsername, string repoName, string directoryPath, string accessToken, string branch = null);
 
         /// <summary>
         /// Tìm kiếm repositories trong Gitea
         /// </summary>
         Task<List<RepositoryResponse>> SearchRepositoriesAsync(string keyword, string accessToken);
+        
+        /// <summary>
+        /// Generate a login session for direct login to Gitea without password
+        /// </summary>
+        Task<string> GenerateLoginSessionAsync(string username, string accessToken);
+        
+        /// <summary>
+        /// Test if the Gitea server is accessible
+        /// </summary>
+        Task<bool> TestGiteaServerConnectivityAsync();
+        
+        /// <summary>
+        /// Get branches for a repository
+        /// </summary>
+        Task<List<Models.GiteaBranch>> GetBranchesAsync(string owner, string repo, string accessToken);
+        
+        /// <summary>
+        /// Get commits for a repository
+        /// </summary>
+        Task<List<Models.GiteaCommit>> GetCommitsAsync(string owner, string repo, string branch, string accessToken, string path = null);
+        
+        /// <summary>
+        /// Create a new branch in a repository
+        /// </summary>
+        Task<bool> CreateBranchAsync(string owner, string repo, string newBranchName, string sourceBranch, string accessToken);
+
+        /// <summary>
+        /// Get the base URL of the Gitea server
+        /// </summary>
+        string GetBaseUrl();
+        
+        /// <summary>
+        /// Get admin token for accessing Gitea API
+        /// </summary>
+        string GetAdminToken();
+        
+        /// <summary>
+        /// Get repository details by ID
+        /// </summary>
+        Task<RepositoryResponse> GetRepositoryByIdAsync(int repositoryId, string accessToken);
     }
 } 

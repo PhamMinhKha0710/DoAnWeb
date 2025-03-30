@@ -4,9 +4,13 @@ namespace DoAnWeb.ViewModels
 {
     public class LinkGiteaViewModel
     {
-        [Display(Name = "Confirm Link")]
-        public bool ConfirmLink { get; set; }
+        [Display(Name = "Create New Account")]
+        public bool CreateNewAccount { get; set; }
         
-        public string ReturnUrl { get; set; }
+        [Display(Name = "Gitea Username")]
+        public string GiteaUsername { get; set; }
+        
+        [Display(Name = "Gitea Password")]
+        public string GiteaPassword { get; set; }
     }
 } 

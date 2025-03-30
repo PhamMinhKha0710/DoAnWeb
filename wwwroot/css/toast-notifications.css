@@ -1,0 +1,205 @@
+/* Toast Notifications Styles
+-------------------------------------------------- */
+
+/* Container for toasts */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1080;
+    max-width: 350px;
+}
+
+/* Basic toast styles */
+.toast {
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+/* Toast showing animation */
+.toast.showing {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Toast shown state */
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Toast hiding animation */
+.toast.hiding {
+    animation: slideOut 0.3s ease-in forwards;
+}
+
+/* Vote specific toast styling */
+.vote-toast {
+    border-left: 4px solid var(--primary);
+    padding: 12px 15px;
+}
+
+.vote-toast .vote-toast-header {
+    margin-bottom: 8px;
+}
+
+.vote-toast .vote-toast-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.vote-toast .vote-toast-body {
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    margin-bottom: 10px;
+}
+
+.vote-toast .vote-toast-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Score update highlight animation */
+.score-updated {
+    animation: scoreHighlight 2s ease;
+}
+
+/* Notification dropdown enhancements */
+.notification-item.unread {
+    background-color: rgba(13, 110, 253, 0.05);
+    position: relative;
+}
+
+.notification-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background-color: var(--primary);
+}
+
+/* Vote specific notification in dropdown */
+.notification-item .notification-icon .bi-arrow-up-circle {
+    color: #dc3545 !important;
+}
+
+/* Add a subtle pulse animation for new notifications */
+.notification-item.unread .notification-icon i {
+    animation: notificationPulse 2s ease;
+}
+
+@keyframes notificationPulse {
+    0% {
+        transform: scale(1);
+    }
+    10% {
+        transform: scale(1.2);
+    }
+    20% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.1);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* Badge pulse animation */
+.notification-badge {
+    animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Animations definitions */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+@keyframes scoreHighlight {
+    0% {
+        background-color: transparent;
+        color: inherit;
+    }
+    20% {
+        background-color: var(--success);
+        color: white;
+    }
+    100% {
+        background-color: transparent;
+        color: inherit;
+    }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .toast {
+        background-color: var(--dark);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .vote-toast .vote-toast-title {
+        color: white;
+    }
+    
+    .vote-toast .vote-toast-body {
+        color: var(--gray-300);
+    }
+    
+    .notification-item.unread {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    @keyframes scoreHighlight {
+        0% {
+            background-color: transparent;
+            color: inherit;
+        }
+        20% {
+            background-color: var(--success);
+            color: white;
+        }
+        100% {
+            background-color: transparent;
+            color: inherit;
+        }
+    }
+} 

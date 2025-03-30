@@ -16,6 +16,12 @@ namespace DoAnWeb.Controllers
             _context = context;
         }
 
+        // GET: TagPreferences
+        public IActionResult Index()
+        {
+            return RedirectToAction(nameof(WatchedTags));
+        }
+
         // GET: TagPreferences/WatchedTags
         public IActionResult WatchedTags()
         {

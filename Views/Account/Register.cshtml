@@ -27,6 +27,14 @@
                             </div>
                         }
                         
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <div>@TempData["SuccessMessage"]</div>
+                            </div>
+                        }
+                        
                         <form asp-action="Register" method="post" class="row">
                             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                             
@@ -110,10 +118,10 @@
                                     </div>
                                     
                                     <div class="social-login">
-                                        <a href="#" class="social-btn google">
+                                        <a href="@Url.Action("ExternalLogin", "Account", new { provider = "Google", returnUrl = "/", isRegistration = "true" })" class="social-btn google">
                                             <i class="bi bi-google"></i> Google
                                         </a>
-                                        <a href="#" class="social-btn github">
+                                        <a href="@Url.Action("ExternalLogin", "Account", new { provider = "GitHub", returnUrl = "/", isRegistration = "true" })" class="social-btn github">
                                             <i class="bi bi-github"></i> GitHub
                                         </a>
                                     </div>

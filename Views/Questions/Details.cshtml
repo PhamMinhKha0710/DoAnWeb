@@ -1,7 +1,35 @@
 @model DoAnWeb.Models.Question
+@using System.Security.Claims
 
 @{
     ViewData["Title"] = Model.Title;
+    
+    bool isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    bool hasVoted = !string.IsNullOrEmpty(Model.UserVoteType);
+    bool isUpvote = Model.UserVoteType == "up";
+    
+    string btnClass = hasVoted 
+        ? (isUpvote ? "btn-primary" : "btn-danger") 
+        : "btn-outline-primary";
+        
+    string iconClass = hasVoted 
+        ? (isUpvote ? "bi-hand-thumbs-up-fill" : "bi-hand-thumbs-down-fill") 
+        : "bi-hand-thumbs-up";
+        
+    string btnText = hasVoted 
+        ? (isUpvote ? "Upvoted" : "Downvoted") 
+        : "Vote";
+        
+    // Create a dictionary of answers by ID for quick lookup
+    var answerDict = Model.Answers?.ToDictionary(a => a.AnswerId) ?? new Dictionary<int, DoAnWeb.Models.Answer>();
+    
+    // Get top-level answers (those without a parent)
+    var topLevelAnswers = Model.Answers?
+        .Where(a => a.ParentAnswerId == null)
+        .OrderBy(a => a.IsAccepted ? 0 : 1)
+        .ThenByDescending(a => a.Score)
+        .ThenBy(a => a.CreatedDate)
+        .ToList() ?? new List<DoAnWeb.Models.Answer>();
 }
 
 @section Styles {
@@ -10,9 +38,32 @@
     <link rel="stylesheet" href="~/css/code-blocks.css" />
     <link rel="stylesheet" href="~/css/comment-styles.css" />
     <link rel="stylesheet" href="~/css/attachment-styles.css" />
+    <link rel="stylesheet" href="~/css/vote-styles.css" />
+    <link rel="stylesheet" href="~/css/toast-notifications.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/web/pdf_viewer.min.css">
+    
+    <!-- Add metadata for question ID (used by voting system) -->
+    <meta name="question-id" content="@Model.QuestionId" />
+    
+    <style>
+        .spin-animation {
+            animation: spin 1s linear infinite;
+        }
+        
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 }
+
+<!-- Hidden form for CSRF token that JavaScript can access -->
+<form id="csrf-form" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
 
 <div class="container">
     <div class="row mb-4">
@@ -21,142 +72,130 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
                     <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Questions</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+                    <li class="breadcrumb-item active fw-medium" aria-current="page">@Model.Title</li>
                 </ol>
             </nav>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-lg-9">
             <!-- Question Card -->
-            <div class="card mb-4 question-detail-card">
-                <div class="card-header bg-transparent py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h1 class="card-title mb-0 fs-4 fw-bold">@Model.Title</h1>
-                        @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString())
-                        {
-                            <div>
-                                <a asp-action="Edit" asp-route-id="@Model.QuestionId" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-pencil me-1"></i> Edit
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@Model.QuestionId" class="btn btn-outline-danger btn-sm">
-                                    <i class="bi bi-trash me-1"></i> Delete
-                                </a>
-                            </div>
-                        }
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="question-stats d-flex gap-2">
-                            <span class="badge bg-primary rounded-pill px-3 py-2">
-                                <i class="bi bi-arrow-up-circle me-1"></i> @Model.Score votes
-                            </span>
-                            <span class="badge bg-secondary rounded-pill px-3 py-2">
-                                <i class="bi bi-eye me-1"></i> <span class="view-count">@Model.ViewCount</span> views
-                            </span>
-                            <span class="badge bg-info rounded-pill px-3 py-2">
-                                <i class="bi bi-info-circle me-1"></i> @Model.Status
-                            </span>
-                        </div>
-                        <div class="question-dates">
-                            <small class="text-muted">
-                                <i class="bi bi-calendar3 me-1"></i> Asked on @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")
-                            </small>
-                            @if (Model.UpdatedDate != Model.CreatedDate)
+            <div class="card mb-4 question-detail-card animate__animated animate__fadeIn shadow-sm">
+                <div class="card-header position-relative py-4 px-4" style="background: linear-gradient(135deg, #2980b9, #3498db);">
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <h1 class="card-title fs-2 fw-bold lh-base text-white" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.3); margin: 0.5rem 0;">@Model.Title</h1>
+                            @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString())
                             {
-                                <small class="text-muted ms-2">
-                                    <i class="bi bi-pencil-square me-1"></i> Updated on @Model.UpdatedDate?.ToString("MMM dd, yyyy")
-                                </small>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="question-body mb-4 content-area">
-                        @Html.Raw(Model.Body)
-                    </div>
-
-                    <!-- Question Comments Section -->
-                    <div class="comment-section question-comments-section mt-3">
-                        <div class="comment-header">
-                            <i class="bi bi-chat-text me-1"></i>
-                            Bình luận<span class="comment-count-badge comment-count">@(Model.Comments?.Count ?? 0)</span>
-                        </div>
-                        <div class="question-comments-container">
-                            @if (Model.Comments != null && Model.Comments.Any())
-                            {
-                                foreach (var comment in Model.Comments.OrderBy(c => c.CreatedDate))
-                                {
-                                    <div class="comment-item" data-comment-id="@comment.CommentId">
-                                        <div class="card-body py-2">
-                                            <div class="d-flex">
-                                                <div class="comment-avatar me-2">
-                                                    <img src="@(comment.User?.AvatarUrl ?? "/images/default-avatar.png")" 
-                                                         alt="@comment.User?.DisplayName" class="rounded-circle">
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <div class="comment-content">
-                                                        <div class="comment-text">@comment.Body</div>
-                                                    </div>
-                                                    <div class="comment-meta">
-                                                        <span class="comment-author">@(comment.User?.DisplayName ?? "Unknown user")</span>
-                                                        <span class="mx-1">•</span>
-                                                        <span class="comment-date" title="@comment.CreatedDate.ToString("g")">
-                                                            @((DateTime.Now - comment.CreatedDate).TotalDays < 1 ? 
-                                                                comment.CreatedDate.ToString("HH:mm") : 
-                                                                comment.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                            else
-                            {
-                                <div class="no-comments-message">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
+                                <div class="ms-3 flex-shrink-0">
+                                    <a asp-action="Edit" asp-route-id="@Model.QuestionId" class="btn btn-light text-primary btn-sm rounded-pill">
+                                        <i class="bi bi-pencil me-1"></i> Edit
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@Model.QuestionId" class="btn btn-light text-danger btn-sm rounded-pill ms-2">
+                                        <i class="bi bi-trash me-1"></i> Delete
+                                    </a>
+                                </div>
                             }
                         </div>
                         
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <div class="comment-controls">
-                                <a href="#" class="add-comment-link" 
-                                   data-target-type="Question" data-target-id="@Model.QuestionId">
-                                    <i class="bi bi-chat"></i> Viết bình luận...
-                                </a>
-                                <div class="comment-form-container d-none"></div>
+                        <div class="d-flex gap-2 mb-2">
+                            <div class="badge bg-white text-primary rounded-pill px-3 py-2 d-flex align-items-center shadow-sm">
+                                <i class="bi bi-arrow-up-circle me-1"></i> <span class="vote-count" data-id="@Model.QuestionId" data-type="question">@Model.Score </span> votes
                             </div>
-                        }
+                            <div class="badge bg-white text-secondary rounded-pill px-3 py-2 d-flex align-items-center shadow-sm">
+                                <i class="bi bi-eye me-1"></i> <span class="view-count">@Model.ViewCount </span> views
+                                <span class="view-loading-indicator ms-1 d-none"><i class="bi bi-arrow-repeat spin-animation"></i></span>
+                            </div>
+                            <div class="badge bg-white text-info rounded-pill px-3 py-2 d-flex align-items-center shadow-sm">
+                                <i class="bi bi-info-circle me-1"></i> @Model.Status
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-end mb-4 pt-2 pb-3 border-bottom">
+                        <div class="question-dates d-flex align-items-center text-muted">
+                            <div class="d-flex align-items-center">
+                                <img src="@(Model.User?.AvatarUrl ?? "/images/default-avatar.png")" class="rounded-circle me-2" width="32" height="32" alt="User avatar">
+                                <span class="fw-medium me-2">@(Model.User?.DisplayName ?? "Unknown user")</span>
+                                <i class="bi bi-calendar3 ms-2 me-1"></i> @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")
+                                @if (Model.UpdatedDate.HasValue && Model.CreatedDate.HasValue && Model.UpdatedDate.Value != Model.CreatedDate.Value)
+                                {
+                                    <span class="ms-2">
+                                        <i class="bi bi-pencil-square me-1"></i> Updated on @Model.UpdatedDate.Value.ToString("MMM dd, yyyy")
+                                    </span>
+                                }
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="question-body-container p-4 mb-4 bg-white rounded-4 border shadow-sm position-relative">
+                        <div class="question-icon position-absolute" style="top: -15px; left: 20px; background-color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
+                            <i class="bi bi-question-circle-fill text-primary"></i>
+                        </div>
+                        <div class="question-body content-area">
+                            @Html.Raw(Model.Body)
+                        </div>
+                    </div>
+
+                    <!-- Tags Section -->
+                    <div class="mb-4 d-flex flex-wrap gap-2">
                         @foreach (var tag in Model.Tags)
                         {
-                            <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark me-1 text-decoration-none">@tag.TagName</a>
+                            <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark text-decoration-none px-3 py-2 d-inline-block shadow-sm" style="transition: all 0.2s ease-in-out;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                                <i class="bi bi-tag me-1"></i>@tag.TagName
+                            </a>
                         }
                     </div>
-
+                    
                     @if (Model.Attachments != null && Model.Attachments.Any())
                     {
-                        <div class="mb-4">
-                            <h5 class="mb-3"><i class="bi bi-paperclip me-2"></i>Attachments</h5>
-                            <div class="attachment-list row">
+                        <div class="mb-5 attachment-section bg-white p-4 rounded-4 shadow-sm">
+                            <h5 class="mb-4 d-flex align-items-center">
+                                <i class="bi bi-paperclip text-primary me-2"></i>
+                                <span>Attachments</span>
+                                <span class="ms-2 badge bg-primary rounded-pill">@Model.Attachments.Count</span>
+                            </h5>
+                            <div class="attachment-list row g-3">
                                 @foreach (var attachment in Model.Attachments)
                                 {
                                     <div class="col-md-6 col-lg-4 mb-3">
-                                        <div class="attachment-item p-3 border rounded h-100 shadow-sm">
+                                        <div class="attachment-item p-3 border rounded-3 h-100 shadow-sm position-relative bg-white"
+                                             style="transition: all 0.3s ease;" 
+                                             onmouseover="this.style.transform='translateY(-5px)'; this.classList.add('shadow')" 
+                                             onmouseout="this.style.transform='translateY(0)'; this.classList.remove('shadow')">
                                             @{
                                                 string fileIcon = "bi-file-earmark";
                                                 bool isImage = false;
+                                                bool isPdf = false;
+                                                bool isText = false;
+                                                bool isVideo = false;
+                                                bool isAudio = false;
                                                 string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+                                                string[] videoExtensions = { ".mp4", ".webm", ".ogg", ".mov", ".avi" };
+                                                string[] audioExtensions = { ".mp3", ".wav", ".ogg", ".m4a" };
                                                 
-                                                if (attachment.FileName.EndsWith(".pdf")) fileIcon = "bi-file-earmark-pdf";
+                                                if (attachment.FileName.EndsWith(".pdf")) {
+                                                    fileIcon = "bi-file-earmark-pdf";
+                                                    isPdf = true;
+                                                }
                                                 else if (attachment.FileName.EndsWith(".doc") || attachment.FileName.EndsWith(".docx")) fileIcon = "bi-file-earmark-word";
+                                                else if (attachment.FileName.EndsWith(".xls") || attachment.FileName.EndsWith(".xlsx")) fileIcon = "bi-file-earmark-excel";
+                                                else if (attachment.FileName.EndsWith(".ppt") || attachment.FileName.EndsWith(".pptx")) fileIcon = "bi-file-earmark-ppt";
                                                 else if (attachment.FileName.EndsWith(".zip") || attachment.FileName.EndsWith(".rar")) fileIcon = "bi-file-earmark-zip";
-                                                else if (attachment.FileName.EndsWith(".txt")) fileIcon = "bi-file-earmark-text";
+                                                else if (attachment.FileName.EndsWith(".txt") || attachment.FileName.EndsWith(".csv") || attachment.FileName.EndsWith(".json")) {
+                                                    fileIcon = "bi-file-earmark-text";
+                                                    isText = true;
+                                                }
+                                                else if (videoExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext))) {
+                                                    fileIcon = "bi-film";
+                                                    isVideo = true;
+                                                }
+                                                else if (audioExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext))) {
+                                                    fileIcon = "bi-file-earmark-music";
+                                                    isAudio = true;
+                                                }
                                                 else if (imageExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext)))
                                                 {
                                                     fileIcon = "bi-file-earmark-image";
@@ -164,74 +203,156 @@
                                                 }
                                             }
                                             
-                                            @if (isImage)
-                                            {
-                                                <div class="text-center mb-3">
-                                                    <a href="@attachment.FilePath" data-lightbox="question-images" data-title="@attachment.FileName" class="image-link">
-                                                        <img src="@attachment.FilePath" alt="@attachment.FileName" class="attachment-preview img-fluid" />
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <div class="file-info d-flex align-items-center">
+                                                    <div class="file-icon-container d-flex justify-content-center align-items-center bg-light rounded-circle p-2 me-2" style="width: 40px; height: 40px;">
+                                                        <i class="bi @fileIcon fs-4 text-primary"></i>
+                                                    </div>
                                                     <div>
-                                                        <i class="bi @fileIcon me-2 fs-5"></i>
-                                                        <span class="fw-medium text-truncate d-inline-block" style="max-width: 150px;" title="@attachment.FileName">@attachment.FileName</span>
-                                                        <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
-                                                    </div>
-                                                    <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
-                                                        <i class="bi bi-download me-1"></i> Download
-                                                    </a>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <div class="d-flex align-items-center h-100">
-                                                    <div class="file-icon me-3 text-primary">
-                                                        <i class="bi @fileIcon fs-1"></i>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <div class="fw-medium text-truncate" title="@attachment.FileName">@attachment.FileName</div>
-                                                        <div class="text-muted small mb-2">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
-                                                        <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
-                                                            <i class="bi bi-download me-1"></i> Download
-                                                        </a>
+                                                        <div class="fw-medium text-truncate" style="max-width: 160px;" title="@attachment.FileName">@attachment.FileName</div>
+                                                        <div class="text-muted small">@(attachment.FileSize / 1024) KB</div>
                                                     </div>
                                                 </div>
-                                            }
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-light rounded-circle shadow-sm" type="button" id="dropdownMenuButton-@attachment.AttachmentId" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownMenuButton-@attachment.AttachmentId">
+                                                        <li><a class="dropdown-item d-flex align-items-center" href="@attachment.FilePath" download="@attachment.FileName"><i class="bi bi-download me-2 text-primary"></i>Download</a></li>
+                                                        @if (isImage || isPdf || isText || isVideo || isAudio)
+                                                        {
+                                                            <li><a class="dropdown-item d-flex align-items-center preview-file" href="#" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="@(isImage ? "image" : isPdf ? "pdf" : isText ? "text" : isVideo ? "video" : "audio")"><i class="bi bi-eye me-2 text-info"></i>Preview</a></li>
+                                                        }
+                                                        <li><a class="dropdown-item d-flex align-items-center" href="@attachment.FilePath" target="_blank"><i class="bi bi-box-arrow-up-right me-2 text-success"></i>Open in New Tab</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="attachment-preview-container">
+                                                @if (isImage)
+                                                {
+                                                    <div class="image-preview position-relative rounded-3 overflow-hidden" style="height: 140px;">
+                                                        <img src="@attachment.FilePath" alt="@attachment.FileName" class="img-preview w-100 h-100 object-fit-cover" />
+                                                        <div class="preview-overlay d-flex align-items-center justify-content-center">
+                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file animate__animated animate__fadeIn" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="image">
+                                                                <i class="bi bi-eye me-1"></i> Preview
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (isPdf)
+                                                {
+                                                    <div class="pdf-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
+                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                                            <i class="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
+                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="pdf">
+                                                                <i class="bi bi-eye me-1"></i> Preview PDF
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (isText)
+                                                {
+                                                    <div class="text-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
+                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                                            <i class="bi bi-file-earmark-text text-info fs-1 mb-2"></i>
+                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="text">
+                                                                <i class="bi bi-eye me-1"></i> Preview Text
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (isVideo)
+                                                {
+                                                    <div class="video-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
+                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                                            <i class="bi bi-film text-success fs-1 mb-2"></i>
+                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="video">
+                                                                <i class="bi bi-play me-1"></i> Play Video
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (isAudio)
+                                                {
+                                                    <div class="audio-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
+                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                                            <i class="bi bi-file-earmark-music text-warning fs-1 mb-2"></i>
+                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="audio">
+                                                                <i class="bi bi-play me-1"></i> Play Audio
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="generic-file-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
+                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                                            <i class="bi @fileIcon text-secondary fs-1 mb-2"></i>
+                                                            <a href="@attachment.FilePath" download="@attachment.FileName" class="btn btn-primary btn-sm rounded-pill">
+                                                                <i class="bi bi-download me-1"></i> Download
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                            
+                                            <div class="attachment-date text-muted small mt-2 text-end d-flex align-items-center justify-content-end">
+                                                <i class="bi bi-calendar3 me-1"></i> @(attachment.UploadDate.ToString("MMM dd, yyyy"))
+                                            </div>
                                         </div>
                                     </div>
                                 }
                             </div>
                         </div>
                     }
-
-                    <div class="card author-card bg-light border-0 mb-0">
-                        <div class="card-body p-3">
+                    
+                    <div class="card author-card border-0 mb-0 rounded-4 shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="mb-3 text-primary fw-bold">About the author</h5>
                             <div class="d-flex">
                                 <div class="flex-shrink-0">
-                                    <div class="author-avatar rounded-circle d-flex align-items-center justify-content-center bg-primary text-white">
+                                    <div class="author-avatar rounded-circle shadow-sm overflow-hidden d-flex align-items-center justify-content-center bg-gradient-primary text-white"
+                                         style="width: 80px; height: 80px; background: linear-gradient(45deg, #2980b9, #3498db);">
                                         @if (string.IsNullOrEmpty(Model.User?.AvatarUrl))
                                         {
-                                            <i class="bi bi-person-fill fs-4"></i>
+                                            <i class="bi bi-person-fill fs-1"></i>
                                         }
                                         else
                                         {
-                                            <img src="@Model.User.AvatarUrl" alt="@Model.User?.DisplayName" class="rounded-circle" width="50" height="50">
+                                            <img src="@Model.User.AvatarUrl" alt="@Model.User?.DisplayName" class="w-100 h-100 object-fit-cover">
                                         }
                                     </div>
                                 </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <h5 class="mt-0 mb-1 fw-bold">@Model.User?.DisplayName</h5>
-                                    <p class="mb-0 text-muted">@Model.User?.Bio</p>
+                                <div class="flex-grow-1 ms-4">
+                                    <h5 class="mb-1 fw-bold d-flex align-items-center">
+                                        @Model.User?.DisplayName
+                                        <a href="@Url.Action("Details", "Users", new { id = Model.UserId })" class="btn btn-sm btn-light rounded-pill ms-2 text-primary">
+                                            <i class="bi bi-person-badge me-1"></i> View profile
+                                        </a>
+                                    </h5>
+                                    <p class="mb-3 text-muted">@Model.User?.Bio</p>
+                                    <div class="user-stats d-flex flex-wrap gap-3">
+                                        <span class="badge bg-light text-dark px-3 py-2 d-flex align-items-center">
+                                            <i class="bi bi-question-circle me-1 text-primary"></i> @(Model.User?.Questions?.Count ?? 0) questions
+                                        </span>
+                                        <span class="badge bg-light text-dark px-3 py-2 d-flex align-items-center">
+                                            <i class="bi bi-chat-dots me-1 text-info"></i> @(Model.User?.Comments?.Count ?? 0) comments
+                                        </span>
+                                        <span class="badge bg-light text-dark px-3 py-2 d-flex align-items-center">
+                                            <i class="bi bi-award me-1 text-warning"></i> <span class="user-reputation" data-user-id="@(Model.User?.UserId ?? 0)">@(Model.User?.Reputation ?? 0)</span> reputation
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card-footer bg-transparent py-3">
+                <div class="card-footer bg-transparent py-4">
                     @if (TempData["SuccessMessage"] != null)
                     {
-                        <div class="alert alert-success d-flex align-items-center mb-3">
+                        <div class="alert alert-success d-flex align-items-center mb-3 rounded-pill">
                             <i class="bi bi-check-circle-fill me-2"></i>
                             <div>@TempData["SuccessMessage"]</div>
                         </div>
@@ -239,7 +360,7 @@
                     
                     @if (TempData["ErrorMessage"] != null)
                     {
-                        <div class="alert alert-danger d-flex align-items-center mb-3">
+                        <div class="alert alert-danger d-flex align-items-center mb-3 rounded-pill">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
                             <div>@TempData["ErrorMessage"]</div>
                         </div>
@@ -247,30 +368,23 @@
                     
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between align-items-center">
                             <div class="action-buttons">
-                                @{
-                                    bool hasUpvoted = Model.UserVoteType == "up";
-                                    bool hasDownvoted = Model.UserVoteType == "down";
-                                }
-                                <form asp-action="Vote" method="post" class="d-inline vote-form">
-                                    <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <input type="hidden" name="voteType" value="@(hasUpvoted ? "remove" : "up")" class="vote-type-input" />
-                                    <button type="submit" class="btn @(hasUpvoted ? "btn-primary" : "btn-outline-success") btn-sm vote-button @(hasUpvoted ? "active" : "")">
-                                        <i class="bi @(hasUpvoted ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> @(hasUpvoted ? "Upvoted" : "Upvote")
-                                    </button>
-                                </form>
-                                <form asp-action="Vote" method="post" class="d-inline vote-form">
-                                    <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <input type="hidden" name="voteType" value="@(hasDownvoted ? "remove" : "down")" class="vote-type-input" />
-                                    <button type="submit" class="btn @(hasDownvoted ? "btn-danger" : "btn-outline-danger") btn-sm vote-button @(hasDownvoted ? "active-downvote" : "")">
-                                        <i class="bi @(hasDownvoted ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> @(hasDownvoted ? "Downvoted" : "Downvote")
-                                    </button>
-                                </form>
+                                <button onclick="vote(@Model.QuestionId, 'question', '@(hasVoted ? "none" : "up")')" 
+                                        class="btn @btnClass btn-sm vote-button" 
+                                        data-id="@Model.QuestionId" 
+                                        data-type="question"
+                                        data-vote-state="@(hasVoted ? (isUpvote ? "up" : "down") : "none")">
+                                    <i class="bi @iconClass me-1"></i> 
+                                    <span>@btnText</span>
+                                    <span class="vote-loading-indicator ms-1 d-none"><i class="bi bi-arrow-repeat spin-animation"></i></span>
+                                </button>
+                                
                                 <form asp-controller="SavedItems" asp-action="SaveQuestion" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@Model.QuestionId" />
-                                    <button type="submit" class="btn btn-outline-primary btn-sm @(Model.IsSaved ? "saved" : "")" title="@(Model.IsSaved ? "Unsave this question" : "Save this question")">
-                                        <i class="bi @(Model.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> @(Model.IsSaved ? "Question saved" : "Save question")
+                                    <button type="submit" class="btn btn-outline-primary btn-sm @(Model.IsSaved ? "saved" : "") vote-button" title="@(Model.IsSaved ? "Unsave this question" : "Save this question")">
+                                        <i class="bi @(Model.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> 
+                                        <span>@(Model.IsSaved ? "Saved" : "Save")</span>
                                     </button>
                                 </form>
                             </div>
@@ -280,11 +394,13 @@
             </div>
 
             <!-- Answers Section -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="fw-bold">Answers (@(Model.Answers?.Count() ?? 0))</h3>
+            <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+                <h3 class="fw-bold">
+                    <i class="bi bi-chat-quote me-2 text-primary"></i>Answers <span class="badge bg-secondary rounded-pill">@(Model.Answers?.Count() ?? 0)</span>
+                </h3>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <a href="#answer-form" class="btn btn-primary btn-sm">
+                    <a href="#answer-form" class="btn btn-primary btn-sm rounded-pill px-3 py-2 animate__animated animate__pulse animate__infinite animate__slower">
                         <i class="bi bi-pencil-square me-1"></i> Write an Answer
                     </a>
                 }
@@ -293,208 +409,105 @@
             <div class="answers-container">
                 @if (Model.Answers != null && Model.Answers.Any())
                 {
-                    foreach (var answer in Model.Answers.OrderByDescending(a => a.IsAccepted).ThenByDescending(a => a.Score))
+                    <h3 class="mt-5 mb-4 fw-bold">
+                        <i class="bi bi-chat-left-text-fill me-2 text-primary"></i>
+                        @Model.Answers.Count Answers
+                    </h3>
+                    
+                    foreach (var answer in topLevelAnswers)
                     {
-                        <div class="card mb-4 answer-card @(answer.IsAccepted ? "border-success" : "")">
-                            @if (answer.IsAccepted)
-                            {
-                                <div class="accepted-banner bg-success text-white py-1 px-3">
-                                    <i class="bi bi-check-circle-fill me-1"></i> Accepted Answer
-                                </div>
-                            }
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between mb-3">
-                                    <div class="vote-section d-flex gap-2">
-                                        <span class="badge bg-secondary rounded-pill px-3 py-2">
-                                            <i class="bi bi-arrow-up-circle me-1"></i> @answer.Score votes
-                                        </span>
+                        <div id="answer-@answer.AnswerId" class="answer mb-4">
+                            <div class="answer-content">
+                                <div class="answer-body-container p-4 mb-3 bg-white rounded-4 border shadow-sm">
+                                    <div class="answer-body content-area">
+                                        @Html.Raw(answer.Body)
                                     </div>
-                                    <small class="text-muted">
-                                        <i class="bi bi-calendar3 me-1"></i> Answered on @(answer.CreatedDate.HasValue ? answer.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")
-                                    </small>
-                                </div>
-                                <div class="answer-content mt-3 content-area">
-                                    @Html.Raw(answer.Body)
                                 </div>
                                 
-                                <!-- Answer Comments Section -->
-                                <div class="comment-section answer-comments-section mt-3">
-                                    <div class="comment-header">
-                                        <i class="bi bi-chat-text me-1"></i>
-                                        Bình luận<span class="comment-count-badge comment-count">@(answer.Comments?.Count ?? 0)</span>
-                                    </div>
-                                    <div class="answer-comments-container">
-                                        @if (answer.Comments != null && answer.Comments.Any())
-                                        {
-                                            foreach (var comment in answer.Comments.OrderBy(c => c.CreatedDate))
-                                            {
-                                                <div class="comment-item" data-comment-id="@comment.CommentId">
-                                                    <div class="card-body py-2">
-                                                        <div class="d-flex">
-                                                            <div class="comment-avatar me-2">
-                                                                <img src="@(comment.User?.AvatarUrl ?? "/images/default-avatar.png")" 
-                                                                     alt="@comment.User?.DisplayName" class="rounded-circle">
-                                                            </div>
-                                                            <div class="flex-grow-1">
-                                                                <div class="comment-content">
-                                                                    <div class="comment-text">@comment.Body</div>
-                                                                </div>
-                                                                <div class="comment-meta">
-                                                                    <span class="comment-author">@(comment.User?.DisplayName ?? "Unknown user")</span>
-                                                                    <span class="mx-1">•</span>
-                                                                    <span class="comment-date" title="@comment.CreatedDate.ToString("g")">
-                                                                        @((DateTime.Now - comment.CreatedDate).TotalDays < 1 ? 
-                                                                            comment.CreatedDate.ToString("HH:mm") : 
-                                                                            comment.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        }
-                                        else
-                                        {
-                                            <div class="no-comments-message">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
-                                        }
-                                    </div>
-                                    
-                                    @if (User.Identity?.IsAuthenticated == true)
-                                    {
-                                        <div class="comment-controls">
-                                            <a href="#" class="add-comment-link" 
-                                               data-target-type="Answer" data-target-id="@answer.AnswerId">
-                                                <i class="bi bi-chat"></i> Viết bình luận...
-                                            </a>
-                                            <div class="comment-form-container d-none"></div>
-                                        </div>
-                                    }
-                                </div>
-                                
-                                @if (answer.Attachments != null && answer.Attachments.Any())
-                                {
-                                    <div class="mt-3 mb-3">
-                                        <h6 class="mb-3"><i class="bi bi-image me-2"></i>Attachments</h6>
-                                        <div class="attachment-list row">
-                                            @foreach (var attachment in answer.Attachments)
-                                            {
-                                                <div class="col-md-6 col-lg-4 mb-3">
-                                                    <div class="attachment-item p-3 border rounded h-100 shadow-sm">
-                                                        @{
-                                                            bool isImage = false;
-                                                            string fileIcon = "bi-file-earmark";
-                                                            string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
-                                                            
-                                                            if (attachment.FileName.EndsWith(".pdf")) fileIcon = "bi-file-earmark-pdf";
-                                                            else if (attachment.FileName.EndsWith(".doc") || attachment.FileName.EndsWith(".docx")) fileIcon = "bi-file-earmark-word";
-                                                            else if (attachment.FileName.EndsWith(".zip") || attachment.FileName.EndsWith(".rar")) fileIcon = "bi-file-earmark-zip";
-                                                            else if (attachment.FileName.EndsWith(".txt")) fileIcon = "bi-file-earmark-text";
-                                                            else if (imageExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext)))
-                                                            {
-                                                                fileIcon = "bi-file-earmark-image";
-                                                                isImage = true;
-                                                            }
-                                                        }
-                                                        
-                                                        @if (isImage)
-                                                        {
-                                                            <div class="text-center mb-3">
-                                                                <a href="@attachment.FilePath" data-lightbox="answer-@answer.AnswerId-images" data-title="@attachment.FileName" class="image-link">
-                                                                    <img src="@attachment.FilePath" alt="@attachment.FileName" class="attachment-preview img-fluid" />
-                                                                </a>
-                                                            </div>
-                                                            <div class="d-flex align-items-center justify-content-between">
-                                                                <div>
-                                                                    <i class="bi @fileIcon me-2 fs-5"></i>
-                                                                    <span class="fw-medium text-truncate d-inline-block" style="max-width: 150px;" title="@attachment.FileName">@attachment.FileName</span>
-                                                                    <div class="text-muted small">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
-                                                                </div>
-                                                                <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
-                                                                    <i class="bi bi-download me-1"></i> Download
-                                                                </a>
-                                                            </div>
-                                                        }
-                                                        else
-                                                        {
-                                                            <div class="d-flex align-items-center h-100">
-                                                                <div class="file-icon me-3 text-primary">
-                                                                    <i class="bi @fileIcon fs-1"></i>
-                                                                </div>
-                                                                <div class="flex-grow-1">
-                                                                    <div class="fw-medium text-truncate" title="@attachment.FileName">@attachment.FileName</div>
-                                                                    <div class="text-muted small mb-2">@(attachment.FileSize / 1024) KB - @attachment.UploadDate.ToString("MMM dd, yyyy")</div>
-                                                                    <a href="@attachment.FilePath" class="btn btn-sm btn-outline-primary" download="@attachment.FileName">
-                                                                        <i class="bi bi-download me-1"></i> Download
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                                <div class="answer-footer mt-4">
+                                <div class="answer-footer">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="user-info d-flex align-items-center">
                                             <div class="avatar me-2">
-                                                <i class="bi bi-person-circle"></i>
+                                                <img src="@(answer.User?.AvatarUrl ?? "/images/default-avatar.png")" alt="User avatar" class="rounded-circle" width="40" height="40">
                                             </div>
-                                            <small class="text-muted">Answered by <a href="#" class="text-decoration-none">@(answer.User?.DisplayName ?? "Unknown")</a></small>
+                                            <span>Answered by <a href="#" class="text-decoration-none fw-medium">@(answer.User?.DisplayName ?? "Unknown")</a></span>
                                         </div>
                                         @if (User.Identity?.IsAuthenticated == true)
                                         {
-                                            <div class="action-buttons">
-                                                @{
-                                                    bool hasUpvotedAnswer = answer.UserVoteType == "up";
-                                                    bool hasDownvotedAnswer = answer.UserVoteType == "down";
-                                                }
-                                                <form asp-action="VoteAnswer" method="post" class="d-inline vote-form">
-                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
-                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                    <input type="hidden" name="voteType" value="@(hasUpvotedAnswer ? "remove" : "up")" class="vote-type-input" />
-                                                    <button type="submit" class="btn @(hasUpvotedAnswer ? "btn-primary" : "btn-outline-success") btn-sm vote-button @(hasUpvotedAnswer ? "active" : "")">
-                                                        <i class="bi @(hasUpvotedAnswer ? "bi-arrow-up-circle-fill" : "bi-arrow-up")"></i> @(hasUpvotedAnswer ? "Upvoted" : "Upvote")
-                                                    </button>
-                                                </form>
-                                                <form asp-action="VoteAnswer" method="post" class="d-inline vote-form">
-                                                    <input type="hidden" name="answerId" value="@answer.AnswerId" />
-                                                    <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                    <input type="hidden" name="voteType" value="@(hasDownvotedAnswer ? "remove" : "down")" class="vote-type-input" />
-                                                    <button type="submit" class="btn @(hasDownvotedAnswer ? "btn-danger" : "btn-outline-danger") btn-sm vote-button @(hasDownvotedAnswer ? "active-downvote" : "")">
-                                                        <i class="bi @(hasDownvotedAnswer ? "bi-arrow-down-circle-fill" : "bi-arrow-down")"></i> @(hasDownvotedAnswer ? "Downvoted" : "Downvote")
-                                                    </button>
-                                                </form>
-                                                <form asp-controller="SavedItems" asp-action="SaveAnswer" method="post" class="d-inline">
-                                                    <input type="hidden" name="id" value="@answer.AnswerId" />
-                                                    <button type="submit" class="btn btn-outline-primary btn-sm @(answer.IsSaved ? "saved" : "")" title="@(answer.IsSaved ? "Unsave this answer" : "Save this answer")">
-                                                        <i class="bi @(answer.IsSaved ? "bi-bookmark-check-fill" : "bi-bookmark")"></i> @(answer.IsSaved ? "Answer saved" : "Save answer")
-                                                    </button>
-                                                </form>
-                                                @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString() && !answer.IsAccepted)
-                                                {
-                                                    <form asp-action="AcceptAnswer" method="post" class="d-inline">
-                                                        <input type="hidden" name="answerId" value="@answer.AnswerId" />
-                                                        <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                                                        <button type="submit" class="btn btn-outline-success btn-sm">
-                                                            <i class="bi bi-check-circle"></i> Accept
-                                                        </button>
-                                                    </form>
-                                                }
-                                            </div>
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    onclick="reAnswerTo(@answer.AnswerId, '@(answer.User?.DisplayName ?? "Unknown")')">
+                                                <i class="bi bi-reply me-1"></i> Re-Answer
+                                            </button>
                                         }
                                     </div>
                                 </div>
                             </div>
+                        
+                            @{
+                                // Get child answers for this answer
+                                var childAnswers = Model.Answers
+                                    .Where(a => a.ParentAnswerId == answer.AnswerId)
+                                    .OrderBy(a => a.CreatedDate)
+                                    .ToList();
+                                
+                                // Only render the child answers section if there are any
+                                if (childAnswers.Any())
+                                {
+                                    <div class="child-answers mt-3" style="margin-left: 40px;">
+                                        @foreach (var childAnswer in childAnswers)
+                                        {
+                                            <div id="answer-@childAnswer.AnswerId" class="answer mb-4" style="border-left: 3px solid #e9ecef; padding-left: 15px;">
+                                                <div class="re-answer-indicator mb-3 text-muted small">
+                                                    <i class="bi bi-arrow-return-right me-1"></i>
+                                                    <span>In response to 
+                                                        @if (childAnswer.ParentAnswerId.HasValue && answerDict.ContainsKey(childAnswer.ParentAnswerId.Value))
+                                                        {
+                                                            <a href="#answer-@childAnswer.ParentAnswerId" class="fw-medium">
+                                                                @(answerDict[childAnswer.ParentAnswerId.Value].User?.DisplayName ?? "Unknown user")
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Unknown user</span>
+                                                        }
+                                                        's answer
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="answer-content">
+                                                    <div class="answer-body-container p-4 mb-3 bg-white rounded border">
+                                                        <div class="answer-body content-area">
+                                                            @Html.Raw(childAnswer.Body)
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="answer-footer">
+                                                        <div class="user-info d-flex align-items-center">
+                                                            <div class="avatar me-2">
+                                                                <img src="@(childAnswer.User?.AvatarUrl ?? "/images/default-avatar.png")" alt="User avatar" class="rounded-circle" width="40" height="40">
+                                                            </div>
+                                                            <span>Answered by <a href="#" class="text-decoration-none fw-medium">@(childAnswer.User?.DisplayName ?? "Unknown")</a></span>
+                                                        </div>
+                                                        @if (User.Identity?.IsAuthenticated == true)
+                                                        {
+                                                            <button class="btn btn-outline-info btn-sm" 
+                                                                    onclick="reAnswerTo(@childAnswer.AnswerId, '@(childAnswer.User?.DisplayName ?? "Unknown")')">
+                                                                <i class="bi bi-reply me-1"></i> Re-Answer
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
                         </div>
                     }
                 }
                 else
                 {
-                    <div class="empty-state text-center py-5">
-                        <i class="bi bi-chat-square-text display-1 text-muted mb-3"></i>
+                    <div class="empty-state text-center py-5 bg-light rounded-3">
                         <h4>No Answers Yet</h4>
                         <p class="text-muted">Be the first to answer this question!</p>
                     </div>
@@ -504,108 +517,243 @@
             <!-- Answer Form -->
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <div class="card mt-5" id="answer-form">
-                    <div class="card-header bg-transparent py-3">
+                <div class="card mt-5 border-0 rounded-4" id="answer-form">
+                    <div class="card-header bg-primary text-white py-3 px-4">
                         <h4 class="mb-0">Your Answer</h4>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <form asp-action="Answer" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="questionId" value="@Model.QuestionId" />
-                            <div class="mb-3">
-                                <div class="markdown-editor-container">
-                                    <div class="markdown-toolbar mb-2">
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="**Bold**"><i class="bi bi-type-bold"></i></button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="*Italic*"><i class="bi bi-type-italic"></i></button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="# Heading"><i class="bi bi-type-h1"></i></button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="[Link](url)"><i class="bi bi-link"></i></button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="![Image](url)"><i class="bi bi-image"></i></button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-markdown="`Code`"><i class="bi bi-code"></i></button>
-                                        </div>
-                                    </div>
-                                    <textarea name="Body" class="form-control markdown-editor" rows="6" placeholder="Write your answer here..."></textarea>
-                                </div>
+                            <input type="hidden" name="referencedAnswerId" id="referencedAnswerId" value="" />
+                            
+                            <div class="mb-4">
+                                <textarea id="answerBody" name="Body" class="form-control" rows="8" 
+                                          placeholder="Write your answer here..."></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-medium">Attachments</label>
-                                <input type="file" name="AnswerAttachments" class="form-control" multiple id="answer-attachments" />
-                                <div class="form-text">
-                                    <i class="bi bi-image me-1"></i> Supported formats: JPG, JPEG, PNG, GIF, BMP, WEBP (Max 5MB per file)
-                                </div>
-                                
-                                <!-- Answer Image Preview Container -->
-                                <div id="answer-image-preview-container" class="mt-3 row g-2">
-                                    <!-- Preview images will be inserted here by JavaScript -->
-                                </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-medium mb-2">Attachments</label>
+                                <input type="file" name="Attachments" class="form-control" multiple>
                             </div>
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-send"></i> Post Answer
-                                </button>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Post Your Answer</button>
                             </div>
                         </form>
                     </div>
                 </div>
             }
         </div>
+        
+        <!-- Right Sidebar -->
+        <div class="col-lg-3">
+            <div class="sticky-top" style="top: 20px; z-index: 100;">
+                <!-- Author Card -->
+                <div class="card mb-4 shadow-sm rounded-4 border-0 animate__animated animate__fadeIn">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3 fw-bold"><i class="bi bi-person-circle me-2"></i>Author</h5>
+                        <div class="d-flex align-items-center">
+                            @if (string.IsNullOrEmpty(Model.User?.AvatarUrl))
+                            {
+                                <div class="avatar me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <span class="fw-bold">@(Model.User?.DisplayName?.Substring(0, 1).ToUpper() ?? "U")</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <img src="@Model.User.AvatarUrl" class="rounded-circle me-3" width="50" height="50" alt="User avatar" />
+                            }
+                            <div>
+                                <div class="fw-medium">@Model.User?.DisplayName</div>
+                                <div class="text-muted small">@Model.User?.Reputation Reputation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Card -->
+                <div class="card mb-4 shadow-sm rounded-4 border-0 animate__animated animate__fadeIn animate__delay-1s">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3 fw-bold"><i class="bi bi-bar-chart-line me-2"></i>Stats</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-eye me-2 text-secondary"></i>Views</span>
+                                <span class="badge bg-light text-dark rounded-pill">@Model.ViewCount</span>
+                            </li>
+                            <li class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-arrow-up-circle me-2 text-secondary"></i>Votes</span>
+                                <span class="badge bg-light text-dark rounded-pill">@Model.Score</span>
+                            </li>
+                            <li class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-chat-left-text me-2 text-secondary"></i>Answers</span>
+                                <span class="badge bg-light text-dark rounded-pill">@(Model.Answers?.Count ?? 0)</span>
+                            </li>
+                            <li class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center py-2">
+                                <span><i class="bi bi-calendar3 me-2 text-secondary"></i>Asked</span>
+                                <span class="badge bg-light text-dark rounded-pill">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Tags Card -->
+                @if (Model.Tags != null && Model.Tags.Any())
+                {
+                    <div class="card mb-4 shadow-sm rounded-4 border-0 animate__animated animate__fadeIn animate__delay-2s">
+                        <div class="card-body p-4">
+                            <h5 class="mb-3 fw-bold"><i class="bi bi-tags me-2"></i>Tags</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var tag in Model.Tags)
+                                {
+                                    <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark text-decoration-none px-3 py-2">
+                                        <i class="bi bi-tag me-1"></i>@tag.TagName
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+                
+                <!-- Related Questions Card (placeholder) -->
+                <div class="card shadow-sm rounded-4 border-0 animate__animated animate__fadeIn animate__delay-3s">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3 fw-bold"><i class="bi bi-link-45deg me-2"></i>Related Questions</h5>
+                        <div class="list-group list-group-flush">
+                            <!-- This would be populated with actual related questions in a real implementation -->
+                            <a href="#" class="list-group-item list-group-item-action border-0 bg-transparent py-2 px-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 text-truncate">Sample related question title</h6>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">3 answers</small>
+                                    <span class="badge bg-success rounded-pill">+5</span>
+                                </div>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action border-0 bg-transparent py-2 px-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 text-truncate">Another example question that's related</h6>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">1 answer</small>
+                                    <span class="badge bg-secondary rounded-pill">+2</span>
+                                </div>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action border-0 bg-transparent py-2 px-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 text-truncate">A third related question example</h6>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">0 answers</small>
+                                    <span class="badge bg-secondary rounded-pill">+1</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-
 @section Scripts {
-    <!-- SignalR core library -->
+    <!-- SignalR core script - must be loaded first -->
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     
-    <!-- View Counter Script -->
-    <script src="~/js/view-counter.js"></script>
+    <!-- SignalR support scripts -->
+    <script src="~/js/signalr-loader.js"></script>
+    <script src="~/js/signalr-connection-check.js"></script>
     
-    <!-- Markdown parser library -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- PDF.js library for PDF preview -->
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+    <script>
+        // Set PDF.js worker source
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+            console.log('PDF.js loaded successfully');
+        } else {
+            console.warn('PDF.js library not available');
+        }
+    </script>
     
-    <!-- Prism.js for syntax highlighting -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
-    
-    <!-- Lightbox for image viewing -->
-    <script src="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/js/lightbox.min.js"></script>
-    
-    <!-- Custom Markdown editor implementation -->
-    <script src="~/js/markdown-editor.js"></script>
-    
-    <!-- Attachment viewer script -->
+    <!-- Application specific scripts -->
+    <script src="~/js/view-counter-fixed.js"></script>
+    <script src="~/js/vote-handler.js"></script>
     <script src="~/js/attachment-viewer.js"></script>
     
-    <!-- Answer attachments script -->
-    <script src="~/js/answer-attachments.js"></script>
-    
-    <!-- Question notification handler for real-time updates -->
-    <script src="~/js/question-notification-handler.js"></script>
-    
-    <!-- SignalR client for real-time communication -->
-    <script src="~/js/signalr-client.js"></script>
-    
-    <!-- Comment management scripts -->
-    <script src="~/js/comment-form.js"></script>
-    
-    <!-- Image preview handler script -->
-    <script src="~/js/image-preview-handler.js"></script>
-    
+    <!-- Inline script -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Prism for syntax highlighting
-            if (typeof Prism !== 'undefined') {
-                Prism.highlightAll();
+        // Function to handle re-answering to a specific answer
+        function reAnswerTo(answerId, authorName) {
+            // Set the referenced answer ID in the hidden input
+            document.getElementById('referencedAnswerId').value = answerId;
+            
+            // Add visual feedback in the answer form
+            const answerForm = document.getElementById('answer-form');
+            
+            // Check if we already have a reference indicator
+            let indicator = document.querySelector('.reanswer-indicator');
+            if (!indicator) {
+                // Create the reference indicator if it doesn't exist
+                const headerEl = answerForm.querySelector('.card-header');
+                headerEl.insertAdjacentHTML('afterend', 
+                    `<div class="reanswer-indicator alert alert-info m-3 d-flex align-items-center">
+                        <i class="bi bi-arrow-return-right me-2 fs-5"></i>
+                        <div class="flex-grow-1">
+                            <strong>You are replying to ${authorName}'s answer</strong>
+                            <p class="mb-0 small">Your answer will appear as a nested reply.</p>
+                        </div>
+                        <button type="button" class="btn-close" onclick="clearReAnswer()"></button>
+                    </div>`
+                );
+            } else {
+                // Update existing indicator
+                const nameEl = indicator.querySelector('strong');
+                nameEl.textContent = `You are replying to ${authorName}'s answer`;
+                indicator.classList.remove('d-none');
             }
             
-            // Khởi tạo tính năng đếm lượt xem
-            if (window.ViewCounter) {
-                ViewCounter.init(@Model.QuestionId);
+            // Change the placeholder text
+            const textArea = document.getElementById('answerBody');
+            textArea.placeholder = `Write your response to ${authorName}'s answer here...`;
+            
+            // Change submit button text
+            const submitBtn = answerForm.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="bi bi-reply me-1"></i> Post Your Reply';
+            
+            // Scroll to the answer form
+            answerForm.scrollIntoView({ behavior: 'smooth' });
+            
+            // Focus on the textarea
+            textArea.focus();
+        }
+        
+        // Function to clear re-answer reference
+        function clearReAnswer() {
+            // Clear the referenced answer ID
+            document.getElementById('referencedAnswerId').value = '';
+            
+            // Hide the reference indicator
+            const indicator = document.querySelector('.reanswer-indicator');
+            if (indicator) {
+                indicator.classList.add('d-none');
+            }
+            
+            // Reset the placeholder text
+            const textArea = document.getElementById('answerBody');
+            textArea.placeholder = 'Write your answer here...';
+            
+            // Reset submit button text
+            const submitBtn = document.getElementById('answer-form').querySelector('button[type="submit"]');
+            submitBtn.innerHTML = 'Post Your Answer';
+        }
+        
+        // Ensure connections are established
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Details page loaded, ensuring SignalR connections are active');
+            
+            // Force immediate connection attempt for view counting
+            if (typeof initViewCounter === 'function') {
+                setTimeout(initViewCounter, 100);
             }
         });
     </script>

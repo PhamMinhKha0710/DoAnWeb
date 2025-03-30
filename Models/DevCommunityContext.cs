@@ -31,11 +31,15 @@ public partial class DevCommunityContext : DbContext
 
     public virtual DbSet<QuestionAttachment> QuestionAttachments { get; set; }
 
+    public virtual DbSet<QuestionTag> QuestionTags { get; set; }
+
     public virtual DbSet<Repository> Repositories { get; set; }
 
     public virtual DbSet<RepositoryCommit> RepositoryCommits { get; set; }
 
     public virtual DbSet<RepositoryFile> RepositoryFiles { get; set; }
+
+    public virtual DbSet<RepositoryMapping> RepositoryMappings { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -50,6 +54,16 @@ public partial class DevCommunityContext : DbContext
     public virtual DbSet<UserWatchedTag> UserWatchedTags { get; set; }
 
     public virtual DbSet<Vote> Votes { get; set; }
+
+    public virtual DbSet<SavedItem> SavedItems { get; set; }
+
+    public virtual DbSet<BadgeAssignment> BadgeAssignments { get; set; }
+
+    public virtual DbSet<Badge> Badges { get; set; }
+
+    public virtual DbSet<Attachment> Attachments { get; set; }
+
+    public virtual DbSet<ReputationHistory> ReputationHistories { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -202,6 +216,26 @@ public partial class DevCommunityContext : DbContext
                 .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__Repositor__Owner__5629CD9C");
+        });
+
+        modelBuilder.Entity<RepositoryMapping>(entity =>
+        {
+            entity.HasKey(e => e.MappingId);
+            
+            entity.Property(e => e.HtmlUrl).HasMaxLength(255);
+            entity.Property(e => e.CloneUrl).HasMaxLength(255);
+            entity.Property(e => e.SshUrl).HasMaxLength(255);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.LastSyncDate)
+                .HasColumnType("datetime");
+                
+            entity.HasOne(d => d.Repository)
+                .WithMany()
+                .HasForeignKey(d => d.DevCommunityRepositoryId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_RepositoryMappings_Repositories");
         });
 
         modelBuilder.Entity<RepositoryCommit>(entity =>
@@ -396,6 +430,28 @@ public partial class DevCommunityContext : DbContext
                 .HasForeignKey(d => d.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        // Configure QuestionTag composite key
+        modelBuilder.Entity<QuestionTag>()
+            .HasKey(qt => new { qt.QuestionId, qt.TagId });
+
+        modelBuilder.Entity<QuestionTag>()
+            .HasOne(qt => qt.Question)
+            .WithMany(q => q.QuestionTags)
+            .HasForeignKey(qt => qt.QuestionId);
+
+        modelBuilder.Entity<QuestionTag>()
+            .HasOne(qt => qt.Tag)
+            .WithMany(t => t.QuestionTags)
+            .HasForeignKey(qt => qt.TagId);
+
+        // Configure UserWatchedTag composite key
+        modelBuilder.Entity<UserWatchedTag>()
+            .HasKey(uwt => new { uwt.UserId, uwt.TagId });
+
+        // Configure SavedItem composite key
+        modelBuilder.Entity<SavedItem>()
+            .HasKey(si => new { si.UserId, si.ItemId, si.ItemType });
 
         OnModelCreatingPartial(modelBuilder);
     }

@@ -80,66 +80,78 @@ namespace DoAnWeb.Services
                     .ThenInclude(a => a.Attachments)
                 .FirstOrDefault(q => q.QuestionId == questionId);
 
-            if (question != null)
-            {
-                try
-                {
-                    // Load comments for the question
-                    var questionComments = _context.Comments
-                        .Include(c => c.User)
-                        .Where(c => c.QuestionId == questionId && c.AnswerId == null)
-                        .AsEnumerable() // Chuyển về bộ nhớ trước khi xử lý để xử lý null an toàn
-                        .Select(c => new Comment
-                        {
-                            CommentId = c.CommentId,
-                            Body = c.Body ?? string.Empty, // Xử lý null cho chuỗi
-                            CreatedDate = c.CreatedDate,
-                            UserId = c.UserId,
-                            User = c.User,
-                            QuestionId = c.QuestionId,
-                            AnswerId = c.AnswerId,
-                            TargetType = c.TargetType ?? string.Empty, // Xử lý null cho chuỗi
-                            TargetId = c.TargetId
-                        })
-                        .OrderBy(c => c.CreatedDate)
-                        .ToList();
-                    
-                    question.Comments = questionComments;
+            if (question == null)
+                return null;
 
-                    // Load comments for each answer
-                    foreach (var answer in question.Answers)
-                    {
-                        var answerComments = _context.Comments
-                            .Include(c => c.User)
-                            .Where(c => c.AnswerId == answer.AnswerId)
-                            .AsEnumerable() // Chuyển về bộ nhớ trước khi xử lý để xử lý null an toàn
-                            .Select(c => new Comment
-                            {
-                                CommentId = c.CommentId,
-                                Body = c.Body ?? string.Empty, // Xử lý null cho chuỗi
-                                CreatedDate = c.CreatedDate,
-                                UserId = c.UserId,
-                                User = c.User,
-                                QuestionId = c.QuestionId,
-                                AnswerId = c.AnswerId,
-                                TargetType = c.TargetType ?? string.Empty, // Xử lý null cho chuỗi
-                                TargetId = c.TargetId
-                            })
-                            .OrderBy(c => c.CreatedDate)
-                            .ToList();
-                        
-                        answer.Comments = answerComments;
-                    }
-                }
-                catch (Exception ex)
+            // Load comments separately to structure them properly with replies
+            // Get all question-related comments (direct comments and replies)
+            var allQuestionComments = _context.Comments
+                .Include(c => c.User)
+                .Where(c => c.QuestionId == questionId && c.AnswerId == null)
+                .ToList();
+
+            // Separate into parent comments and replies
+            var parentComments = allQuestionComments
+                .Where(c => c.ParentCommentId == null)
+                .ToList();
+
+            var replies = allQuestionComments
+                .Where(c => c.ParentCommentId != null)
+                .ToList();
+
+            // Group replies by parent comment ID
+            var repliesByParent = replies
+                .GroupBy(r => r.ParentCommentId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // Assign replies to their parent comments
+            foreach (var parentComment in parentComments)
+            {
+                if (repliesByParent.TryGetValue(parentComment.CommentId, out var commentReplies))
                 {
-                    // Log lỗi và trả về câu hỏi mà không có comments
-                    Console.WriteLine($"Error loading comments: {ex.Message}");
-                    question.Comments = new List<Comment>();
-                    foreach (var answer in question.Answers)
+                    parentComment.Replies = commentReplies;
+                }
+            }
+
+            // Assign the structured comments to the question
+            question.Comments = parentComments;
+
+            // Do the same for each answer's comments
+            if (question.Answers != null)
+            {
+                foreach (var answer in question.Answers)
+                {
+                    // Get all answer-related comments (direct comments and replies)
+                    var allAnswerComments = _context.Comments
+                        .Include(c => c.User)
+                        .Where(c => c.AnswerId == answer.AnswerId)
+                        .ToList();
+
+                    // Separate into parent comments and replies
+                    var answerParentComments = allAnswerComments
+                        .Where(c => c.ParentCommentId == null)
+                        .ToList();
+
+                    var answerReplies = allAnswerComments
+                        .Where(c => c.ParentCommentId != null)
+                        .ToList();
+
+                    // Group replies by parent comment ID
+                    var answerRepliesByParent = answerReplies
+                        .GroupBy(r => r.ParentCommentId)
+                        .ToDictionary(g => g.Key, g => g.ToList());
+
+                    // Assign replies to their parent comments
+                    foreach (var parentComment in answerParentComments)
                     {
-                        answer.Comments = new List<Comment>();
+                        if (answerRepliesByParent.TryGetValue(parentComment.CommentId, out var commentReplies))
+                        {
+                            parentComment.Replies = commentReplies;
+                        }
                     }
+
+                    // Assign the structured comments to the answer
+                    answer.Comments = answerParentComments;
                 }
             }
 
@@ -551,6 +563,584 @@ namespace DoAnWeb.Services
                 throw new ArgumentException("Question not found");
             
             return question.ViewCount ?? 0;
+        }
+
+        /// <summary>
+        /// Retrieves all questions from the database asynchronously
+        /// </summary>
+        public async Task<IEnumerable<Question>> GetAllQuestionsAsync()
+        {
+            return await _questionRepository.GetAllAsync();
+        }
+
+        /// <summary>
+        /// Retrieves all questions with their associated user information asynchronously
+        /// </summary>
+        public async Task<IEnumerable<Question>> GetQuestionsWithUsersAsync()
+        {
+            // Since the repository might not have an async version, we'll use the context directly
+            return await _context.Questions
+                .Include(q => q.User)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Retrieves a specific question by its ID asynchronously
+        /// </summary>
+        public async Task<Question> GetQuestionByIdAsync(int id)
+        {
+            return await _questionRepository.GetByIdAsync(id);
+        }
+
+        /// <summary>
+        /// Retrieves a question with all its details including answers, comments, and tags asynchronously
+        /// </summary>
+        public async Task<Question> GetQuestionWithDetailsAsync(int questionId)
+        {
+            var question = await _context.Questions
+                .Include(q => q.User)
+                .Include(q => q.QuestionTags)
+                    .ThenInclude(qt => qt.Tag)
+                .Include(q => q.Attachments)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.User)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.Attachments)
+                .FirstOrDefaultAsync(q => q.QuestionId == questionId);
+
+            if (question == null)
+                return null;
+
+            // Load comments separately to structure them properly with replies
+            // Get all question-related comments (direct comments and replies)
+            var allQuestionComments = await _context.Comments
+                .Include(c => c.User)
+                .Where(c => c.QuestionId == questionId && c.AnswerId == null)
+                .ToListAsync();
+
+            // Separate into parent comments and replies
+            var parentComments = allQuestionComments
+                .Where(c => c.ParentCommentId == null)
+                .ToList();
+            
+            // Group replies by parent comment ID
+            var repliesByParent = allQuestionComments
+                .Where(c => c.ParentCommentId != null)
+                .GroupBy(c => c.ParentCommentId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // Assign replies to their parent comments
+            foreach (var parentComment in parentComments)
+            {
+                if (repliesByParent.TryGetValue(parentComment.CommentId, out var commentReplies))
+                {
+                    parentComment.Replies = commentReplies;
+                }
+            }
+
+            // Assign the structured comments to the question
+            question.Comments = parentComments;
+
+            // Do the same for each answer's comments
+            if (question.Answers != null)
+            {
+                foreach (var answer in question.Answers)
+                {
+                    // Get all answer-related comments (direct comments and replies)
+                    var allAnswerComments = await _context.Comments
+                        .Include(c => c.User)
+                        .Where(c => c.AnswerId == answer.AnswerId)
+                        .ToListAsync();
+
+                    // Separate into parent comments and replies
+                    var answerParentComments = allAnswerComments
+                        .Where(c => c.ParentCommentId == null)
+                        .ToList();
+                    
+                    // Group replies by parent comment ID
+                    var answerRepliesByParent = allAnswerComments
+                        .Where(c => c.ParentCommentId != null)
+                        .GroupBy(c => c.ParentCommentId)
+                        .ToDictionary(g => g.Key, g => g.ToList());
+
+                    // Assign replies to their parent comments
+                    foreach (var parentComment in answerParentComments)
+                    {
+                        if (answerRepliesByParent.TryGetValue(parentComment.CommentId, out var commentReplies))
+                        {
+                            parentComment.Replies = commentReplies;
+                        }
+                    }
+
+                    // Assign the structured comments to the answer
+                    answer.Comments = answerParentComments;
+                }
+            }
+
+            return question;
+        }
+
+        /// <summary>
+        /// Retrieves all questions that have a specific tag asynchronously
+        /// </summary>
+        public async Task<IEnumerable<Question>> GetQuestionsByTagAsync(string tagName)
+        {
+            // Using context directly for async operation
+            return await _context.Questions
+                .Include(q => q.User)
+                .Include(q => q.QuestionTags)
+                    .ThenInclude(qt => qt.Tag)
+                .Where(q => q.QuestionTags.Any(qt => qt.Tag.TagName == tagName))
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Retrieves all questions created by a specific user asynchronously
+        /// </summary>
+        public async Task<IEnumerable<Question>> GetQuestionsByUserAsync(int userId)
+        {
+            return await _context.Questions
+                .Include(q => q.User)
+                .Where(q => q.UserId == userId)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Searches for questions matching the provided search term asynchronously
+        /// Searches in title, body, and tags
+        /// </summary>
+        public async Task<IEnumerable<Question>> SearchQuestionsAsync(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return await GetAllQuestionsAsync();
+
+            // Using context directly for async operation with search
+            var normalizedSearchTerm = searchTerm.ToLower();
+            
+            return await _context.Questions
+                .Include(q => q.User)
+                .Include(q => q.QuestionTags)
+                    .ThenInclude(qt => qt.Tag)
+                .Include(q => q.Answers)
+                .Where(q => 
+                    q.Title.ToLower().Contains(normalizedSearchTerm) ||
+                    q.Body.ToLower().Contains(normalizedSearchTerm) ||
+                    q.QuestionTags.Any(qt => qt.Tag.TagName.ToLower().Contains(normalizedSearchTerm))
+                )
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Creates a new question with optional tags asynchronously
+        /// </summary>
+        public async Task CreateQuestionAsync(Question question, List<string> tagNames)
+        {
+            // Set default values if not provided
+            question.CreatedDate = DateTime.Now;
+            question.UpdatedDate = DateTime.Now;
+            question.ViewCount = 0;
+            question.Score = 0;
+            
+            // Add the question to the repository
+            _questionRepository.Add(question);
+            await _questionRepository.SaveAsync();
+            
+            // Associate tags with the question if provided
+            if (tagNames != null && tagNames.Count > 0)
+            {
+                foreach (var tagName in tagNames)
+                {
+                    // Check if tag exists
+                    var tag = (await _tagRepository.FindAsync(t => t.TagName == tagName)).FirstOrDefault();
+                    if (tag == null)
+                    {
+                        // Create new tag
+                        tag = new Tag { TagName = tagName };
+                        _tagRepository.Add(tag);
+                        await _tagRepository.SaveAsync();
+                    }
+                    
+                    // Create question-tag association
+                    var questionTag = new QuestionTag
+                    {
+                        QuestionId = question.QuestionId,
+                        TagId = tag.TagId
+                    };
+                    
+                    _context.QuestionTags.Add(questionTag);
+                }
+                
+                // Save changes
+                await _context.SaveChangesAsync();
+            }
+            
+            // Notify clients about the new question
+            await _realTimeService.NotifyNewQuestion(question);
+        }
+
+        /// <summary>
+        /// Updates an existing question and its associated tags asynchronously
+        /// </summary>
+        public async Task UpdateQuestionAsync(Question question, List<string> tagNames)
+        {
+            var existingQuestion = await _questionRepository.GetByIdAsync(question.QuestionId);
+            if (existingQuestion == null)
+                throw new ArgumentException($"Question with ID {question.QuestionId} not found");
+                
+            // Update question properties
+            existingQuestion.Title = question.Title;
+            existingQuestion.Body = question.Body;
+            existingQuestion.UpdatedDate = DateTime.Now;
+            
+            // Update tags if provided
+            if (tagNames != null)
+            {
+                // Clear existing tags
+                var existingQuestionTags = await _context.QuestionTags
+                    .Where(qt => qt.QuestionId == question.QuestionId)
+                    .ToListAsync();
+                
+                _context.QuestionTags.RemoveRange(existingQuestionTags);
+                
+                // Add new tags
+                foreach (var tagName in tagNames)
+                {
+                    // Check if tag exists
+                    var tag = (await _tagRepository.FindAsync(t => t.TagName == tagName)).FirstOrDefault();
+                    if (tag == null)
+                    {
+                        // Create new tag
+                        tag = new Tag { TagName = tagName };
+                        _tagRepository.Add(tag);
+                        await _tagRepository.SaveAsync();
+                    }
+
+                    // Associate tag with question
+                    var questionTag = new QuestionTag
+                    {
+                        QuestionId = question.QuestionId,
+                        TagId = tag.TagId
+                    };
+                    
+                    _context.QuestionTags.Add(questionTag);
+                }
+            }
+
+            // Save changes
+            _questionRepository.Update(existingQuestion);
+            await _questionRepository.SaveAsync();
+            await _context.SaveChangesAsync();
+
+            // Notify clients about the question update
+            await _realTimeService.NotifyQuestionUpdated(existingQuestion);
+        }
+
+        /// <summary>
+        /// Deletes a question and all its associated data asynchronously
+        /// </summary>
+        public async Task DeleteQuestionAsync(int id)
+        {
+            var question = await _questionRepository.GetByIdAsync(id);
+            if (question != null)
+            {
+                _questionRepository.Delete(question);
+                await _questionRepository.SaveAsync();
+            }
+        }
+
+        /// <summary>
+        /// Records a vote (upvote or downvote) for a question asynchronously
+        /// Updates the question's score accordingly
+        /// </summary>
+        public async Task VoteQuestionAsync(int questionId, int userId, bool isUpvote)
+        {
+            // Get the question
+            var question = await _questionRepository.GetByIdAsync(questionId);
+            if (question == null)
+                throw new ArgumentException($"Question with ID {questionId} not found");
+            
+            // Check if user has already voted on this question
+            var existingVotes = await _voteRepository.FindAsync(v => 
+                v.UserId == userId && 
+                v.TargetId == questionId && 
+                v.TargetType == "Question");
+            
+            var existingVote = existingVotes.FirstOrDefault();
+            
+            // Calculate vote value (1 for upvote, -1 for downvote)
+            int voteValue = isUpvote ? 1 : -1;
+            
+            if (existingVote != null)
+            {
+                // User has already voted on this question
+                if ((existingVote.IsUpvote && isUpvote) || (!existingVote.IsUpvote && !isUpvote))
+                {
+                    // Same vote type, remove the vote
+                    _voteRepository.Delete(existingVote);
+                    await _voteRepository.SaveAsync();
+                    
+                    // Adjust question score
+                    await UpdateQuestionScoreAsync(questionId, -existingVote.VoteValue);
+                }
+                else
+                {
+                    // Changed vote direction
+                    existingVote.IsUpvote = isUpvote;
+                    existingVote.VoteValue = voteValue;
+                    existingVote.CreatedDate = DateTime.Now;
+                    
+                    _voteRepository.Update(existingVote);
+                    await _voteRepository.SaveAsync();
+                    
+                    // Adjust question score (double the value for a vote flip)
+                    await UpdateQuestionScoreAsync(questionId, voteValue * 2);
+                }
+            }
+            else
+            {
+                // Create new vote
+                var vote = new Vote
+                {
+                    TargetId = questionId,
+                    UserId = userId,
+                    TargetType = "Question",
+                    VoteValue = voteValue,
+                    IsUpvote = isUpvote,
+                    CreatedDate = DateTime.Now
+                };
+                
+                _voteRepository.Add(vote);
+                await _voteRepository.SaveAsync();
+                
+                // Update question score
+                await UpdateQuestionScoreAsync(questionId, voteValue);
+                
+                // Send notification about the new vote
+                await _notificationService.NotifyVoteAsync("Question", questionId, userId);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to update a question's score asynchronously
+        /// </summary>
+        private async Task UpdateQuestionScoreAsync(int questionId, int scoreChange)
+        {
+            var question = await _questionRepository.GetByIdAsync(questionId);
+            if (question != null)
+            {
+                question.Score += scoreChange;
+                _questionRepository.Update(question);
+                await _questionRepository.SaveAsync();
+            }
+        }
+
+        /// <summary>
+        /// Adds a new answer to a question asynchronously
+        /// </summary>
+        public async Task AddAnswerAsync(Answer answer)
+        {
+            // Set default values
+            answer.CreatedDate = DateTime.Now;
+            answer.UpdatedDate = DateTime.Now;
+            answer.Score = 0;
+            answer.IsAccepted = false;
+            
+            // Add the answer
+            _answerRepository.Add(answer);
+            await _answerRepository.SaveAsync();
+            
+            // Update question's answer count (if using cached counts)
+            var question = await _questionRepository.GetByIdAsync(answer.QuestionId.Value);
+            if (question != null)
+            {
+                question.UpdatedDate = DateTime.Now;
+                _questionRepository.Update(question);
+                await _questionRepository.SaveAsync();
+            }
+            
+            // Send notification
+            await _realTimeService.NotifyNewAnswer(answer);
+            
+            // Notify the question owner
+            if (question?.UserId != null && answer.UserId != null && question.UserId != answer.UserId)
+            {
+                await _notificationService.NotifyNewAnswerAsync(question.QuestionId, answer.AnswerId, answer.UserId.Value);
+            }
+        }
+
+        /// <summary>
+        /// Adds a new attachment to a question asynchronously
+        /// </summary>
+        public async Task AddAttachmentAsync(QuestionAttachment attachment)
+        {
+            _context.QuestionAttachments.Add(attachment);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Adds a new attachment to an answer asynchronously
+        /// </summary>
+        public async Task AddAnswerAttachmentAsync(AnswerAttachment attachment)
+        {
+            _context.AnswerAttachments.Add(attachment);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Gets a user's vote on a specific question asynchronously
+        /// </summary>
+        public async Task<Vote> GetUserVoteOnQuestionAsync(int userId, int questionId)
+        {
+            var votes = await _voteRepository.FindAsync(v => 
+                v.UserId == userId && 
+                v.TargetId == questionId && 
+                v.TargetType == "Question");
+                
+            return votes.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets a user's vote on a specific answer asynchronously
+        /// </summary>
+        public async Task<Vote> GetUserVoteOnAnswerAsync(int userId, int answerId)
+        {
+            var votes = await _voteRepository.FindAsync(v => 
+                v.UserId == userId && 
+                v.TargetId == answerId && 
+                v.TargetType == "Answer");
+                
+            return votes.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Adds a new vote asynchronously
+        /// </summary>
+        public async Task AddVoteAsync(Vote vote)
+        {
+            _voteRepository.Add(vote);
+            await _voteRepository.SaveAsync();
+            
+            // Update the target's score
+            if (vote.TargetType == "Question")
+            {
+                await UpdateQuestionScoreAsync(vote.TargetId, vote.IsUpvote ? 1 : -1);
+            }
+            else if (vote.TargetType == "Answer")
+            {
+                await UpdateAnswerScoreAsync(vote.TargetId, vote.IsUpvote ? 1 : -1);
+            }
+            
+            // Send notification about the new vote if UserId has a value
+            if (vote.UserId.HasValue)
+            {
+                await _notificationService.NotifyVoteAsync(vote.TargetType, vote.TargetId, vote.UserId.Value);
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing vote asynchronously
+        /// </summary>
+        public async Task UpdateVoteAsync(Vote vote)
+        {
+            var existingVote = (await _voteRepository.FindAsync(v => v.VoteId == vote.VoteId)).FirstOrDefault();
+            if (existingVote == null)
+                throw new ArgumentException($"Vote with ID {vote.VoteId} not found");
+                
+            // Calculate the score change based on the vote change
+            int scoreChange = 0;
+            
+            if (existingVote.IsUpvote != vote.IsUpvote)
+            {
+                // If the vote direction changed, update score accordingly
+                scoreChange = vote.IsUpvote ? 2 : -2; // +2 for switching from down to up, -2 for switching from up to down
+            }
+            
+            // Update the vote
+            existingVote.IsUpvote = vote.IsUpvote;
+            existingVote.VoteValue = vote.IsUpvote ? 1 : -1;
+            existingVote.VoteDate = vote.VoteDate;
+            
+            _voteRepository.Update(existingVote);
+            await _voteRepository.SaveAsync();
+            
+            // Update the target's score if the vote direction changed
+            if (scoreChange != 0)
+            {
+                if (existingVote.TargetType == "Question")
+                {
+                    await UpdateQuestionScoreAsync(existingVote.TargetId, scoreChange);
+                }
+                else if (existingVote.TargetType == "Answer")
+                {
+                    await UpdateAnswerScoreAsync(existingVote.TargetId, scoreChange);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a vote by its ID asynchronously
+        /// </summary>
+        public async Task RemoveVoteAsync(int voteId)
+        {
+            var vote = (await _voteRepository.FindAsync(v => v.VoteId == voteId)).FirstOrDefault();
+            if (vote == null)
+                return;
+                
+            int scoreChange = -vote.VoteValue; // Negate the vote value to remove its effect
+            
+            _voteRepository.Delete(vote);
+            await _voteRepository.SaveAsync();
+            
+            // Update the target's score
+            if (vote.TargetType == "Question")
+            {
+                await UpdateQuestionScoreAsync(vote.TargetId, scoreChange);
+            }
+            else if (vote.TargetType == "Answer")
+            {
+                await UpdateAnswerScoreAsync(vote.TargetId, scoreChange);
+            }
+        }
+
+        /// <summary>
+        /// Updates answer score asynchronously
+        /// </summary>
+        private async Task UpdateAnswerScoreAsync(int answerId, int scoreChange)
+        {
+            var answer = await _answerRepository.GetByIdAsync(answerId);
+            if (answer != null)
+            {
+                answer.Score += scoreChange;
+                _answerRepository.Update(answer);
+                await _answerRepository.SaveAsync();
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật lượt xem cho câu hỏi dạng bất đồng bộ
+        /// </summary>
+        public async Task<int> UpdateViewCountAsync(int questionId)
+        {
+            var question = await _questionRepository.GetByIdAsync(questionId);
+            if (question == null)
+                return 0;
+                
+            // Increment view count
+            question.ViewCount = (question.ViewCount ?? 0) + 1;
+            
+            _questionRepository.Update(question);
+            await _questionRepository.SaveAsync();
+            
+            return question.ViewCount ?? 0;
+        }
+
+        /// <summary>
+        /// Lấy số lượt xem hiện tại cho câu hỏi dạng bất đồng bộ
+        /// </summary>
+        public async Task<int> GetViewCountAsync(int questionId)
+        {
+            var question = await _questionRepository.GetByIdAsync(questionId);
+            return question?.ViewCount ?? 0;
         }
     }
 }

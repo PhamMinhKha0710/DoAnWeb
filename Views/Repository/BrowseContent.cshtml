@@ -1,0 +1,317 @@
+@model List<DoAnWeb.GitIntegration.Models.GiteaContent>
+@using DoAnWeb.GitIntegration.Models
+
+@{
+    ViewData["Title"] = "Browse Repository Content";
+    var currentPath = ViewBag.CurrentPath as string;
+    var parentPath = ViewBag.ParentPath as string;
+    var branches = ViewBag.Branches as List<DoAnWeb.GitIntegration.Models.GiteaBranch>;
+    var currentBranch = ViewBag.CurrentBranch as string;
+    var owner = ViewBag.Owner as string;
+    var repo = ViewBag.Repository as string;
+    var isOwner = ViewBag.IsOwner as bool? ?? false;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center">
+            <a asp-action="DetailsByName" asp-route-owner="@owner" asp-route-repo="@repo" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i> Back to Repository
+            </a>
+            <h2 class="mb-0">
+                <i class="bi bi-folder me-2"></i>Repository Files
+            </h2>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <!-- Branch Dropdown -->
+                <div class="dropdown me-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                           id="branchDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-git"></i> @currentBranch
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="branchDropdown">
+                        @foreach (var branch in branches ?? new List<DoAnWeb.GitIntegration.Models.GiteaBranch>())
+                        {
+                            <li>
+                                <a class="dropdown-item @(branch.Name == currentBranch ? "active" : "")" 
+                                   asp-action="BrowseContent" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@branch.Name" asp-route-path="@currentPath">
+                                    @branch.Name
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                
+                <!-- File Path Breadcrumbs -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a asp-action="BrowseContent" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch">
+                                <i class="bi bi-folder-fill"></i> root
+                            </a>
+                        </li>
+                        
+                        @if (!string.IsNullOrEmpty(currentPath))
+                        {
+                            var pathSegments = currentPath.Split('/');
+                            var buildPath = "";
+                            
+                            for (int i = 0; i < pathSegments.Length; i++)
+                            {
+                                buildPath += (i > 0 ? "/" : "") + pathSegments[i];
+                                var isLast = i == pathSegments.Length - 1;
+                                
+                                if (isLast)
+                                {
+                                    <li class="breadcrumb-item active" aria-current="page">@pathSegments[i]</li>
+                                }
+                                else
+                                {
+                                    <li class="breadcrumb-item">
+                                        <a asp-action="BrowseContent" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@buildPath">
+                                            @pathSegments[i]
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        }
+                    </ol>
+                </nav>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div>
+                <div class="btn-group">
+                    @if (isOwner)
+                    {
+                        <a asp-action="CreateBranch" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-sourceBranch="@currentBranch"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-diagram-2"></i> New Branch
+                        </a>
+                        <a asp-action="UploadFile" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@currentPath" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-file-earmark-plus"></i> Upload File
+                        </a>
+                        <a asp-action="UploadFolder" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@currentPath" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-folder-plus"></i> Upload Folder
+                        </a>
+                        <a asp-action="CreateFile" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@currentPath" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-file-earmark-text"></i> New File
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="CreateBranch" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-sourceBranch="@currentBranch"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-git"></i> Fork Repository
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <!-- File List -->
+        <div class="card-body p-0">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="p-5 text-center">
+                    <i class="bi bi-folder2-open text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">This directory is empty</h4>
+                    <p class="text-muted">Upload files or create a new file to get started</p>
+                    @if (isOwner)
+                    {
+                        <div class="mt-3">
+                            <a href="@Url.Action("UploadFile", new { owner, repo, branch = currentBranch, path = currentPath })" 
+                               class="btn btn-primary me-2">
+                                <i class="bi bi-file-earmark-plus"></i> Upload File
+                            </a>
+                            <a href="@Url.Action("CreateFile", new { owner, repo, branch = currentBranch, path = currentPath })" 
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-file-earmark-text"></i> New File
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover file-explorer mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50%">Name</th>
+                                <th style="width: 15%">Size</th>
+                                <th style="width: 20%">Last Commit</th>
+                                @if (isOwner)
+                                {
+                                    <th style="width: 15%">Actions</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!string.IsNullOrEmpty(parentPath) || parentPath == "")
+                            {
+                                <tr>
+                                    <td colspan="4">
+                                        <a asp-action="BrowseContent" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@parentPath" 
+                                           class="text-decoration-none">
+                                            <i class="bi bi-arrow-up-circle text-primary"></i>
+                                            <span class="ms-2">..</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            
+                            @foreach (var item in Model.Where(f => f.Type == "dir").OrderBy(f => f.Name))
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-action="BrowseContent" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@item.Path" 
+                                           class="text-decoration-none">
+                                            <i class="bi bi-folder-fill text-primary me-2"></i>
+                                            @item.Name
+                                        </a>
+                                    </td>
+                                    <td>-</td>
+                                    <td class="text-muted small">-</td>
+                                    @if (isOwner)
+                                    {
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="#" class="btn btn-outline-danger" 
+                                                   onclick="confirmDelete('@item.Path', '@item.Name', true)">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                            
+                            @foreach (var item in Model.Where(f => f.Type != "dir").OrderBy(f => f.Name))
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-action="FileContent" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-path="@item.Path" 
+                                           class="text-decoration-none">
+                                            @{
+                                                string icon = "bi-file-earmark";
+                                                string extension = System.IO.Path.GetExtension(item.Name).ToLowerInvariant();
+                                                
+                                                if (extension == ".cs" || extension == ".cshtml")
+                                                    icon = "bi-filetype-cs";
+                                                else if (extension == ".js")
+                                                    icon = "bi-filetype-js";
+                                                else if (extension == ".html" || extension == ".htm")
+                                                    icon = "bi-filetype-html";
+                                                else if (extension == ".css")
+                                                    icon = "bi-filetype-css";
+                                                else if (extension == ".jpg" || extension == ".jpeg" || extension == ".png" || extension == ".gif")
+                                                    icon = "bi-filetype-png";
+                                                else if (extension == ".md")
+                                                    icon = "bi-filetype-md";
+                                                else if (extension == ".json")
+                                                    icon = "bi-filetype-json";
+                                                else if (extension == ".xml")
+                                                    icon = "bi-filetype-xml";
+                                                else if (extension == ".txt")
+                                                    icon = "bi-filetype-txt";
+                                            }
+                                            
+                                            <i class="bi @icon text-secondary me-2"></i>
+                                            @item.Name
+                                        </a>
+                                    </td>
+                                    <td>@(item.Size < 1024 ? $"{item.Size} B" : item.Size < 1024 * 1024 ? $"{item.Size / 1024:N1} KB" : $"{item.Size / (1024 * 1024):N1} MB")</td>
+                                    <td class="text-muted small">-</td>
+                                    @if (isOwner)
+                                    {
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a asp-action="EditFile" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@item.Path" 
+                                                   class="btn btn-outline-primary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-action="DownloadFile" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@item.Path" 
+                                                   class="btn btn-outline-secondary">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                                <a href="#" class="btn btn-outline-danger" 
+                                                   onclick="confirmDelete('@item.Path', '@item.Name', false)">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a asp-action="DownloadFile" asp-route-owner="@owner" asp-route-repo="@repo" asp-route-branch="@currentBranch" asp-route-path="@item.Path" 
+                                                   class="btn btn-outline-secondary">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage"></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    This action cannot be undone!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="deletePath" name="path" />
+                    <input type="hidden" id="deleteType" name="isDirectory" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(path, name, isDirectory) {
+            document.getElementById('deleteMessage').innerText = `Are you sure you want to delete ${isDirectory ? 'directory' : 'file'} "${name}"?`;
+            document.getElementById('deletePath').value = path;
+            document.getElementById('deleteType').value = isDirectory;
+            document.getElementById('deleteForm').action = '@Url.Action("DeleteFile", new { owner = owner, repo = repo, branch = currentBranch })';
+            
+            var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+            
+            return false;
+        }
+    </script>
+}

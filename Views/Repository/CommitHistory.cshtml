@@ -1,0 +1,123 @@
+@model DoAnWeb.ViewModels.CommitHistoryViewModel
+
+@{
+    ViewData["Title"] = "Commit History";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Commit History
+                </h2>
+                <div>
+                    <a asp-action="DetailsByName" asp-route-owner="@Model.Owner" asp-route-repo="@Model.Repository.RepositoryName" asp-route-branch="@Model.Branch" 
+                       class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-folder"></i> Files
+                    </a>
+                    <a asp-action="Branches" asp-route-owner="@Model.Owner" asp-route-repo="@Model.Repository.RepositoryName" 
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-diagram-3"></i> Branches
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">@Model.Owner / @Model.Repository.RepositoryName</h4>
+                        <div class="text-white-50">
+                            <i class="bi bi-git"></i> Branch: <strong>@Model.Branch</strong>
+                        </div>
+                    </div>
+                    <span class="badge bg-light text-dark">
+                        <i class="bi bi-clock-history"></i> @Model.Commits.Count Commits
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Commits == null || !Model.Commits.Any())
+                    {
+                        <div class="p-4 text-center">
+                            <i class="bi bi-exclamation-circle text-muted" style="font-size: 3rem;"></i>
+                            <p class="mt-3">No commits found for this branch.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="commit-timeline">
+                            @foreach (var commit in Model.Commits)
+                            {
+                                <div class="commit-item p-3 border-bottom">
+                                    <div class="d-flex align-items-start">
+                                        <div class="commit-avatar me-3">
+                                            @if (!string.IsNullOrEmpty(commit.Author?.AvatarUrl))
+                                            {
+                                                <img src="@commit.Author.AvatarUrl" alt="@commit.Commit.Author.Name" 
+                                                     class="rounded-circle" width="40" height="40">
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="commit-details flex-grow-1">
+                                            <h5 class="commit-title mb-1">
+                                                <a href="@commit.HtmlUrl" target="_blank" class="text-decoration-none">
+                                                    @(commit.Commit.Message.Split('\n')[0])
+                                                </a>
+                                            </h5>
+                                            <div class="commit-meta d-flex flex-wrap align-items-center text-muted small">
+                                                <div class="me-3">
+                                                    <i class="bi bi-person"></i>
+                                                    @commit.Commit.Author.Name
+                                                </div>
+                                                <div class="me-3">
+                                                    <i class="bi bi-calendar3"></i>
+                                                    <span title="@commit.Commit.Author.Date.ToLocalTime()">
+                                                        @commit.Commit.Author.Date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <i class="bi bi-code-square"></i>
+                                                    <span class="commit-sha" title="@commit.Sha">@commit.Sha.Substring(0, 7)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .commit-timeline .commit-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .commit-timeline .commit-title {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    details summary {
+        cursor: pointer;
+    }
+    
+    .text-truncate {
+        max-width: 500px;
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+</style> 

@@ -1,6 +1,64 @@
 ﻿/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 
+/* Base Flexbox Layout */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+main {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Responsive Container */
+.container-fluid {
+  width: 100%;
+  padding-right: var(--bs-gutter-x, 1.5rem);
+  padding-left: var(--bs-gutter-x, 1.5rem);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.page-transition-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+/* Flexible Columns */
+.sidebar, .right-sidebar {
+  flex: 0 0 auto;
+  transition: all 0.3s ease;
+}
+
+.sidebar .nav {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make columns more responsive */
+@media (max-width: 768px) {
+  .col-md-8, .col-md-10, .col-md-2 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
 a.navbar-brand {
   white-space: normal;
   text-align: center;
@@ -50,3 +108,279 @@ button.accept-policy {
   border-top: 1px solid #e5e5e5;
   padding: 0 1rem;
 }
+
+/* Page transition effects */
+.page-transition-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.main-content {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    max-width: 100%;
+}
+
+.main-content.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Modern navbar styling */
+.navbar {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.navbar-collapse {
+    flex-grow: 1;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.navbar-nav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Fullscreen layout adjustments */
+.sidebar, .right-sidebar {
+    position: sticky;
+    top: 90px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.sidebar::-webkit-scrollbar, 
+.right-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb, 
+.right-sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--secondary-rgb), 0.3);
+    border-radius: var(--radius-full);
+}
+
+/* Card adjustments for fullscreen */
+.card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body {
+    flex: 1 1 auto;
+}
+
+/* Make sure content doesn't overflow on small screens */
+img, svg, video, canvas, audio, iframe, embed, object {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Code blocks in fullscreen mode */
+pre {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Make footer stick to bottom */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+footer {
+    flex-shrink: 0;
+}
+
+/* Responsive adjustments for fullscreen */
+@media (max-width: 768px) {
+    .page-transition-wrapper {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .navbar {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .navbar-collapse {
+        flex-direction: column;
+    }
+    
+    .search-container {
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+}
+
+/* Existing styles */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+    letter-spacing: -0.5px;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: translateY(-2px);
+}
+
+.nav-link {
+    position: relative;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background-color: var(--primary);
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover::after, 
+.nav-link.active::after {
+    width: 80%;
+}
+
+/* Sidebar improvements */
+.sidebar .nav-link {
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(var(--primary-rgb), 0.15);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Footer styling */
+.footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 10;
+    margin-top: 5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer .container-fluid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.footer .row {
+    width: 100%;
+}
+
+/* Notification enhancements */
+.notification-badge, 
+.chat-badge, 
+.saved-items-count {
+    transition: all 0.3s ease;
+    animation: pulse-light 2s infinite;
+}
+
+@keyframes pulse-light {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(var(--primary-rgb), 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0);
+    }
+}
+
+/* Card and container effects */
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+}
+
+/* Button effects */
+.btn {
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode improvements */
+@media (prefers-color-scheme: dark) {
+    .navbar {
+        background-color: rgba(33, 37, 41, 0.95);
+    }
+    
+    .footer {
+        background-color: #212529;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+}
+
+/* More flexbox utilities */
+.d-flex { display: flex !important; }
+.flex-row { flex-direction: row !important; }
+.flex-column { flex-direction: column !important; }
+.flex-grow-1 { flex-grow: 1 !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-nowrap { flex-wrap: nowrap !important; }
+.justify-content-start { justify-content: flex-start !important; }
+.justify-content-end { justify-content: flex-end !important; }
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-around { justify-content: space-around !important; }
+.justify-content-evenly { justify-content: space-evenly !important; }
+.align-items-start { align-items: flex-start !important; }
+.align-items-end { align-items: flex-end !important; }
+.align-items-center { align-items: center !important; }
+.align-items-baseline { align-items: baseline !important; }
+.align-items-stretch { align-items: stretch !important; }
+.align-self-start { align-self: flex-start !important; }
+.align-self-end { align-self: flex-end !important; }
+.align-self-center { align-self: center !important; }
+.align-self-baseline { align-self: baseline !important; }
+.align-self-stretch { align-self: stretch !important; }
+.order-first { order: -1 !important; }
+.order-last { order: 1000 !important; }
+.order-0 { order: 0 !important; }

@@ -45,5 +45,8 @@ namespace DoAnWeb.Services
         
         // Create commit
         void CreateCommit(RepositoryCommit commit);
+        
+        // Get repository by name
+        Repository GetRepositoryByName(string owner, string repositoryName);
     }
 }

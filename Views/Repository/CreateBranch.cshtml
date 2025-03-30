@@ -1,0 +1,89 @@
+@model DoAnWeb.ViewModels.CreateBranchViewModel
+
+@{
+    ViewData["Title"] = "Create New Branch";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-diagram-2 me-2"></i>Create New Branch
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
+                    
+                    <form asp-action="CreateBranch" method="post">
+                        <input type="hidden" asp-for="Owner" />
+                        <input type="hidden" asp-for="RepositoryName" />
+                        
+                        <div class="mb-3">
+                            <label asp-for="NewBranchName" class="form-label">New Branch Name</label>
+                            <input asp-for="NewBranchName" class="form-control" placeholder="e.g., feature/new-feature" />
+                            <span asp-validation-for="NewBranchName" class="text-danger"></span>
+                            <div class="form-text">
+                                Branch names must be unique. Common patterns include 'feature/name', 'bugfix/issue', etc.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="SourceBranch" class="form-label">Create From</label>
+                            <select asp-for="SourceBranch" class="form-select" asp-items="@(new SelectList(Model.AvailableBranches, "Name", "Name"))">
+                            </select>
+                            <span asp-validation-for="SourceBranch" class="text-danger"></span>
+                            <div class="form-text">
+                                The new branch will be created from the selected branch, including all its commits and files.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>About branches:</strong> Branches allow you to develop features, fix bugs, or experiment with new ideas in isolation without affecting the main codebase.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="@Url.Action("BrowseContent", new { owner = Model.Owner, repo = Model.RepositoryName, branch = Model.SourceBranch })" 
+                               class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle me-2"></i>Create Branch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4 shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>Branch Management Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">Use descriptive branch names that reflect the work being done</li>
+                        <li class="mb-2">Keep branches focused on a single feature or bug fix</li>
+                        <li class="mb-2">Regularly merge or rebase with the main branch to stay up-to-date</li>
+                        <li class="mb-2">Delete branches after they've been merged to keep your repository clean</li>
+                        <li>Protect your main branch to prevent direct pushes and ensure code quality</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

@@ -4,235 +4,192 @@ using DoAnWeb.Models;
 using DoAnWeb.Repositories;
 using DoAnWeb.Services;
 using DoAnWeb.GitIntegration;
+using DoAnWeb.Middleware;
+using DoAnWeb.Filters;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using System.IO.Compression;
 using DoAnWeb.Utils;
+using DoAnWeb.Extensions;
+using DoAnWeb.Extensions.ServiceExtensions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 
 // Create the web application builder
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ 1. Database Configuration
-// Read connection string from appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("DevCommunityDB");
+// Cấu hình logging chi tiết hơn
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.AddFilter("DoAnWeb.Controllers", LogLevel.Trace);
+builder.Logging.AddFilter("DoAnWeb.GitIntegration", LogLevel.Trace);
 
-// Configure Entity Framework Core with SQL Server and performance optimizations
-builder.Services.AddDbContext<DevCommunityContext>(options =>
-    options.UseSqlServer(connectionString, sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure(3); // Automatically retry connection on failure (up to 3 times)
-        sqlOptions.CommandTimeout(30);      // Increase timeout for complex queries (30 seconds)
-    }));
+// ✅ 1. Database and Repository Configuration
+builder.Services
+    .AddDatabaseServices(builder.Configuration)
+    .AddRepositories();
 
-// ✅ 2. Repository Registration
-// Register generic and specific repositories using dependency injection
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
-builder.Services.AddScoped<IRepositoryRepository, RepositoryRepository>();
-builder.Services.AddScoped<IUserSavedItemRepository, UserSavedItemRepository>();
-builder.Services.AddScoped<IRepository<Vote>, Repository<Vote>>();
-builder.Services.AddScoped<IRepository<Answer>, Repository<Answer>>();
-builder.Services.AddScoped<IRepository<Tag>, Repository<Tag>>();
-// builder.Services.AddScoped<IPostRepository, PostRepository>(); // Tạm thời bỏ đăng ký PostRepository vì không có DbSet tương ứng
-builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+// ✅ 2. Application and Business Services
+builder.Services
+    .AddApplicationServices()
+    .AddGiteaServices();
 
-// ✅ 3. Service Registration
-// Register business logic services using dependency injection
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IQuestionService, QuestionService>();
-builder.Services.AddScoped<IRepositoryService, RepositoryService>();
-builder.Services.AddScoped<IAnswerService, AnswerService>();
-builder.Services.AddScoped<IQuestionRealTimeService, QuestionRealTimeService>();
-builder.Services.AddScoped<IMarkdownService, MarkdownService>();
+// Add CheckGiteaUsers service
+builder.Services.AddScoped<DoAnWeb.GitIntegration.CheckGiteaUsers>();
 
-// Register password hash service
-builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
+// ✅ 3. Infrastructure Services
+builder.Services
+    .AddCompressionServices()
+    .AddCorsServices()
+    .AddCachingServices()
+    .AddSessionServices();
 
-// Register Gitea integration services
-builder.Services.AddHttpClient<IGiteaIntegrationService, SimpleGiteaService>();
-builder.Services.AddScoped<IGiteaUserSyncService, GiteaUserSyncService>();
-builder.Services.AddScoped<IGiteaRepositoryService, GiteaRepositoryService>();
-
-// Register notification services
-builder.Services.AddSingleton<NotificationBackgroundService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddHostedService(provider => provider.GetRequiredService<NotificationBackgroundService>());
-
-// ✅ 4. MVC Configuration
-// Add MVC with response caching for improved performance
-builder.Services.AddControllersWithViews(options =>
-{
-    options.CacheProfiles.Add("Default", new() { Duration = 60 }); // Default cache of 60 seconds
-});
-
-// ✅ 5. Response Compression
-// Add response compression to reduce bandwidth usage and improve load times
-builder.Services.AddResponseCompression(options =>
-{
-    options.EnableForHttps = true; // Enable compression for HTTPS connections
-    options.Providers.Add<BrotliCompressionProvider>();
-    options.Providers.Add<GzipCompressionProvider>();
-    
-    // Add SignalR endpoints to compression
-    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        new[] { "application/octet-stream" });
-});
-
-// Configure compression providers for optimal speed
-builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Fastest; // Optimize for speed
-});
-
-builder.Services.Configure<GzipCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Fastest; // Optimize for speed
-});
-
-// ✅ 6. Memory Cache
-// Add in-memory caching for frequently accessed data
-builder.Services.AddMemoryCache();
-
-// Đăng ký IHttpContextAccessor để truy cập HttpContext trong view
-builder.Services.AddHttpContextAccessor();
-
-// Thêm dịch vụ Session
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-// ✅ 7. Authentication
-// Configure cookie-based authentication
-builder.Services.AddAuthentication("CookieAuth")
-    .AddCookie("CookieAuth", options =>
-    {
-        options.Cookie.Name = "DevCommunityAuth";
-        options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-    });
-
-// ✅ 8. SignalR
-// Add SignalR for real-time features with advanced options
-builder.Services.AddSignalR(options => 
-{
-    options.EnableDetailedErrors = true;
-    options.MaximumReceiveMessageSize = 102400; // 100 KB
-    options.StreamBufferCapacity = 20;
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
-    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-});
-
-// ✅ 9. CORS Configuration
-// Add CORS policy to allow connections from other devices
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy", builder =>
-        builder
-            .WithOrigins("https://example.com", "https://sub.example.com")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
-});
+// ✅ 4. MVC and Authentication
+builder.Services
+    .AddMvcWithFilters()
+    .AddAuthenticationServices(builder.Configuration)
+    .AddSignalRServices();
 
 // Build the application
 var app = builder.Build();
 
-// ✅ 10. Environment-specific Configuration
-// Configure error handling and security headers for production
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error"); // Global error handler
-    app.UseHsts(); // HTTP Strict Transport Security
-}
+// ✅ 5. Database Migrations and Schema Updates
+app.MigrateDatabase()
+   .UpdateDatabaseSchema();
 
-// Execute the SQL scripts to create database tables
+// Fix Vote identity column configuration - ensure VoteId is an identity column
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<DoAnWeb.Models.DevCommunityContext>();
     try
     {
-        var services = scope.ServiceProvider;
-        var configuration = services.GetRequiredService<IConfiguration>();
-        var dbUtils = new DbUtils(configuration);
+        // Check if we need to update the VoteId column
+        var connection = dbContext.Database.GetDbConnection();
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            -- First check if VoteId is already an identity column
+            IF NOT EXISTS (
+                SELECT 1 FROM sys.identity_columns 
+                WHERE object_id = OBJECT_ID('Votes') 
+                AND name = 'VoteId'
+            )
+            BEGIN
+                -- Get the current primary key constraint name if it exists
+                DECLARE @constraintName NVARCHAR(128)
+                SELECT @constraintName = name 
+                FROM sys.key_constraints 
+                WHERE parent_object_id = OBJECT_ID('Votes') 
+                AND type = 'PK'
+                
+                -- Drop the existing primary key constraint if it exists
+                IF @constraintName IS NOT NULL
+                BEGIN
+                    DECLARE @dropSQL NVARCHAR(200)
+                    SET @dropSQL = 'ALTER TABLE Votes DROP CONSTRAINT ' + @constraintName
+                    EXEC(@dropSQL)
+                END
+                
+                -- Create a temporary backup of the Votes table
+                SELECT * INTO Votes_Temp FROM Votes
+                
+                -- Get the maximum VoteId to use for reseed later
+                DECLARE @maxVoteId INT
+                SELECT @maxVoteId = ISNULL(MAX(VoteId), 0) FROM Votes_Temp
+                
+                -- Drop the original Votes table
+                DROP TABLE Votes
+                
+                -- Create a new Votes table with VoteId as IDENTITY column
+                CREATE TABLE Votes (
+                    VoteId INT IDENTITY(1,1) PRIMARY KEY,
+                    UserId INT,
+                    TargetType NVARCHAR(20) NOT NULL,
+                    TargetId INT NOT NULL,
+                    AnswerId INT,
+                    VoteValue INT NOT NULL,
+                    IsUpvote BIT NOT NULL,
+                    CreatedDate DATETIME
+                )
+                
+                -- Reseed the identity to start after the max value 
+                DBCC CHECKIDENT ('Votes', RESEED, @maxVoteId)
+                
+                -- Copy data from the temporary table back to the new Votes table
+                SET IDENTITY_INSERT Votes ON
+                INSERT INTO Votes (VoteId, UserId, TargetType, TargetId, AnswerId, VoteValue, IsUpvote, CreatedDate)
+                SELECT VoteId, UserId, TargetType, TargetId, AnswerId, VoteValue, IsUpvote, CreatedDate
+                FROM Votes_Temp
+                SET IDENTITY_INSERT Votes OFF
+                
+                -- Drop the temporary table
+                DROP TABLE Votes_Temp
+                
+                -- Add foreign key constraints back
+                ALTER TABLE Votes ADD CONSTRAINT FK_Votes_Users 
+                FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
+                
+                ALTER TABLE Votes ADD CONSTRAINT FK_Votes_Answers 
+                FOREIGN KEY (AnswerId) REFERENCES Answers(AnswerId) ON DELETE CASCADE
+                
+                PRINT 'Vote table successfully restructured with identity column'
+            END
+            ELSE
+            BEGIN
+                PRINT 'VoteId is already an identity column, no action needed'
+            END";
         
-        // First execute the entity tables script
-        string entityScriptPath = Path.Combine(app.Environment.ContentRootPath, "entity-tables.sql");
-        if (File.Exists(entityScriptPath))
-        {
-            Console.WriteLine("Executing SQL script to create entity tables...");
-            Console.WriteLine($"Script path: {entityScriptPath}");
-            dbUtils.ExecuteSqlScript(entityScriptPath);
-            Console.WriteLine("Entity tables SQL script execution completed.");
-        }
-        else
-        {
-            Console.WriteLine($"Entity tables SQL script not found at path: {entityScriptPath}");
-        }
+        if (connection.State != System.Data.ConnectionState.Open)
+            connection.Open();
+            
+        command.ExecuteNonQuery();
         
-        // Then execute the chat tables script
-        string chatScriptPath = Path.Combine(app.Environment.ContentRootPath, "chat-tables.sql");
-        if (File.Exists(chatScriptPath))
-        {
-            Console.WriteLine("Executing SQL script to create chat tables...");
-            Console.WriteLine($"Script path: {chatScriptPath}");
-            dbUtils.ExecuteSqlScript(chatScriptPath);
-            Console.WriteLine("Chat tables SQL script execution completed.");
-        }
-        else
-        {
-            Console.WriteLine($"Chat tables SQL script not found at path: {chatScriptPath}");
-        }
+        app.Logger.LogInformation("Vote table schema updated successfully");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error executing SQL scripts: {ex.Message}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
-        // Continue application startup even if script execution fails
+        app.Logger.LogError(ex, "Error updating Vote table schema");
     }
 }
 
-// ✅ 11. Middleware Pipeline
-// Configure the HTTP request pipeline with middleware in the correct order
+// ✅ 6. Configure Middleware Pipeline
+app.ConfigureMiddleware();
 
-// Redirect HTTP to HTTPS for security
-app.UseHttpsRedirection();
 
-// Enable response compression
-app.UseResponseCompression();
-
-// Serve static files (CSS, JS, images)
 app.UseStaticFiles();
 
-// Enable routing
-app.UseRouting();
 
-// Enable CORS (must be between UseRouting and UseAuthorization)
-app.UseCors("CorsPolicy");
+// ✅ 7. Configure Endpoints
+app.ConfigureEndpoints();
 
-// Sử dụng Session
-app.UseSession();
+// Configure endpoints
+app.MapControllerRoute(
+    name: "user-profile",
+    pattern: "User/Profile",
+    defaults: new { controller = "Users", action = "Profile" });
 
-// Enable authentication and authorization
-app.UseAuthentication();
-app.UseAuthorization();
-
-// Map controllers and SignalR hubs
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Map all SignalR hubs
-app.MapHub<NotificationHub>("/notificationHub");
-app.MapHub<QuestionHub>("/questionHub");
-app.MapHub<ViewCountHub>("/viewCountHub");
+    
 
-// Map new real-time hubs
-app.MapHub<PresenceHub>("/presenceHub");
-app.MapHub<ChatHub>("/chatHub");
-app.MapHub<ActivityHub>("/activityHub");
+// Add diagnostic endpoints (for admin only)
+app.MapGet("/api/admin/check-gitea-users", async (
+    DoAnWeb.GitIntegration.CheckGiteaUsers checker,
+    HttpContext context) => 
+{
+    // Only allow admins
+    if (!context.User.IsInRole("Admin"))
+    {
+        return Results.Forbid();
+    }
+    
+    await checker.CheckUsers();
+    return Results.Ok(new { message = "Check completed. See logs for details." });
+})
+.RequireAuthorization(new Microsoft.AspNetCore.Authorization.AuthorizeAttribute { Roles = "Admin" });
 
 // Start the application
 app.Run();

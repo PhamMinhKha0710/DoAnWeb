@@ -116,7 +116,7 @@ namespace DoAnWeb.Services
         }
 
         /// <summary>
-        /// Notify clients about a new comment on a question or answer
+        /// Notify clients about a new comment or reply
         /// </summary>
         public async Task NotifyNewComment(Comment comment, string targetType, int targetId)
         {
@@ -128,48 +128,75 @@ namespace DoAnWeb.Services
                     return;
                 }
 
-                int questionId = 0;
+                // Load related data if needed
+                if (comment.User == null)
+                {
+                    var user = await _context.Users.FindAsync(comment.UserId);
+                    comment.User = user;
+                }
+
+                // Determine question ID for notification
+                int? questionId = null;
                 
-                // Determine which question this comment belongs to
-                if (targetType.Equals("Question", StringComparison.OrdinalIgnoreCase))
+                if (targetType == "Question")
                 {
                     questionId = targetId;
                 }
-                else if (targetType.Equals("Answer", StringComparison.OrdinalIgnoreCase))
+                else if (targetType == "Answer")
                 {
-                    // Tìm questionId từ đối tượng Answer
                     var answer = await _context.Answers.FindAsync(targetId);
-                    if (answer != null && answer.QuestionId.HasValue)
+                    questionId = answer?.QuestionId;
+                }
+                else if (targetType == "Comment" && comment.ParentCommentId.HasValue)
+                {
+                    // For replies to comments, we need to find the parent comment's target
+                    var parentComment = await _context.Comments.FindAsync(comment.ParentCommentId);
+                    if (parentComment != null)
                     {
-                        questionId = answer.QuestionId.Value;
+                        if (parentComment.TargetType == "Question")
+                        {
+                            questionId = parentComment.TargetId;
+                        }
+                        else if (parentComment.TargetType == "Answer")
+                        {
+                            var answer = await _context.Answers.FindAsync(parentComment.TargetId);
+                            questionId = answer?.QuestionId;
+                        }
                     }
                 }
-                
-                if (questionId <= 0)
+
+                if (!questionId.HasValue)
                 {
-                    _logger.LogWarning($"Could not determine question ID for comment {comment.CommentId}");
+                    _logger.LogWarning($"Could not determine question ID for comment notification. CommentId: {comment.CommentId}");
                     return;
                 }
 
-                // Create comment data to send
+                // Create simplified object with only needed data
                 var commentData = new
                 {
                     comment.CommentId,
                     comment.Body,
                     comment.UserId,
                     UserName = comment.User?.Username ?? "Unknown user",
+                    UserDisplayName = comment.User?.DisplayName ?? "Unknown user",
                     UserAvatar = comment.User?.AvatarUrl,
                     comment.CreatedDate,
-                    TargetType = targetType,
-                    TargetId = targetId,
-                    QuestionId = questionId
+                    comment.TargetType,
+                    comment.TargetId,
+                    QuestionId = questionId,
+                    comment.ParentCommentId,
+                    IsReply = comment.ParentCommentId.HasValue
                 };
 
-                // Send to clients viewing this question
-                await _questionHubContext.Clients.Group($"Question-{questionId}")
-                    .SendAsync("ReceiveNewComment", commentData);
+                string eventName = comment.ParentCommentId.HasValue 
+                    ? "ReceiveNewReply" 
+                    : "ReceiveNewComment";
 
-                _logger.LogInformation($"Notified clients about new comment: {comment.CommentId} for {targetType} {targetId}");
+                // Send notification to the correct group with updated format
+                string groupName = $"question_{questionId}";
+                await _questionHubContext.Clients.Group(groupName).SendAsync(eventName, commentData);
+
+                _logger.LogInformation($"Notified clients about new {(comment.ParentCommentId.HasValue ? "reply" : "comment")}: {comment.CommentId} for question: {questionId} via {groupName}");
             }
             catch (Exception ex)
             {

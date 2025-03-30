@@ -18,5 +18,8 @@ namespace DoAnWeb.Repositories
         
         // Search repositories by name
         IEnumerable<Repository> SearchRepositories(string searchTerm);
+        
+        // Get all repositories with owner information loaded
+        IEnumerable<Repository> GetAllWithOwners();
     }
 }

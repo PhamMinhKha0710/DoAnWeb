@@ -4,36 +4,50 @@
     ViewData["Title"] = "Repositories";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="bi bi-archive-fill text-primary me-2"></i>
-            Code Repositories
-        </h1>
-        
-        @if (User.Identity.IsAuthenticated)
-        {
-            <div>
-                <a asp-action="Create" class="btn btn-success me-2">
-                    <i class="bi bi-plus-circle"></i> Create Repository
-                </a>
-                <a asp-action="MyRepositories" class="btn btn-outline-primary">
-                    <i class="bi bi-person"></i> My Repositories
-                </a>
-            </div>
-        }
-    </div>
+<style>
+    .repository-card a {
+        cursor: pointer !important;
+        position: relative;
+        z-index: 10;
+    }
     
-    <div class="card mb-4">
+    .debug-info {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 9999;
+        max-width: 300px;
+        display: none;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="mb-0">
+            <i class="bi bi-archive"></i> Code Repositories
+        </h1>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Repository
+            </a>
+            <a asp-action="MyRepositories" class="btn btn-outline-primary ms-2">
+                <i class="bi bi-person"></i> My Repositories
+            </a>
+        </div>
+    </div>
+
+    <!-- Search form -->
+    <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <form asp-action="Index" method="get" class="row g-3">
+            <form method="get" asp-action="Index" class="row g-2 align-items-center">
                 <div class="col-md-10">
                     <div class="input-group">
-                        <span class="input-group-text bg-light">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text" name="search" value="@Model.SearchTerm" class="form-control" 
-                               placeholder="Search repositories by name, description, or language..." />
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Search repositories by name, description or language..." value="@Model.SearchTerm">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -42,7 +56,7 @@
             </form>
         </div>
     </div>
-    
+
     @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -58,140 +72,207 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
+
+    <h2 class="mb-3">Public Repositories</h2>
     
-    @if (!string.IsNullOrEmpty(Model.SearchTerm))
-    {
-        <h2 class="mb-3">Search Results for "@Model.SearchTerm"</h2>
-        
-        @if (Model.GiteaRepositories.Any())
+    <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+        @if (!string.IsNullOrEmpty(Model.SearchTerm) && Model.GiteaRepositories != null && Model.GiteaRepositories.Any())
         {
-            <div class="row">
-                @foreach (var repo in Model.GiteaRepositories)
-                {
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <img src="@repo.Owner.AvatarUrl" alt="@repo.Owner.Login" class="rounded-circle me-3" style="width: 48px; height: 48px;" />
-                                    <div>
-                                        <h5 class="card-title">
-                                            <a href="@repo.HtmlUrl" target="_blank" class="text-decoration-none">
-                                                @repo.FullName
-                                            </a>
-                                        </h5>
-                                        <h6 class="card-subtitle mb-2 text-muted">
-                                            <i class="bi bi-person"></i> @repo.Owner.FullName
-                                        </h6>
+            @foreach (var repo in Model.GiteaRepositories)
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                @if (repo.Owner != null && !string.IsNullOrEmpty(repo.Owner.AvatarUrl))
+                                {
+                                    <img src="@repo.Owner.AvatarUrl" alt="@repo.Owner.Login" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-person"></i>
                                     </div>
+                                }
+                                <a href="https://localhost:3000/@(repo.Owner?.Login)" target="_blank" class="text-decoration-none text-muted">
+                                    @(repo.Owner?.Login ?? "Unknown")
+                                </a>
+                            </div>
+                            <h5 class="card-title">
+                                @if (!string.IsNullOrEmpty(repo.Name) && !string.IsNullOrEmpty(repo.Owner?.Login))
+                                {
+                                    <a asp-action="DetailsByName" asp-route-owner="@repo.Owner.Login" asp-route-repo="@repo.Name" class="text-decoration-none">
+                                        @repo.Name
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>@repo.Name <small class="text-warning">(Owner information incomplete)</small></span>
+                                }
+                            </h5>
+                            <p class="card-text text-muted">
+                                @if (string.IsNullOrEmpty(repo.Description))
+                                {
+                                    <span class="fst-italic">No description provided</span>
+                                }
+                                else
+                                {
+                                    @repo.Description
+                                }
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-secondary me-2">@repo.DefaultBranch</span>
+                                    @if (repo.Private)
+                                    {
+                                        <span class="badge bg-danger">Private</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Public</span>
+                                    }
                                 </div>
-                                
-                                <p class="card-text mt-3">
-                                    @(string.IsNullOrEmpty(repo.Description) ? "No description provided" : repo.Description)
-                                </p>
-                                
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <div>
-                                        <span class="badge bg-secondary me-2">@repo.DefaultBranch</span>
-                                        @if (repo.Private)
-                                        {
-                                            <span class="badge bg-danger">Private</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success">Public</span>
-                                        }
-                                    </div>
-                                    <small class="text-muted">
-                                        Updated: @repo.UpdatedAt.ToShortDateString()
-                                    </small>
+                                <div>
+                                    @if (!string.IsNullOrEmpty(repo.Name) && !string.IsNullOrEmpty(repo.Owner?.Login))
+                                    {
+                                        <a asp-action="DetailsByName" asp-route-owner="@repo.Owner.Login" asp-route-repo="@repo.Name" class="btn btn-sm btn-outline-primary repository-details-link" data-debug="repo-name-@repo.Name">
+                                            <i class="bi bi-code-square"></i> View
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                                            <i class="bi bi-exclamation-triangle"></i> Invalid Repository
+                                        </button>
+                                    }
                                 </div>
                             </div>
-                            <div class="card-footer bg-transparent">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <i class="bi bi-code-slash me-1"></i> Code
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> Updated: @repo.UpdatedAt.ToString("yyyy-MM-dd")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else if (Model.Repositories != null && Model.Repositories.Any())
+        {
+            @foreach (var repo in Model.Repositories.Where(r => r.Visibility == "Public"))
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                @if (repo.Owner != null && !string.IsNullOrEmpty(repo.Owner.AvatarUrl))
+                                {
+                                    <img src="@repo.Owner.AvatarUrl" alt="@(repo.Owner.GiteaUsername ?? repo.Owner.Username)" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-person"></i>
                                     </div>
-                                    <a href="@repo.HtmlUrl" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        Visit Repository
+                                }
+                                <span class="text-muted">
+                                    @if (repo.Owner != null)
+                                    {
+                                        <a asp-controller="User" asp-action="Profile" asp-route-username="@(repo.Owner.GiteaUsername ?? repo.Owner.Username)" class="text-decoration-none text-muted">
+                                            @(repo.Owner.DisplayName ?? repo.Owner.GiteaUsername ?? repo.Owner.Username)
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            <i class="bi bi-shield-lock me-1"></i> DevCommunity
+                                        </span>
+                                    }
+                                </span>
+                            </div>
+                            <h5 class="card-title">
+                                <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="text-decoration-none">
+                                    @repo.RepositoryName
+                                </a>
+                            </h5>
+                            <p class="card-text text-muted">
+                                @if (string.IsNullOrEmpty(repo.Description))
+                                {
+                                    <span class="fst-italic">No description provided</span>
+                                }
+                                else
+                                {
+                                    @repo.Description
+                                }
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-secondary me-2">@(repo.DefaultBranch ?? "main")</span>
+                                    @if (repo.Visibility == "Private")
+                                    {
+                                        <span class="badge bg-danger">Private</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Public</span>
+                                    }
+                                </div>
+                                <div>
+                                    <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="btn btn-sm btn-outline-primary repository-details-link" data-debug="repo-id-@repo.RepositoryId">
+                                        <i class="bi bi-code-square"></i> View
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                No repositories found matching your search criteria.
-            </div>
-        }
-    }
-    else
-    {
-        <h2 class="mb-3">All Public Repositories</h2>
-        
-        @if (Model.Repositories.Any())
-        {
-            <div class="row">
-                @foreach (var repo in Model.Repositories)
-                {
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="text-decoration-none">
-                                        @repo.RepositoryName
-                                    </a>
-                                </h5>
-                                <h6 class="card-subtitle mb-2 text-muted">
-                                    <i class="bi bi-person"></i> @(repo.Owner?.Username ?? "Unknown")
-                                </h6>
-                                
-                                <p class="card-text mt-3">
-                                    @(string.IsNullOrEmpty(repo.Description) ? "No description provided" : repo.Description)
-                                </p>
-                                
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <div>
-                                        <span class="badge bg-secondary me-2">@repo.DefaultBranch</span>
-                                        @if (repo.Visibility == "Private")
-                                        {
-                                            <span class="badge bg-danger">Private</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success">Public</span>
-                                        }
-                                    </div>
-                                    <small class="text-muted">
-                                        Updated: @(repo.UpdatedDate?.ToShortDateString() ?? "N/A")
-                                    </small>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <i class="bi bi-code-slash me-1"></i> Code
-                                    </div>
-                                    <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="btn btn-sm btn-outline-primary">
-                                        View Details
-                                    </a>
-                                </div>
-                            </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> Updated: @(repo.UpdatedDate?.ToString("yyyy-MM-dd") ?? "Unknown")
+                            </small>
                         </div>
                     </div>
-                }
-            </div>
+                </div>
+            }
         }
         else
         {
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                No repositories available yet. Be the first to create one!
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                    {
+                        <span>No repositories found matching your search criteria. Try a different search or create a new repository.</span>
+                    }
+                    else
+                    {
+                        <span>No public repositories found. <a asp-action="Create" class="alert-link">Create a new repository</a> to get started!</span>
+                    }
+                </div>
             </div>
         }
-    }
-</div> 
+    </div>
+</div>
+
+<div class="debug-info"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click logging for repository links
+        const repoLinks = document.querySelectorAll('.repository-details-link');
+        repoLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                console.log('Repository link clicked:', this.getAttribute('data-debug'));
+                console.log('Link href:', this.getAttribute('href'));
+                
+                // Show debug info
+                const debugInfo = document.querySelector('.debug-info');
+                debugInfo.style.display = 'block';
+                debugInfo.innerHTML = `Link clicked: ${this.getAttribute('data-debug')}<br>Redirecting to: ${this.getAttribute('href')}`;
+                
+                // Hide after 5 seconds
+                setTimeout(() => {
+                    debugInfo.style.display = 'none';
+                }, 5000);
+            });
+        });
+    });
+</script> 

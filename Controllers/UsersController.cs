@@ -176,5 +176,21 @@ namespace DoAnWeb.Controllers
             }
             return View(user);
         }
+
+        public IActionResult Profile(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Index");
+            }
+
+            var user = _userService.GetUserByUsername(username);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return View("Details", user);
+        }
     }
 }

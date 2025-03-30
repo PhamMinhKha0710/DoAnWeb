@@ -1,0 +1,217 @@
+/* fast-animations.css - Tối ưu hiệu ứng chuyển trang và animation */
+
+/* Tối ưu hóa hiệu ứng chuyển trang */
+.page-transition-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.main-content {
+    opacity: 0.8;
+    transform: translateY(5px);
+    transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.main-content.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Overrides cho các animation AOS để nhanh hơn */
+[data-aos] {
+    transition-duration: 500ms !important;
+}
+
+[data-aos].aos-animate {
+    transition-duration: 500ms !important;
+}
+
+/* Tăng tốc các hiệu ứng CSS */
+.alert {
+    animation-duration: 300ms !important;
+}
+
+.dropdown-menu {
+    animation-duration: 150ms !important;
+    transition: opacity 150ms, transform 150ms !important;
+}
+
+.dropdown-toggle::after {
+    transition: transform 150ms !important;
+}
+
+.card {
+    transition: transform 150ms, box-shadow 150ms !important;
+}
+
+.nav-link {
+    transition: color 150ms !important;
+}
+
+.btn {
+    transition: all 150ms !important;
+}
+
+/* Cải thiện hiệu ứng cho các phần tử UI khác */
+.fade {
+    transition: opacity 150ms linear !important;
+}
+
+.modal.fade .modal-dialog {
+    transition: transform 150ms ease-out !important;
+}
+
+.collapse {
+    transition: height 200ms ease !important;
+}
+
+.tab-pane.fade {
+    transition: opacity 100ms linear !important;
+}
+
+/* Sticky sidebar - Giữ sidebar cố định khi cuộn trang */
+.sidebar-container, .right-sidebar-container {
+    position: relative;
+    height: 100%;
+}
+
+.sidebar, .right-sidebar {
+    position: sticky;
+    top: 76px; /* Cần điều chỉnh theo chiều cao của navbar */
+    max-height: calc(100vh - 86px);
+    overflow-y: auto;
+    z-index: 100;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    transition: top 0.2s ease, max-height 0.2s ease;
+    will-change: top, max-height;
+}
+
+.sidebar.stop-at-footer, .right-sidebar.stop-at-footer {
+    position: absolute;
+    bottom: 0;
+    top: auto !important;
+}
+
+.sidebar::-webkit-scrollbar, .right-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb, .right-sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track, .right-sidebar::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+/* Đảm bảo sidebar vẫn hiển thị đẹp ở các màn hình khác nhau */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .sidebar, .right-sidebar {
+        top: 68px;
+        max-height: calc(100vh - 78px);
+    }
+}
+
+/* Right sidebar cố định tương tự như left sidebar */
+.right-sidebar {
+    position: sticky;
+    top: 76px;
+    max-height: calc(100vh - 86px);
+    overflow-y: auto;
+    z-index: 100;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+.right-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.right-sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.right-sidebar::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .right-sidebar {
+        top: 68px;
+        max-height: calc(100vh - 78px);
+    }
+}
+
+/* Tối ưu các hiệu ứng scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion) {
+    * {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Sidebar containers - đảm bảo sidebars luôn hiển thị đúng */
+.sidebar-container, .right-sidebar-container {
+    position: relative;
+    height: 100%;
+}
+
+/* Cải thiện hiệu ứng sidebar khi cuộn */
+.sidebar, .right-sidebar {
+    transition: top 0.2s ease;
+    will-change: top;
+    background-color: var(--background);
+}
+
+/* Xử lý sidebar khi cuộn đến footer */
+html.has-scroll-smooth {
+    overflow: hidden;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+/* Cải thiện hiệu ứng trên màn hình nhỏ */
+@media (max-width: 767.98px) {
+    /* Trên mobile, tắt sticky sidebar vì chúng ta đã có mobile nav */
+    .sidebar, .right-sidebar {
+        position: static;
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+/* Fix cho các trường hợp đặc biệt khi có nhiều nội dung sidebar */
+.sidebar .nav-link, .right-sidebar .nav-link {
+    padding: 0.5rem 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Fix cho scrolling khi có quá nhiều nội dung */
+@media (min-height: 700px) {
+    .sidebar, .right-sidebar {
+        max-height: calc(100vh - 86px);
+    }
+}
+
+@media (max-height: 700px) {
+    .sidebar, .right-sidebar {
+        max-height: calc(100vh - 76px);
+    }
+} 

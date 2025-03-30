@@ -2,6 +2,7 @@ using DoAnWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -76,6 +77,9 @@ namespace DoAnWeb.Hubs
                         {
                             await Groups.AddToGroupAsync(Context.ConnectionId, $"tag-{tagId}");
                         }
+                        
+                        // Add to reputation group
+                        await Groups.AddToGroupAsync(Context.ConnectionId, $"reputation-{userIdInt}");
 
                         _logger.LogInformation($"User {userId} connected to NotificationHub and joined {watchedQuestions.Count} question groups, {userAnswers.Count} answer groups, and {watchedTags.Count} tag groups");
                     }
@@ -100,7 +104,8 @@ namespace DoAnWeb.Hubs
 
             // Security check - only allow joining groups the user should have access to
             if (groupName.StartsWith("question-") || groupName.StartsWith("tag-") || 
-                groupName.StartsWith("answer-") || groupName.StartsWith("user-"))
+                groupName.StartsWith("answer-") || groupName.StartsWith("user-") ||
+                groupName.StartsWith("reputation-"))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
                 _logger.LogInformation($"User {Context.User?.Identity?.Name} joined group {groupName}");
@@ -182,6 +187,49 @@ namespace DoAnWeb.Hubs
             {
                 _logger.LogError(ex, "Error marking all notifications as read");
             }
+        }
+        
+        /// <summary>
+        /// Gửi thông báo về thay đổi điểm reputation cho người dùng
+        /// </summary>
+        /// <param name="userId">ID của người dùng</param>
+        /// <param name="newReputation">Điểm reputation mới</param>
+        /// <param name="reason">Lý do thay đổi điểm</param>
+        /// <returns>Task</returns>
+        public async Task SendReputationUpdate(int userId, int newReputation, string reason)
+        {
+            try
+            {
+                // Kiểm tra quyền - chỉ admin hoặc system mới có thể gọi phương thức này
+                if (!IsAdminOrSystem())
+                {
+                    _logger.LogWarning($"Unauthorized attempt to call SendReputationUpdate by {Context.User?.Identity?.Name}");
+                    return;
+                }
+                
+                // Gửi thông báo đến nhóm reputation của người dùng
+                await Clients.Group($"reputation-{userId}").SendAsync("ReputationChanged", userId, newReputation, reason);
+                
+                _logger.LogInformation($"Reputation update sent for user {userId}: new value = {newReputation}, reason = {reason}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error sending reputation update for user {userId}");
+            }
+        }
+        
+        /// <summary>
+        /// Check if the current user is an admin or system
+        /// </summary>
+        private bool IsAdminOrSystem()
+        {
+            // System claim là một claim đặc biệt cho các service backgrounds
+            var isSystem = Context.User.HasClaim(c => c.Type == "System" && c.Value == "true");
+            
+            // Admin check
+            var isAdmin = Context.User.IsInRole("Admin");
+            
+            return isSystem || isAdmin;
         }
     }
 }

@@ -1,0 +1,153 @@
+@model DoAnWeb.ViewModels.UploadFileViewModel
+
+@{
+    ViewData["Title"] = "Upload File";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-file-earmark-plus me-2"></i>Upload File
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Repository:</strong> @Model.Owner/@Model.Repository
+                        <br>
+                        <strong>Target Directory:</strong> @(string.IsNullOrEmpty(Model.TargetDirectory) ? "Root directory" : Model.TargetDirectory)
+                    </div>
+                    
+                    <form asp-action="UploadFile" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="Owner" />
+                        <input type="hidden" asp-for="Repository" />
+                        <input type="hidden" asp-for="TargetDirectory" />
+                        
+                        <div class="mb-3">
+                            <label asp-for="Branch" class="form-label">Target Branch</label>
+                            <select asp-for="Branch" class="form-select">
+                                @if (ViewBag.Branches != null)
+                                {
+                                    foreach (var branch in ViewBag.Branches)
+                                    {
+                                        <option value="@branch.Name" selected="@(branch.Name == Model.Branch)">@branch.Name</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="main">main</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Branch" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="CommitMessage" class="form-label">Commit Message</label>
+                            <input asp-for="CommitMessage" class="form-control" placeholder="Add file via upload" />
+                            <span asp-validation-for="CommitMessage" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                A brief description of the changes you're making with this upload.
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="File" class="form-label">Select File to Upload</label>
+                            <input asp-for="File" type="file" class="form-control" />
+                            <span asp-validation-for="File" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Maximum file size is 50MB.
+                            </small>
+                            
+                            <div class="mt-2 p-3 border rounded bg-light" id="fileInfoContainer" style="display: none;">
+                                <div id="fileInfo"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="FilePath" class="form-label">File Path (Optional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text text-muted" id="pathPrefix">
+                                    @(string.IsNullOrEmpty(Model.TargetDirectory) ? "" : Model.TargetDirectory + "/")
+                                </span>
+                                <input asp-for="FilePath" class="form-control" placeholder="Enter custom filename or leave empty to use original filename" />
+                            </div>
+                            <span asp-validation-for="FilePath" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                You can provide a custom filename or path. If left empty, the original filename will be used.
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="DetailsByName" asp-route-owner="@Model.Owner" asp-route-repo="@Model.Repository" asp-route-branch="@Model.Branch" asp-route-path="@Model.TargetDirectory" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cloud-upload"></i> Upload File
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Hiển thị thông tin file được chọn
+        document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+            const fileInfoContainer = document.getElementById('fileInfoContainer');
+            const fileInfo = document.getElementById('fileInfo');
+            fileInfo.innerHTML = '';
+            
+            if (this.files.length > 0) {
+                fileInfoContainer.style.display = 'block';
+                const file = this.files[0];
+                
+                const header = document.createElement('h6');
+                header.textContent = `Selected file:`;
+                fileInfo.appendChild(header);
+                
+                const details = document.createElement('div');
+                details.className = 'small';
+                details.innerHTML = `
+                    <p class="mb-1"><strong>Name:</strong> ${file.name}</p>
+                    <p class="mb-1"><strong>Type:</strong> ${file.type || 'Unknown'}</p>
+                    <p class="mb-0"><strong>Size:</strong> ${formatFileSize(file.size)}</p>
+                `;
+                fileInfo.appendChild(details);
+                
+                // Auto-fill the filename if the FilePath field is empty
+                const filePathInput = document.getElementById('FilePath');
+                if (!filePathInput.value) {
+                    filePathInput.value = file.name;
+                }
+            } else {
+                fileInfoContainer.style.display = 'none';
+            }
+        });
+        
+        // Format file size in human-readable format
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+} 

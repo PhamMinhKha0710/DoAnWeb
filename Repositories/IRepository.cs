@@ -34,5 +34,11 @@ namespace DoAnWeb.Repositories
         /// </summary>
         /// <returns>The database context</returns>
         DbContext GetContext();
+
+        Task<IEnumerable<T>> GetAllAsync();
+        Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
+        Task<T> GetByIdAsync(int id);
+        Task DeleteAsync(int id);
+        Task SaveAsync();
     }
 }
