@@ -1,0 +1,402 @@
+@model DoAnWeb.ViewModels.CreateFileViewModel
+
+@{
+    ViewData["Title"] = "Create New File";
+    
+    // Get current directory path for display
+    var currentPath = Model.TargetDirectory ?? "";
+    var displayPath = string.IsNullOrEmpty(currentPath) ? "/" : "/" + currentPath + "/";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-file-earmark-plus me-2"></i>Create New File
+                        </h3>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("BrowseContent", new { owner = Model.Owner, repo = Model.Repository, branch = Model.Branch, path = Model.TargetDirectory })" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Files
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="p-3 bg-light border-bottom">
+                        <div class="text-muted small mb-2">
+                            <i class="bi bi-folder me-1"></i>
+                            Directory: @displayPath
+                        </div>
+                        
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                <div asp-validation-summary="All" class="mb-0"></div>
+                            </div>
+                        }
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">@displayPath</span>
+                                    <input type="text" id="fileName" class="form-control" placeholder="filename.extension" 
+                                           onkeyup="updateLanguage()" onchange="updateLanguage()" required />
+                                </div>
+                                <div class="form-text">
+                                    Examples: script.js, styles.css, README.md, Program.cs
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch mt-2 text-end">
+                                    <input class="form-check-input" type="checkbox" id="editorThemeToggle" onchange="toggleEditorTheme()">
+                                    <label class="form-check-label" for="editorThemeToggle">Dark mode</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="CreateFile" method="post" id="createFileForm">
+                        <input type="hidden" asp-for="Owner" />
+                        <input type="hidden" asp-for="Repository" />
+                        <input type="hidden" asp-for="Branch" />
+                        <input type="hidden" asp-for="TargetDirectory" />
+                        <input type="hidden" asp-for="FileName" id="hiddenFileName" />
+                        
+                        <div class="editor-container" style="height: 500px; width: 100%; border-bottom: 1px solid #dee2e6;">
+                            <div id="editor" style="height: 100%; width: 100%; font-size: 14px;"></div>
+                            <textarea asp-for="Content" id="hiddenContent" style="display: none;"></textarea>
+                        </div>
+                        
+                        <div class="p-3">
+                            <div class="mb-3">
+                                <label asp-for="CommitMessage" class="form-label">Commit Message</label>
+                                <input asp-for="CommitMessage" class="form-control" id="commitMsg" placeholder="Add new file" />
+                                <span asp-validation-for="CommitMessage" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <a href="@Url.Action("BrowseContent", new { owner = Model.Owner, repo = Model.Repository, branch = Model.Branch, path = Model.TargetDirectory })" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Cancel
+                                    </a>
+                                </div>
+                                <div>
+                                    <button type="button" id="previewBtn" class="btn btn-outline-secondary me-2" onclick="togglePreview()">
+                                        <i class="bi bi-eye me-2"></i>Preview
+                                    </button>
+                                    <button type="submit" class="btn btn-success" onclick="return prepareSubmit()">
+                                        <i class="bi bi-check-circle me-2"></i>Create File
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Preview Panel -->
+            <div class="card shadow-sm border-0 mb-3 d-none" id="previewPanel">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-eye me-2"></i>Preview: <span id="previewFileName"></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="previewContent" class="markdown-body"></div>
+                </div>
+            </div>
+            
+            <!-- Template Suggestions -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>Templates & Suggestions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Click on a template below to quickly get started with common file types:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="useTemplate('markdown')">
+                                <i class="bi bi-file-earmark-text me-2"></i>README.md
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="useTemplate('html')">
+                                <i class="bi bi-filetype-html me-2"></i>HTML File
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="useTemplate('css')">
+                                <i class="bi bi-filetype-css me-2"></i>CSS File
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="useTemplate('javascript')">
+                                <i class="bi bi-filetype-js me-2"></i>JavaScript File
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="useTemplate('csharp')">
+                                <i class="bi bi-filetype-cs me-2"></i>C# Class
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="useTemplate('json')">
+                                <i class="bi bi-filetype-json me-2"></i>JSON File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.css" />
+    <style>
+        .ace_editor {
+            font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        .markdown-body {
+            padding: 1rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            border-radius: 3px;
+            padding: 16px;
+            overflow: auto;
+        }
+        .markdown-body code {
+            background-color: rgba(175, 184, 193, 0.2);
+            border-radius: 3px;
+            padding: 0.2em 0.4em;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+    </style>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/theme-github.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/theme-monokai.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        let editor;
+        let previewActive = false;
+        let currentMode = "plaintext";
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            // Initialize Ace Editor
+            editor = ace.edit("editor");
+            editor.setTheme("ace/theme/github");
+            editor.session.setMode("ace/mode/plaintext");
+            editor.setShowPrintMargin(false);
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableSnippets: true,
+                enableLiveAutocompletion: true
+            });
+            
+            // Check for stored theme preference
+            if (localStorage.getItem('editorDarkMode') === 'true') {
+                document.getElementById('editorThemeToggle').checked = true;
+                editor.setTheme("ace/theme/monokai");
+            }
+            
+            // Handle tabs properly
+            editor.commands.bindKey("Tab", "indent");
+        });
+        
+        function toggleEditorTheme() {
+            const isDarkMode = document.getElementById('editorThemeToggle').checked;
+            editor.setTheme(isDarkMode ? "ace/theme/monokai" : "ace/theme/github");
+            localStorage.setItem('editorDarkMode', isDarkMode);
+        }
+        
+        function prepareSubmit() {
+            const fileName = document.getElementById('fileName').value.trim();
+            
+            if (!fileName) {
+                alert('Please enter a file name');
+                return false;
+            }
+            
+            document.getElementById('hiddenFileName').value = fileName;
+            document.getElementById('hiddenContent').value = editor.getValue();
+            
+            // Auto-populate commit message if empty
+            const commitMsg = document.getElementById('commitMsg');
+            if (!commitMsg.value.trim()) {
+                commitMsg.value = `Add ${fileName}`;
+            }
+            
+            return true;
+        }
+        
+        function updateLanguage() {
+            const fileName = document.getElementById('fileName').value.trim();
+            let language = "plaintext";
+            
+            if (fileName) {
+                const extension = fileName.split('.').pop().toLowerCase();
+                
+                switch(extension) {
+                    case 'js': 
+                        language = "javascript"; 
+                        break;
+                    case 'html': case 'htm': 
+                        language = "html"; 
+                        break;
+                    case 'css': 
+                        language = "css"; 
+                        break;
+                    case 'cs': 
+                        language = "csharp"; 
+                        break;
+                    case 'cshtml': 
+                        language = "cshtml"; 
+                        break;
+                    case 'json': 
+                        language = "json"; 
+                        break;
+                    case 'xml': 
+                        language = "xml"; 
+                        break;
+                    case 'md': 
+                        language = "markdown"; 
+                        break;
+                    case 'sql': 
+                        language = "sql"; 
+                        break;
+                    case 'py': 
+                        language = "python"; 
+                        break;
+                    case 'java': 
+                        language = "java"; 
+                        break;
+                    case 'ts': 
+                        language = "typescript"; 
+                        break;
+                }
+            }
+            
+            if (currentMode !== language) {
+                currentMode = language;
+                
+                // Dynamically load language mode if it's not plaintext
+                if (language !== "plaintext") {
+                    const script = document.createElement('script');
+                    script.src = `https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/mode-${language}.min.js`;
+                    script.onload = function() {
+                        editor.session.setMode(`ace/mode/${language}`);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    editor.session.setMode(`ace/mode/plaintext`);
+                }
+            }
+            
+            // Update preview file name
+            document.getElementById('previewFileName').textContent = fileName;
+        }
+        
+        function togglePreview() {
+            const previewPanel = document.getElementById('previewPanel');
+            const previewContent = document.getElementById('previewContent');
+            const previewBtn = document.getElementById('previewBtn');
+            const fileName = document.getElementById('fileName').value;
+            
+            previewActive = !previewActive;
+            
+            if (previewActive) {
+                // Get content from editor
+                const content = editor.getValue();
+                
+                // Update preview file name
+                document.getElementById('previewFileName').textContent = fileName || 'Untitled';
+                
+                // For Markdown files, render with Marked.js
+                if (fileName.endsWith('.md')) {
+                    previewContent.innerHTML = marked.parse(content);
+                } else {
+                    // For other files, display formatted code
+                    previewContent.innerHTML = `<pre><code class="language-${currentMode}">${escapeHtml(content)}</code></pre>`;
+                }
+                
+                previewPanel.classList.remove('d-none');
+                previewBtn.innerHTML = '<i class="bi bi-code me-2"></i>Back to Editor';
+            } else {
+                previewPanel.classList.add('d-none');
+                previewBtn.innerHTML = '<i class="bi bi-eye me-2"></i>Preview';
+            }
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        function useTemplate(templateType) {
+            let fileName = '';
+            let content = '';
+            
+            switch(templateType) {
+                case 'markdown':
+                    fileName = 'README.md';
+                    content = "# Project Title\n\n## Description\nAdd a brief description of your project here.\n\n## Features\n- Feature 1\n- Feature 2\n- Feature 3\n\n## Getting Started\nInstructions on how to set up and run your project.\n\n## Usage\nExamples of how to use your project.\n\n## License\nThis project is licensed under the MIT License - see the LICENSE file for details.";
+                    break;
+                    
+                case 'html':
+                    fileName = 'index.html';
+                    content = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Document</title>\n    <link rel=\"stylesheet\" href=\"styles.css\">\n</head>\n<div class=\"body-tag\">\n    <div class=\"container\">\n        <h1>Hello World</h1>\n        <p>Your content here</p>\n    </div>\n    \n    <script src=\"script.js\"></script>\n</div>\n</html>";
+                    break;
+                    
+                case 'css':
+                    fileName = 'styles.css';
+                    content = "/* Main styles */\nbody {\n    font-family: 'Arial', sans-serif;\n    line-height: 1.6;\n    color: #333;\n    margin: 0;\n    padding: 0;\n    background-color: #f5f5f5;\n}\n\n.container {\n    max-width: 1200px;\n    margin: 0 auto;\n    padding: 20px;\n}\n\nh1 {\n    color: #2c3e50;\n}\n\n/* Add your custom styles below */";
+                    break;
+                    
+                case 'javascript':
+                    fileName = 'script.js';
+                    content = "// Wait for DOM to be fully loaded\ndocument.addEventListener('DOMContentLoaded', function() {\n    // Your code here\n    console.log('Document loaded and ready!');\n    \n    // Example function\n    function greet(name) {\n        return `Hello, ${name}!`;\n    }\n    \n    console.log(greet('World'));\n});";
+                    break;
+                    
+                case 'csharp':
+                    fileName = 'Program.cs';
+                    content = "using System;\nusing System.Collections.Generic;\nusing System.Linq;\n\nnamespace MyProject\n{\n    public class Program\n    {\n        public static void Main(string[] args)\n        {\n            Console.WriteLine(\"Hello World!\");\n        }\n    }\n}";
+                    break;
+                    
+                case 'json':
+                    fileName = 'config.json';
+                    content = "{\n    \"appName\": \"MyApplication\",\n    \"version\": \"1.0.0\",\n    \"environment\": \"development\",\n    \"database\": {\n        \"host\": \"localhost\",\n        \"port\": 5432,\n        \"user\": \"admin\",\n        \"password\": \"password\",\n        \"name\": \"mydb\"\n    },\n    \"features\": {\n        \"darkMode\": true,\n        \"notifications\": true\n    }\n}";
+                    break;
+            }
+            
+            // Set the file name and update the editor content
+            if (fileName) {
+                document.getElementById('fileName').value = fileName;
+                updateLanguage();
+                editor.setValue(content, -1); // -1 moves cursor to the start
+            }
+        }
+    </script>
+} 

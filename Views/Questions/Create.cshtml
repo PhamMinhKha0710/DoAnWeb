@@ -74,10 +74,13 @@
 
                         <!-- File upload section with image preview -->
                         <div class="mb-4">
-                            <label asp-for="Attachments" class="form-label fw-medium">Attachments</label>
+                            <label asp-for="Attachments" class="form-label fw-medium">Attachments (Optional)</label>
                             <input type="file" asp-for="Attachments" class="form-control" multiple id="file-upload" />
                             <div class="form-text">
                                 <i class="bi bi-paperclip me-1"></i> Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR, JPG, JPEG, PNG, GIF, BMP, WEBP (Max 10MB per file)
+                            </div>
+                            <div class="form-text mt-1">
+                                <i class="bi bi-info-circle me-1"></i> You can post your question without any attachments. Add files only if they help illustrate your question.
                             </div>
                             
                             <!-- Image preview container -->

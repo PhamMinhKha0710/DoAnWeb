@@ -17,7 +17,7 @@ namespace DoAnWeb.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "9.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -81,6 +81,9 @@ namespace DoAnWeb.Migrations
                     b.Property<int?>("IsUpvote")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ParentAnswerId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("QuestionId")
                         .HasColumnType("int");
 
@@ -99,6 +102,8 @@ namespace DoAnWeb.Migrations
 
                     b.HasKey("AnswerId")
                         .HasName("PK__Answers__D48250043037DE3B");
+
+                    b.HasIndex("ParentAnswerId");
 
                     b.HasIndex("QuestionId");
 
@@ -146,6 +151,139 @@ namespace DoAnWeb.Migrations
                     b.ToTable("AnswerAttachments");
                 });
 
+            modelBuilder.Entity("DoAnWeb.Models.Attachment", b =>
+                {
+                    b.Property<int>("AttachmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AttachmentId"));
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("RelatedEntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UploadDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UploadedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AttachmentId");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("Attachments");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.Badge", b =>
+                {
+                    b.Property<int>("BadgeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BadgeId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Criteria")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ReputationBonus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("BadgeId");
+
+                    b.ToTable("Badges");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.BadgeAssignment", b =>
+                {
+                    b.Property<int>("BadgeAssignmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BadgeAssignmentId"));
+
+                    b.Property<DateTime>("AwardedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("BadgeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("Notified")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BadgeAssignmentId");
+
+                    b.HasIndex("BadgeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BadgeAssignments");
+                });
+
             modelBuilder.Entity("DoAnWeb.Models.Comment", b =>
                 {
                     b.Property<int>("CommentId")
@@ -162,10 +300,19 @@ namespace DoAnWeb.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime?>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
                         .HasDefaultValueSql("(getdate())");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("QuestionId")
                         .HasColumnType("int");
@@ -178,13 +325,15 @@ namespace DoAnWeb.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("CommentId")
                         .HasName("PK__Comments__C3B4DFCA7DE7D79F");
 
                     b.HasIndex("AnswerId");
+
+                    b.HasIndex("ParentCommentId");
 
                     b.HasIndex("QuestionId");
 
@@ -597,6 +746,91 @@ namespace DoAnWeb.Migrations
                     b.ToTable("RepositoryFiles");
                 });
 
+            modelBuilder.Entity("DoAnWeb.Models.RepositoryMapping", b =>
+                {
+                    b.Property<int>("MappingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MappingId"));
+
+                    b.Property<string>("CloneUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<int>("DevCommunityRepositoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GiteaRepositoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HtmlUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("LastSyncDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("SshUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("MappingId");
+
+                    b.HasIndex("DevCommunityRepositoryId");
+
+                    b.ToTable("RepositoryMappings");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.ReputationHistory", b =>
+                {
+                    b.Property<int>("HistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HistoryId"));
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NewValue")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OldValue")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("RelatedEntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RelatedEntityType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("HistoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReputationHistories");
+                });
+
             modelBuilder.Entity("DoAnWeb.Models.Role", b =>
                 {
                     b.Property<int>("RoleId")
@@ -617,6 +851,33 @@ namespace DoAnWeb.Migrations
                         .IsUnique();
 
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.SavedItem", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("SavedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SavedItemId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "ItemId", "ItemType");
+
+                    b.ToTable("SavedItems");
                 });
 
             modelBuilder.Entity("DoAnWeb.Models.Tag", b =>
@@ -658,8 +919,8 @@ namespace DoAnWeb.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Bio")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("bio");
 
                     b.Property<string>("ConnectionId")
                         .HasColumnType("nvarchar(max)");
@@ -679,12 +940,48 @@ namespace DoAnWeb.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("FailedLoginAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("GiteaToken")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("gitea_token");
+
+                    b.Property<string>("GiteaUsername")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("gitea_username");
+
+                    b.Property<string>("HashType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsEmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTime?>("LastLoginDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_login_date");
+
+                    b.Property<DateTime?>("LastPasswordChangeDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("datetime");
 
                     b.Property<string>("PasswordHash")
@@ -692,8 +989,18 @@ namespace DoAnWeb.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime");
+
                     b.Property<string>("ProfilePicture")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReputationPoints")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .ValueGeneratedOnAdd()
@@ -704,6 +1011,13 @@ namespace DoAnWeb.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("VerificationToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<DateTime?>("VerificationTokenExpiry")
+                        .HasColumnType("datetime");
 
                     b.HasKey("UserId")
                         .HasName("PK__Users__1788CC4CE4378A70");
@@ -777,26 +1091,21 @@ namespace DoAnWeb.Migrations
 
             modelBuilder.Entity("DoAnWeb.Models.UserWatchedTag", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("TagId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserId")
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Id")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId", "TagId");
 
                     b.HasIndex("TagId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("UserWatchedTags");
                 });
@@ -873,6 +1182,10 @@ namespace DoAnWeb.Migrations
 
             modelBuilder.Entity("DoAnWeb.Models.Answer", b =>
                 {
+                    b.HasOne("DoAnWeb.Models.Answer", "ParentAnswer")
+                        .WithMany("ChildAnswers")
+                        .HasForeignKey("ParentAnswerId");
+
                     b.HasOne("DoAnWeb.Models.Question", "Question")
                         .WithMany("Answers")
                         .HasForeignKey("QuestionId")
@@ -882,6 +1195,8 @@ namespace DoAnWeb.Migrations
                         .WithMany("Answers")
                         .HasForeignKey("UserId")
                         .HasConstraintName("FK__Answers__UserId__70DDC3D8");
+
+                    b.Navigation("ParentAnswer");
 
                     b.Navigation("Question");
 
@@ -899,6 +1214,34 @@ namespace DoAnWeb.Migrations
                     b.Navigation("Answer");
                 });
 
+            modelBuilder.Entity("DoAnWeb.Models.Attachment", b =>
+                {
+                    b.HasOne("DoAnWeb.Models.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId");
+
+                    b.Navigation("UploadedByUser");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.BadgeAssignment", b =>
+                {
+                    b.HasOne("DoAnWeb.Models.Badge", "Badge")
+                        .WithMany("BadgeAssignments")
+                        .HasForeignKey("BadgeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DoAnWeb.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Badge");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DoAnWeb.Models.Comment", b =>
                 {
                     b.HasOne("DoAnWeb.Models.Answer", "Answer")
@@ -906,6 +1249,10 @@ namespace DoAnWeb.Migrations
                         .HasForeignKey("AnswerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK__Comments__AnswerId__75A278F7");
+
+                    b.HasOne("DoAnWeb.Models.Comment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId");
 
                     b.HasOne("DoAnWeb.Models.Question", "Question")
                         .WithMany()
@@ -917,9 +1264,12 @@ namespace DoAnWeb.Migrations
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("FK__Comments__UserId__75A278F5");
 
                     b.Navigation("Answer");
+
+                    b.Navigation("ParentComment");
 
                     b.Navigation("Question");
 
@@ -1064,6 +1414,40 @@ namespace DoAnWeb.Migrations
                     b.Navigation("Repository");
                 });
 
+            modelBuilder.Entity("DoAnWeb.Models.RepositoryMapping", b =>
+                {
+                    b.HasOne("DoAnWeb.Models.Repository", "Repository")
+                        .WithMany()
+                        .HasForeignKey("DevCommunityRepositoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_RepositoryMappings_Repositories");
+
+                    b.Navigation("Repository");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.ReputationHistory", b =>
+                {
+                    b.HasOne("DoAnWeb.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.SavedItem", b =>
+                {
+                    b.HasOne("DoAnWeb.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DoAnWeb.Models.UserIgnoredTag", b =>
                 {
                     b.HasOne("DoAnWeb.Models.Tag", "Tag")
@@ -1153,6 +1537,18 @@ namespace DoAnWeb.Migrations
             modelBuilder.Entity("DoAnWeb.Models.Answer", b =>
                 {
                     b.Navigation("Attachments");
+
+                    b.Navigation("ChildAnswers");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.Badge", b =>
+                {
+                    b.Navigation("BadgeAssignments");
+                });
+
+            modelBuilder.Entity("DoAnWeb.Models.Comment", b =>
+                {
+                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("DoAnWeb.Models.Conversation", b =>

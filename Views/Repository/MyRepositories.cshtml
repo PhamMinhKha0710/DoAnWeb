@@ -4,15 +4,20 @@
     ViewData["Title"] = "My Repositories";
 }
 
-<div class="container mt-4">
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
+        <h1 class="mb-0 d-flex align-items-center">
             <i class="bi bi-person-workspace text-primary me-2"></i>
             My Repositories
         </h1>
-        <a asp-action="Create" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Create Repository
-        </a>
+        <div>
+            <a href="/Repository/FixOwnership" class="btn btn-warning me-2">
+                <i class="bi bi-tools"></i> Sửa quyền sở hữu
+            </a>
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Create Repository
+            </a>
+        </div>
     </div>
     
     @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
@@ -35,7 +40,12 @@
         <div class="card-header bg-light">
             <ul class="nav nav-tabs card-header-tabs">
                 <li class="nav-item">
-                    <a class="nav-link active" id="local-tab" data-bs-toggle="tab" href="#local">
+                    <a class="nav-link active" id="all-tab" data-bs-toggle="tab" href="#all">
+                        <i class="bi bi-collection"></i> All Repositories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="local-tab" data-bs-toggle="tab" href="#local">
                         <i class="bi bi-database"></i> DevCommunity Repositories
                     </a>
                 </li>
@@ -48,7 +58,190 @@
         </div>
         <div class="card-body">
             <div class="tab-content">
-                <div class="tab-pane fade show active" id="local">
+                <div class="tab-pane fade show active" id="all">
+                    @if (Model.DevCommunityRepositories.Any() || Model.GiteaRepositories.Any())
+                    {
+                        <div class="row">
+                            @foreach (var repo in Model.DevCommunityRepositories)
+                            {
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="bi bi-database text-primary me-2"></i>
+                                                <h5 class="card-title mb-0">
+                                                    <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="text-decoration-none">
+                                                        @repo.RepositoryName
+                                                    </a>
+                                                </h5>
+                                            </div>
+                                            
+                                            <p class="card-text mt-3">
+                                                @(string.IsNullOrEmpty(repo.Description) ? "No description provided" : repo.Description)
+                                            </p>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <div>
+                                                    <span class="badge bg-secondary me-2">@repo.DefaultBranch</span>
+                                                    @if (repo.Visibility == "Private")
+                                                    {
+                                                        <span class="badge bg-danger">Private</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">Public</span>
+                                                    }
+                                                </div>
+                                                <small class="text-muted">
+                                                    Updated: @repo.UpdatedDate?.ToShortDateString()
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="btn-group w-100">
+                                                <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                @if (!string.IsNullOrEmpty(Model.GiteaUsername) && !string.IsNullOrEmpty(repo.RepositoryName))
+                                                {
+                                                    <a asp-action="Details" 
+                                                       asp-route-owner="@Model.GiteaUsername" 
+                                                       asp-route-repo="@repo.RepositoryName" 
+                                                       class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-exclamation-circle"></i> Files
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Repository information incomplete">
+                                                        <i class="bi bi-exclamation-circle"></i> Invalid Repository
+                                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            
+                            @foreach (var repo in Model.GiteaRepositories)
+                            {
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="bi bi-git text-success me-2"></i>
+                                                <h5 class="card-title mb-0">
+                                                    @if (!string.IsNullOrEmpty(repo.Name))
+                                                    {
+                                                        <a asp-action="Details" 
+                                                           asp-route-owner="@(string.IsNullOrEmpty(repo.Owner?.Login) ? Model.GiteaUsername : repo.Owner.Login)" 
+                                                           asp-route-repo="@repo.Name" 
+                                                           class="text-decoration-none">
+                                                            @repo.Name
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">Unnamed Repository</span>
+                                                    }
+                                                </h5>
+                                            </div>
+                                            
+                                            <p class="card-text mt-3">
+                                                @(string.IsNullOrEmpty(repo.Description) ? "No description provided" : repo.Description)
+                                            </p>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <div>
+                                                    <span class="badge bg-secondary me-2">@repo.DefaultBranch</span>
+                                                    @if (repo.Private)
+                                                    {
+                                                        <span class="badge bg-danger">Private</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">Public</span>
+                                                    }
+                                                </div>
+                                                <small class="text-muted">
+                                                    Updated: @repo.UpdatedAt.ToShortDateString()
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="btn-group w-100">
+                                                @if (!string.IsNullOrEmpty(repo.Name) && (!string.IsNullOrEmpty(repo.Owner?.Login) || !string.IsNullOrEmpty(Model.GiteaUsername)))
+                                                {
+                                                    <a asp-action="Details" 
+                                                       asp-route-owner="@(string.IsNullOrEmpty(repo.Owner?.Login) ? Model.GiteaUsername : repo.Owner.Login)" 
+                                                       asp-route-repo="@repo.Name" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-eye"></i> View
+                                                    </a>
+                                                    <a asp-action="Details" 
+                                                       asp-route-owner="@(string.IsNullOrEmpty(repo.Owner?.Login) ? Model.GiteaUsername : repo.Owner.Login)" 
+                                                       asp-route-repo="@repo.Name" 
+                                                       asp-route-branch="@(string.IsNullOrEmpty(repo.DefaultBranch) ? "main" : repo.DefaultBranch)" 
+                                                       class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-clock-history"></i> Commits
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                        <i class="bi bi-exclamation-triangle"></i> Invalid Repository
+                                                    </button>
+                                                }
+                                                <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-download"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            @if (!string.IsNullOrEmpty(repo.CloneUrl))
+                                                            {
+                                                                <a class="dropdown-item copy-url" href="#" 
+                                                                   data-url="@repo.CloneUrl" onclick="copyUrl(event, '@repo.CloneUrl')">
+                                                                    <i class="bi bi-clipboard me-2"></i> Copy HTTPS URL
+                                                                </a>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="dropdown-item disabled">
+                                                                    <i class="bi bi-exclamation-triangle me-2"></i> No HTTPS URL
+                                                                </span>
+                                                            }
+                                                        </li>
+                                                        @if (!string.IsNullOrEmpty(repo.SshUrl))
+                                                        {
+                                                            <li>
+                                                                <a class="dropdown-item copy-url" href="#" 
+                                                                   data-url="@repo.SshUrl" onclick="copyUrl(event, '@repo.SshUrl')">
+                                                                    <i class="bi bi-clipboard me-2"></i> Copy SSH URL
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            You don't have any repositories yet.
+                            <a asp-action="Create" class="alert-link">Create your first repository</a> to get started.
+                        </div>
+                    }
+                </div>
+                
+                <div class="tab-pane fade" id="local">
                     @if (Model.DevCommunityRepositories.Any())
                     {
                         <div class="table-responsive">
@@ -105,9 +298,28 @@
                         </div>
                     }
                 </div>
+                
                 <div class="tab-pane fade" id="gitea">
                     @if (Model.GiteaRepositories.Any())
                     {
+                        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+                            <h6 class="fw-bold">Debug Info (First Repository):</h6>
+                            @{
+                                var debugRepo = Model.GiteaRepositories.FirstOrDefault();
+                                if (debugRepo != null)
+                                {
+                                    <ul class="mb-0">
+                                        <li>Repository Name: @(debugRepo.Name ?? "null")</li>
+                                        <li>Owner Login: @(debugRepo.Owner?.Login ?? "null")</li>
+                                        <li>Model GiteaUsername: @(Model.GiteaUsername ?? "null")</li>
+                                        <li>Owner Value Used: @(debugRepo.Owner?.Login ?? Model.GiteaUsername ?? "null")</li>
+                                        <li>Details URL: @Url.Action("Details", "Repository", new { owner = debugRepo.Owner?.Login ?? Model.GiteaUsername, repo = debugRepo.Name })</li>
+                                    </ul>
+                                }
+                            }
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        
                         <div class="row">
                             @foreach (var repo in Model.GiteaRepositories)
                             {
@@ -115,9 +327,19 @@
                                     <div class="card h-100 shadow-sm">
                                         <div class="card-body">
                                             <h5 class="card-title">
-                                                <a href="@repo.HtmlUrl" target="_blank" class="text-decoration-none">
-                                                    @repo.Name
-                                                </a>
+                                                @if (!string.IsNullOrEmpty(repo.Name) && (!string.IsNullOrEmpty(repo.Owner?.Login) || !string.IsNullOrEmpty(Model.GiteaUsername)))
+                                                {
+                                                    <a asp-action="Details" 
+                                                       asp-route-owner="@(string.IsNullOrEmpty(repo.Owner?.Login) ? Model.GiteaUsername : repo.Owner.Login)" 
+                                                       asp-route-repo="@repo.Name" 
+                                                       class="text-decoration-none">
+                                                        @repo.Name
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Unnamed Repository</span>
+                                                }
                                             </h5>
                                             
                                             <p class="card-text mt-3">
@@ -143,15 +365,28 @@
                                         </div>
                                         <div class="card-footer bg-transparent">
                                             <div class="btn-group w-100">
-                                                <a href="@repo.HtmlUrl" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i> View
-                                                </a>
-                                                <a href="@repo.HtmlUrl/issues" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="bi bi-exclamation-circle"></i> Issues
-                                                </a>
-                                                <a href="@repo.HtmlUrl/commits/@repo.DefaultBranch" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="bi bi-clock-history"></i> Commits
-                                                </a>
+                                                @if (!string.IsNullOrEmpty(repo.Name) && (!string.IsNullOrEmpty(repo.Owner?.Login) || !string.IsNullOrEmpty(Model.GiteaUsername)))
+                                                {
+                                                    <a asp-action="Details" 
+                                                       asp-route-owner="@(string.IsNullOrEmpty(repo.Owner?.Login) ? Model.GiteaUsername : repo.Owner.Login)" 
+                                                       asp-route-repo="@repo.Name" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-eye"></i> View
+                                                    </a>
+                                                    <a asp-action="Details" 
+                                                       asp-route-owner="@(string.IsNullOrEmpty(repo.Owner?.Login) ? Model.GiteaUsername : repo.Owner.Login)" 
+                                                       asp-route-repo="@repo.Name" 
+                                                       asp-route-branch="@(string.IsNullOrEmpty(repo.DefaultBranch) ? "main" : repo.DefaultBranch)" 
+                                                       class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-clock-history"></i> Commits
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                        <i class="bi bi-exclamation-triangle"></i> Invalid Repository
+                                                    </button>
+                                                }
                                                 <div class="btn-group" role="group">
                                                     <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
                                                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -159,10 +394,19 @@
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         <li>
-                                                            <a class="dropdown-item copy-url" href="#" 
-                                                               data-url="@repo.CloneUrl" onclick="copyUrl(event, '@repo.CloneUrl')">
-                                                                <i class="bi bi-clipboard me-2"></i> Copy HTTPS URL
-                                                            </a>
+                                                            @if (!string.IsNullOrEmpty(repo.CloneUrl))
+                                                            {
+                                                                <a class="dropdown-item copy-url" href="#" 
+                                                                   data-url="@repo.CloneUrl" onclick="copyUrl(event, '@repo.CloneUrl')">
+                                                                    <i class="bi bi-clipboard me-2"></i> Copy HTTPS URL
+                                                                </a>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="dropdown-item disabled">
+                                                                    <i class="bi bi-exclamation-triangle me-2"></i> No HTTPS URL
+                                                                </span>
+                                                            }
                                                         </li>
                                                         @if (!string.IsNullOrEmpty(repo.SshUrl))
                                                         {
@@ -246,4 +490,4 @@
             alert('URL copied to clipboard!');
         }
     </script>
-} 
+}

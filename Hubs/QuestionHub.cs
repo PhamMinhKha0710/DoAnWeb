@@ -39,15 +39,17 @@ namespace DoAnWeb.Hubs
         }
 
         /// <summary>
-        /// Join a specific question's group to receive updates about answers
+        /// Join a specific question's group to receive updates about answers and comments
         /// </summary>
         public async Task JoinQuestionGroup(int questionId)
         {
             if (questionId <= 0)
                 return;
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"Question-{questionId}");
-            _logger.LogInformation($"Client {Context.ConnectionId} joined Question-{questionId} group");
+            // Update the group name format to match what's used in the controller
+            string groupName = $"question_{questionId}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            _logger.LogInformation($"Client {Context.ConnectionId} joined {groupName} group");
         }
 
         /// <summary>
@@ -58,7 +60,10 @@ namespace DoAnWeb.Hubs
             if (questionId <= 0)
                 return;
 
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Question-{questionId}");
+            // Update the group name format to match what's used in the controller
+            string groupName = $"question_{questionId}";
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+            _logger.LogInformation($"Client {Context.ConnectionId} left {groupName} group");
         }
 
         /// <summary>
@@ -92,49 +97,50 @@ namespace DoAnWeb.Hubs
 
                 _logger.LogInformation($"Broadcasting new answer: {answer.AnswerId} for question {answer.QuestionId}");
                 
-                // Send to specific question group and to all questions group
-                await Clients.Group($"Question-{answer.QuestionId}").SendAsync("ReceiveNewAnswer", answer);
+                // Update the group name format to match what's used in the controller
+                string groupName = $"question_{answer.QuestionId}";
+                await Clients.Group(groupName).SendAsync("ReceiveNewAnswer", answer);
                 await Clients.Group("AllQuestions").SendAsync("ReceiveNewAnswerCount", answer.QuestionId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error broadcasting new answer {answer.AnswerId} for question {answer.QuestionId}");
+                _logger.LogError(ex, $"Error broadcasting answer for question {answer?.QuestionId}");
             }
         }
         
         /// <summary>
         /// Send a new comment to all clients viewing the related question
         /// </summary>
-        public async Task SendNewComment(Comment comment, string targetType, int targetId)
+        public async Task SendNewComment(Comment comment, int questionId)
         {
             try
             {
-                _logger.LogInformation($"Broadcasting new comment: {comment.CommentId} for {targetType} {targetId}");
-                
-                // Send to all clients viewing the related question
-                int questionId = 0;
-                if (targetType.Equals("Question", StringComparison.OrdinalIgnoreCase))
+                if (questionId <= 0)
                 {
-                    questionId = targetId;
+                    _logger.LogWarning("Attempted to broadcast comment without valid QuestionId");
+                    return;
                 }
-                else if (targetType.Equals("Answer", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Tìm questionId từ cơ sở dữ liệu 
-                    var answer = await _context.Answers.FindAsync(targetId);
-                    if (answer != null && answer.QuestionId.HasValue)
-                    {
-                        questionId = answer.QuestionId.Value;
-                    }
-                }
+
+                _logger.LogInformation($"Broadcasting new comment: {comment.CommentId} for question {questionId}");
                 
-                if (questionId > 0)
+                // Use the correct group name format
+                string groupName = $"question_{questionId}";
+                
+                // If it's a reply (has parent comment), use ReceiveNewReply
+                if (comment.ParentCommentId.HasValue)
                 {
-                    await Clients.Group($"Question-{questionId}").SendAsync("ReceiveNewComment", comment, targetType, targetId);
+                    await Clients.Group(groupName).SendAsync("ReceiveNewReply", comment);
+                    _logger.LogInformation($"Sent reply notification for comment {comment.CommentId} to group {groupName}");
+                }
+                else
+                {
+                    await Clients.Group(groupName).SendAsync("ReceiveNewComment", comment);
+                    _logger.LogInformation($"Sent comment notification for comment {comment.CommentId} to group {groupName}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error broadcasting new comment {comment.CommentId}");
+                _logger.LogError(ex, $"Error broadcasting comment for question {questionId}");
             }
         }
     }

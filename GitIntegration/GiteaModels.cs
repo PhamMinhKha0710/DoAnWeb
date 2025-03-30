@@ -54,6 +54,20 @@ namespace DoAnWeb.GitIntegration
         public string HtmlUrl { get; set; }
     }
 
+    public class GitContentResponse
+    {
+        public string Type { get; set; }
+        public string Name { get; set; }
+        public string Path { get; set; }
+        public string Content { get; set; }
+        public string Encoding { get; set; }
+        public string Sha { get; set; }
+        public long Size { get; set; }
+        public string Url { get; set; }
+        public string HtmlUrl { get; set; }
+        public List<GitIntegration.Models.GiteaContent> Files { get; set; } = new List<GitIntegration.Models.GiteaContent>();
+    }
+
     public class SearchRepositoryResponse
     {
         public int Total { get; set; }

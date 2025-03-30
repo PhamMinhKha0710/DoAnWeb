@@ -321,4 +321,246 @@
 
 .notification-sound-toggle .form-check-input {
     cursor: pointer;
+}
+
+/* SignalR Styles - Real-time features */
+
+/* Notification Styles */
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+    font-size: 0.65rem;
+}
+
+.notification-dropdown-menu {
+    width: 350px;
+    max-width: 90vw;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.notification-dropdown-menu .dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    white-space: normal;
+}
+
+.notification-item:hover {
+    background-color: rgba(0,0,0,0.03);
+}
+
+.notification-item .notification-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary);
+}
+
+.notification-item.unread {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.notification-item small {
+    font-size: 0.75rem;
+    color: var(--bs-secondary);
+}
+
+.notification-item.unread::before {
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--bs-primary);
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+/* Vote Notification Toast */
+.vote-notification-toast {
+    min-width: 300px;
+    background-color: var(--bs-light);
+    border-left: 4px solid var(--bs-primary);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+.vote-notification-toast .toast-header {
+    border-bottom-color: rgba(0,0,0,0.05);
+    background-color: rgba(var(--bs-light-rgb), 0.85);
+}
+
+/* Animation for score updates */
+.score-updated {
+    animation: pulse-highlight 2s ease;
+}
+
+@keyframes pulse-highlight {
+    0% { color: inherit; }
+    30% { color: var(--bs-primary); font-weight: bold; }
+    100% { color: inherit; }
+}
+
+/* View Count Styles */
+.view-count-updated {
+    animation: view-count-highlight 2s ease;
+}
+
+@keyframes view-count-highlight {
+    0% { color: inherit; background-color: transparent; }
+    30% { color: var(--bs-primary); background-color: rgba(var(--bs-primary-rgb), 0.1); font-weight: bold; }
+    100% { color: inherit; background-color: transparent; }
+}
+
+.question-views {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.view-counter-container {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Connection Status Indicator */
+.connection-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.connection-status.connected {
+    background-color: var(--bs-success);
+    box-shadow: 0 0 5px var(--bs-success);
+}
+
+.connection-status.connecting {
+    background-color: var(--bs-warning);
+    box-shadow: 0 0 5px var(--bs-warning);
+    animation: blink 1.5s infinite;
+}
+
+.connection-status.disconnected {
+    background-color: var(--bs-danger);
+    box-shadow: 0 0 5px var(--bs-danger);
+}
+
+@keyframes blink {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
+
+/* Smallest font size utility */
+.smallest {
+    font-size: 0.7rem;
+}
+
+/* SignalR Debug Panel */
+.signalr-debug-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    z-index: 9999;
+    transition: all 0.3s ease;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.signalr-debug-panel.hidden {
+    transform: translateX(310px);
+}
+
+.signalr-debug-panel h5 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.signalr-debug-panel .connection-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.signalr-debug-panel .hub-name {
+    font-weight: 500;
+}
+
+.signalr-debug-panel .status-connected {
+    color: #4caf50;
+}
+
+.signalr-debug-panel .status-connecting {
+    color: #ff9800;
+}
+
+.signalr-debug-panel .status-disconnected {
+    color: #f44336;
+}
+
+.signalr-debug-panel .debug-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.signalr-debug-panel .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.2rem;
+}
+
+.signalr-debug-panel-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: #3498db;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9998;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 20px;
+}
+
+.signalr-debug-panel.hidden + .signalr-debug-panel-toggle {
+    display: flex;
+}
+
+.signalr-debug-panel-toggle i {
+    font-size: 1.2rem;
 } 

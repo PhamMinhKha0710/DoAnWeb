@@ -7,7 +7,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <a href="http://localhost:3000/@Model.Owner/@Model.Repository" target="_blank" class="btn btn-outline-secondary me-2">
+            <a asp-action="DetailsByName" asp-route-owner="@Model.Owner" asp-route-repo="@Model.Repository" asp-route-branch="@Model.Branch" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-arrow-left"></i> Back to Repository
             </a>
             <span class="badge bg-light text-dark border">
@@ -15,11 +15,11 @@
             </span>
         </div>
         <div>
-            <a href="http://localhost:3000/@Model.Owner/@Model.Repository/src/branch/main/@Model.FilePath" 
+            <a href="http://localhost:3000/@Model.Owner/@Model.Repository/src/branch/@Model.Branch/@Model.FilePath" 
                target="_blank" class="btn btn-primary btn-sm">
                 <i class="bi bi-pencil"></i> Edit in Gitea
             </a>
-            <a href="http://localhost:3000/@Model.Owner/@Model.Repository/commits/branch/main/@Model.FilePath" 
+            <a href="http://localhost:3000/@Model.Owner/@Model.Repository/commits/branch/@Model.Branch/@Model.FilePath" 
                target="_blank" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-clock-history"></i> History
             </a>
@@ -73,7 +73,7 @@
                     <ul class="list-unstyled">
                         <li><strong>File Path:</strong> @Model.FilePath</li>
                         <li><strong>Encoding:</strong> @Model.Encoding</li>
-                        <li><strong>Repository:</strong> <a href="http://localhost:3000/@Model.Owner/@Model.Repository" target="_blank">@Model.Owner/@Model.Repository</a></li>
+                        <li><strong>Repository:</strong> <a asp-action="DetailsByName" asp-route-owner="@Model.Owner" asp-route-repo="@Model.Repository">@Model.Owner/@Model.Repository</a></li>
                     </ul>
                 </div>
                 <div class="col-md-6">

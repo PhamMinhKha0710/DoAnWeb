@@ -1,44 +1,90 @@
 /**
  * Vote Handler JavaScript
- * Handles AJAX voting and UI updates
+ * Handles AJAX toggle voting and UI updates
  */
 
 // Main vote function called by vote buttons
 function vote(itemId, itemType, voteType) {
+    // Debug message to ensure function is called
+    console.log('Vote function called with:', { itemId, itemType, voteType });
+    
+    // Get the button element that was clicked
+    const button = document.querySelector(`.vote-button[data-id="${itemId}"][data-type="${itemType}"]`);
+    if (!button) {
+        console.error(`Vote button for ${itemType} ${itemId} not found`);
+        // Try again after a short delay (sometimes DOM might not be fully ready)
+        setTimeout(() => {
+            const retryButton = document.querySelector(`.vote-button[data-id="${itemId}"][data-type="${itemType}"]`);
+            if (retryButton) {
+                console.log('Vote button found on retry');
+                performVote(retryButton, itemId, itemType, voteType);
+            } else {
+                console.error('Vote button still not found after retry');
+                showToast('Error', 'Could not find vote button. Please refresh the page.', 'error');
+            }
+        }, 500);
+        return;
+    }
+    
+    performVote(button, itemId, itemType, voteType);
+}
+
+// Separate the voting logic to avoid code duplication
+function performVote(button, itemId, itemType, voteType) {
+    // Get the current state
+    const currentState = button.getAttribute('data-vote-state') || 'none';
+    
+    // Determine the new vote type
+    // If voteType is 'none', we're removing the vote
+    // If voteType is 'up' and currentState is already 'up', we're removing the vote
+    const newVoteType = (voteType === 'none' || (voteType === 'up' && currentState === 'up')) ? 'none' : voteType;
+    
     // Construct the payload
     const data = {
         itemId: itemId,
         itemType: itemType,
-        voteType: voteType
+        voteType: newVoteType
     };
     
     // Get the CSRF token from the hidden form
     const csrfForm = document.getElementById('csrf-form');
     const token = csrfForm ? csrfForm.querySelector('input[name="__RequestVerificationToken"]')?.value : null;
     
+    if (!token) {
+        console.error('CSRF token not found. Make sure there is a csrf-form with a RequestVerificationToken input.');
+        showToast('Error', 'Security token missing. Please refresh the page.', 'error');
+        return;
+    }
+    
     // Configure the fetch request
     const options = {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
         },
         body: JSON.stringify(data)
     };
     
-    // Add CSRF token if available
-    if (token) {
-        options.headers['RequestVerificationToken'] = token;
+    console.log('Sending vote request with options:', options);
+    
+    // Show loading indicator
+    const loadingIndicator = button.querySelector('.vote-loading-indicator');
+    if (loadingIndicator) {
+        loadingIndicator.classList.remove('d-none');
     }
     
     // Send the request
     fetch('/Vote/Cast', options)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                console.error('Network response was not ok:', response.status, response.statusText);
+                throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
             }
             return response.json();
         })
         .then(data => {
+            console.log('Vote response:', data);
             if (data.success) {
                 // Update the UI
                 updateVoteUI(itemId, itemType, data.newScore, data.userVote);
@@ -62,6 +108,12 @@ function vote(itemId, itemType, voteType) {
         .catch(error => {
             console.error('Error:', error);
             showToast('Error', 'An error occurred while processing your vote', 'error');
+        })
+        .finally(() => {
+            // Hide loading indicator
+            if (loadingIndicator) {
+                loadingIndicator.classList.add('d-none');
+            }
         });
 }
 
@@ -73,50 +125,53 @@ function updateVoteUI(itemId, itemType, newScore, userVote) {
         element.textContent = newScore;
     });
     
-    // Update vote buttons
-    const upButtons = document.querySelectorAll(`.vote-btn-up[data-id="${itemId}"][data-type="${itemType}"]`);
-    const downButtons = document.querySelectorAll(`.vote-btn-down[data-id="${itemId}"][data-type="${itemType}"]`);
+    // Update vote button
+    const buttons = document.querySelectorAll(`.vote-button[data-id="${itemId}"][data-type="${itemType}"]`);
     
-    upButtons.forEach(button => {
+    buttons.forEach(button => {
         const icon = button.querySelector('i');
         const text = button.querySelector('span');
         
-        if (userVote === 1) {
-            // User upvoted
-            button.classList.add('active', 'btn-primary');
-            button.classList.remove('btn-outline-success');
-            icon.classList.remove('bi-arrow-up');
-            icon.classList.add('bi-arrow-up-circle-fill');
-            if (text) text.textContent = 'Upvoted';
-        } else {
-            // User didn't upvote
-            button.classList.remove('active', 'btn-primary');
-            button.classList.add('btn-outline-success');
-            icon.classList.add('bi-arrow-up');
-            icon.classList.remove('bi-arrow-up-circle-fill');
-            if (text) text.textContent = 'Upvote';
-        }
-    });
-    
-    downButtons.forEach(button => {
-        const icon = button.querySelector('i');
-        const text = button.querySelector('span');
+        // Set new state based on user vote
+        let newState = 'none';
+        if (userVote === 1) newState = 'up';
+        else if (userVote === -1) newState = 'down';
         
-        if (userVote === -1) {
-            // User downvoted
-            button.classList.add('active-downvote', 'btn-danger');
-            button.classList.remove('btn-outline-danger');
-            icon.classList.remove('bi-arrow-down');
-            icon.classList.add('bi-arrow-down-circle-fill');
-            if (text) text.textContent = 'Downvoted';
+        // Update data attribute
+        button.setAttribute('data-vote-state', newState);
+        
+        // Update classes and text based on new state
+        if (newState === 'up') {
+            // Upvoted state
+            button.className = 'btn btn-primary btn-sm vote-button';
+            if (icon) {
+                icon.className = 'bi bi-hand-thumbs-up-fill me-1';
+            }
+            if (text) {
+                text.textContent = 'Voted ▲';
+            }
+        } else if (newState === 'down') {
+            // Downvoted state
+            button.className = 'btn btn-danger btn-sm vote-button';
+            if (icon) {
+                icon.className = 'bi bi-hand-thumbs-down-fill me-1';
+            }
+            if (text) {
+                text.textContent = 'Voted ▼';
+            }
         } else {
-            // User didn't downvote
-            button.classList.remove('active-downvote', 'btn-danger');
-            button.classList.add('btn-outline-danger');
-            icon.classList.add('bi-arrow-down');
-            icon.classList.remove('bi-arrow-down-circle-fill');
-            if (text) text.textContent = 'Downvote';
+            // No vote state
+            button.className = 'btn btn-outline-primary btn-sm vote-button';
+            if (icon) {
+                icon.className = 'bi bi-hand-thumbs-up me-1';
+            }
+            if (text) {
+                text.textContent = 'Vote';
+            }
         }
+        
+        // Update onclick handler to toggle appropriately
+        button.setAttribute('onclick', `vote(${itemId}, '${itemType}', '${newState === 'none' ? 'up' : 'none'}')`);
     });
 }
 

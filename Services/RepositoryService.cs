@@ -1,5 +1,6 @@
 using DoAnWeb.Models;
 using DoAnWeb.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace DoAnWeb.Services
 {
@@ -8,15 +9,18 @@ namespace DoAnWeb.Services
         private readonly IRepositoryRepository _repositoryRepository;
         private readonly IRepository<RepositoryFile> _fileRepository;
         private readonly IRepository<RepositoryCommit> _commitRepository;
+        private readonly ILogger<RepositoryService> _logger;
 
         public RepositoryService(
             IRepositoryRepository repositoryRepository,
             IRepository<RepositoryFile> fileRepository,
-            IRepository<RepositoryCommit> commitRepository)
+            IRepository<RepositoryCommit> commitRepository,
+            ILogger<RepositoryService> logger)
         {
             _repositoryRepository = repositoryRepository;
             _fileRepository = fileRepository;
             _commitRepository = commitRepository;
+            _logger = logger;
         }
 
         public IEnumerable<Repository> GetAllRepositories()
@@ -221,6 +225,52 @@ namespace DoAnWeb.Services
             repository.UpdatedDate = DateTime.Now;
             _repositoryRepository.Update(repository);
             _repositoryRepository.Save();
+        }
+
+        public Repository GetRepositoryByName(string owner, string repositoryName)
+        {
+            // This method needs to work with the repository pattern
+            // Search through repositories with owners included
+            var repositories = _repositoryRepository.GetAllWithOwners();
+            
+            // Log repository count for debugging
+            _logger.LogInformation($"Searching for repository {owner}/{repositoryName} among {repositories.Count()} repositories");
+            
+            // Debug log for available repositories
+            foreach (var repo in repositories.Take(10))
+            {
+                string ownerUsername = repo.Owner?.Username;
+                string ownerGiteaUsername = repo.Owner?.GiteaUsername;
+                
+                _logger.LogDebug($"Repository: {repo.RepositoryName}, " +
+                                $"Owner: {ownerUsername ?? "null"}, " +
+                                $"Owner.GiteaUsername: {ownerGiteaUsername ?? "null"}, " + 
+                                $"Is Match Username: {ownerUsername == owner}, " +
+                                $"Is Match GiteaUsername: {ownerGiteaUsername == owner}, " +
+                                $"Is Match RepoName: {repo.RepositoryName.Equals(repositoryName, StringComparison.OrdinalIgnoreCase)}");
+            }
+            
+            if (repositories.Count() > 10)
+            {
+                _logger.LogDebug($"... and {repositories.Count() - 10} more repositories");
+            }
+            
+            // Find the repository matching the owner username and repository name
+            var result = repositories.FirstOrDefault(r => 
+                r.Owner != null && 
+                (r.Owner.Username == owner || r.Owner.GiteaUsername == owner) && 
+                r.RepositoryName.Equals(repositoryName, StringComparison.OrdinalIgnoreCase));
+            
+            if (result != null)
+            {
+                _logger.LogInformation($"Found repository {owner}/{repositoryName} with ID {result.RepositoryId}");
+            }
+            else
+            {
+                _logger.LogWarning($"Repository {owner}/{repositoryName} not found in database");
+            }
+            
+            return result;
         }
     }
 }

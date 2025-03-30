@@ -17,17 +17,20 @@ namespace DoAnWeb.Controllers
         private readonly IAnswerService _answerService;
         private readonly INotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _notificationHubContext;
+        private readonly ReputationService _reputationService;
 
         public VoteController(
             IQuestionService questionService,
             IAnswerService answerService,
             INotificationService notificationService,
-            IHubContext<NotificationHub> notificationHubContext)
+            IHubContext<NotificationHub> notificationHubContext,
+            ReputationService reputationService)
         {
             _questionService = questionService;
             _answerService = answerService;
             _notificationService = notificationService;
             _notificationHubContext = notificationHubContext;
+            _reputationService = reputationService;
         }
 
         /// <summary>
@@ -81,6 +84,15 @@ namespace DoAnWeb.Controllers
                     // Get existing vote
                     var existingVote = _questionService.GetUserVoteOnQuestion(userId, request.ItemId);
 
+                    // Tracking values for reputation updates
+                    bool reputationChanged = false;
+                    bool isNewUpvote = false;
+                    bool isRemovedUpvote = false;
+                    bool isNewDownvote = false;
+                    bool isRemovedDownvote = false;
+                    bool isChangedToUpvote = false;
+                    bool isChangedToDownvote = false;
+
                     // Handle vote
                     if (existingVote != null)
                     {
@@ -88,16 +100,41 @@ namespace DoAnWeb.Controllers
                         {
                             // Remove vote
                             _questionService.RemoveVote(existingVote.VoteId);
+                            
+                            // Update reputation flags
+                            if (existingVote.IsUpvote)
+                            {
+                                isRemovedUpvote = true;
+                                reputationChanged = true;
+                            }
+                            else
+                            {
+                                isRemovedDownvote = true;
+                                reputationChanged = true;
+                            }
                         }
                         else if (existingVote.IsUpvote != isUpvote.Value)
                         {
                             // Change vote direction
+                            bool oldIsUpvote = existingVote.IsUpvote;
                             existingVote.IsUpvote = isUpvote.Value;
                             existingVote.VoteDate = DateTime.UtcNow;
                             _questionService.UpdateVote(existingVote);
                             
                             // Set user vote for response
                             userVote = isUpvote.Value ? 1 : -1;
+                            
+                            // Update reputation flags
+                            if (isUpvote.Value)
+                            {
+                                isChangedToUpvote = true;
+                                reputationChanged = true;
+                            }
+                            else
+                            {
+                                isChangedToDownvote = true;
+                                reputationChanged = true;
+                            }
                         }
                         else
                         {
@@ -127,11 +164,58 @@ namespace DoAnWeb.Controllers
                         
                         // Set user vote for response
                         userVote = isUpvote.Value ? 1 : -1;
+                        
+                        // Update reputation flags
+                        if (isUpvote.Value)
+                        {
+                            isNewUpvote = true;
+                            reputationChanged = true;
+                        }
+                        else
+                        {
+                            isNewDownvote = true;
+                            reputationChanged = true;
+                        }
                     }
 
                     // Get updated score
                     question = _questionService.GetQuestionById(request.ItemId);
                     newScore = question.Score ?? 0;
+
+                    // Update reputation if needed
+                    if (reputationChanged && question.UserId != userId)
+                    {
+                        if (isNewUpvote || isChangedToUpvote)
+                        {
+                            await _reputationService.UpdateReputationForActionAsync(
+                                question.UserId.Value, 
+                                ReputationActionType.QuestionUpvoted, 
+                                question.QuestionId);
+                        }
+                        else if (isNewDownvote || isChangedToDownvote)
+                        {
+                            await _reputationService.UpdateReputationForActionAsync(
+                                question.UserId.Value, 
+                                ReputationActionType.QuestionDownvoted, 
+                                question.QuestionId);
+                        }
+                        else if (isRemovedUpvote)
+                        {
+                            // Removing an upvote reverses the +10
+                            await _reputationService.UpdateReputationAsync(
+                                question.UserId.Value,
+                                -10,
+                                $"Removed upvote on question (ID: {question.QuestionId})");
+                        }
+                        else if (isRemovedDownvote)
+                        {
+                            // Removing a downvote reverses the -2
+                            await _reputationService.UpdateReputationAsync(
+                                question.UserId.Value,
+                                2,
+                                $"Removed downvote on question (ID: {question.QuestionId})");
+                        }
+                    }
 
                     // Send real-time notification through SignalR
                     if (isUpvote.HasValue && isUpvote.Value && question.UserId != userId)
@@ -154,15 +238,15 @@ namespace DoAnWeb.Controllers
                         await _notificationHubContext.Clients
                             .Group($"user-{question.UserId}")
                             .SendAsync("ReceiveNotification", new {
-                                id = Guid.NewGuid().ToString(), 
-                                type = "Vote", 
+                                id = Guid.NewGuid().ToString(),
+                                type = "Vote",
                                 title = "New Upvote",
                                 message = $"{displayName} upvoted your question: \"{questionTitle}\"",
-                                questionId = safeQuestionId,
+                                questionId = question.QuestionId,
                                 score = newScore,
                                 userId = userId,
-                                url = $"/Questions/Details/{safeQuestionId}", 
-                                createdDate = DateTime.UtcNow.ToString("o") 
+                                url = $"/Questions/Details/{safeQuestionId}",
+                                createdDate = DateTime.UtcNow.ToString("o")
                             });
 
                         // Also create database notification - ensure non-nullable int
@@ -172,14 +256,23 @@ namespace DoAnWeb.Controllers
                 else if (request.ItemType.Equals("answer", StringComparison.OrdinalIgnoreCase))
                 {
                     // Get answer
-                    var answer = _answerService.GetAnswerById(request.ItemId);
+                    var answer = await _answerService.GetAnswerByIdAsync(request.ItemId);
                     if (answer == null)
                     {
                         return NotFound(new { success = false, message = "Answer not found" });
                     }
 
                     // Get existing vote
-                    var existingVote = _questionService.GetUserVoteOnAnswer(userId, request.ItemId);
+                    var existingVote = await _questionService.GetUserVoteOnAnswerAsync(userId, request.ItemId);
+
+                    // Tracking values for reputation updates
+                    bool reputationChanged = false;
+                    bool isNewUpvote = false;
+                    bool isRemovedUpvote = false;
+                    bool isNewDownvote = false;
+                    bool isRemovedDownvote = false;
+                    bool isChangedToUpvote = false;
+                    bool isChangedToDownvote = false;
 
                     // Handle vote
                     if (existingVote != null)
@@ -187,17 +280,42 @@ namespace DoAnWeb.Controllers
                         if (!isUpvote.HasValue)
                         {
                             // Remove vote
-                            _questionService.RemoveVote(existingVote.VoteId);
+                            await _questionService.RemoveVoteAsync(existingVote.VoteId);
+                            
+                            // Update reputation flags
+                            if (existingVote.IsUpvote)
+                            {
+                                isRemovedUpvote = true;
+                                reputationChanged = true;
+                            }
+                            else
+                            {
+                                isRemovedDownvote = true;
+                                reputationChanged = true;
+                            }
                         }
                         else if (existingVote.IsUpvote != isUpvote.Value)
                         {
                             // Change vote direction
+                            bool oldIsUpvote = existingVote.IsUpvote;
                             existingVote.IsUpvote = isUpvote.Value;
                             existingVote.VoteDate = DateTime.UtcNow;
-                            _questionService.UpdateVote(existingVote);
+                            await _questionService.UpdateVoteAsync(existingVote);
                             
                             // Set user vote for response
                             userVote = isUpvote.Value ? 1 : -1;
+                            
+                            // Update reputation flags
+                            if (isUpvote.Value)
+                            {
+                                isChangedToUpvote = true;
+                                reputationChanged = true;
+                            }
+                            else
+                            {
+                                isChangedToDownvote = true;
+                                reputationChanged = true;
+                            }
                         }
                         else
                         {
@@ -223,15 +341,62 @@ namespace DoAnWeb.Controllers
                             VoteValue = isUpvote.Value ? 1 : -1
                         };
 
-                        _questionService.AddVote(vote);
+                        await _questionService.AddVoteAsync(vote);
                         
                         // Set user vote for response
                         userVote = isUpvote.Value ? 1 : -1;
+                        
+                        // Update reputation flags
+                        if (isUpvote.Value)
+                        {
+                            isNewUpvote = true;
+                            reputationChanged = true;
+                        }
+                        else
+                        {
+                            isNewDownvote = true;
+                            reputationChanged = true;
+                        }
                     }
 
                     // Get updated score
-                    answer = _answerService.GetAnswerById(request.ItemId);
+                    answer = await _answerService.GetAnswerByIdAsync(request.ItemId);
                     newScore = answer.Score ?? 0;
+
+                    // Update reputation if needed
+                    if (reputationChanged && answer.UserId != userId)
+                    {
+                        if (isNewUpvote || isChangedToUpvote)
+                        {
+                            await _reputationService.UpdateReputationForActionAsync(
+                                answer.UserId.Value, 
+                                ReputationActionType.AnswerUpvoted, 
+                                answer.AnswerId);
+                        }
+                        else if (isNewDownvote || isChangedToDownvote)
+                        {
+                            await _reputationService.UpdateReputationForActionAsync(
+                                answer.UserId.Value, 
+                                ReputationActionType.AnswerDownvoted, 
+                                answer.AnswerId);
+                        }
+                        else if (isRemovedUpvote)
+                        {
+                            // Removing an upvote reverses the +10
+                            await _reputationService.UpdateReputationAsync(
+                                answer.UserId.Value,
+                                -10,
+                                $"Removed upvote on answer (ID: {answer.AnswerId})");
+                        }
+                        else if (isRemovedDownvote)
+                        {
+                            // Removing a downvote reverses the -2
+                            await _reputationService.UpdateReputationAsync(
+                                answer.UserId.Value,
+                                2,
+                                $"Removed downvote on answer (ID: {answer.AnswerId})");
+                        }
+                    }
 
                     // Send real-time notification through SignalR
                     if (isUpvote.HasValue && isUpvote.Value && answer.UserId != userId)
@@ -239,20 +404,18 @@ namespace DoAnWeb.Controllers
                         // Get current user display name
                         var currentUserName = User.Identity?.Name ?? "Someone";
                         var displayName = User.FindFirst("DisplayName")?.Value ?? currentUserName;
-                        
-                        // Get associated question for context
-                        int questionIdValue = answer.QuestionId.HasValue ? answer.QuestionId.Value : 0;
-                        var associatedQuestion = _questionService.GetQuestionById(questionIdValue);
-                        var questionTitle = associatedQuestion?.Title ?? "a question";
-                        if (questionTitle.Length > 50)
+
+                        // Get question title (shortened if needed)
+                        var questionTitle = answer.Question?.Title;
+                        if (questionTitle != null && questionTitle.Length > 50)
                         {
                             questionTitle = questionTitle.Substring(0, 47) + "...";
                         }
 
-                        // Make sure we have non-nullable IDs
+                        // Make sure we have non-nullable Ids
                         int safeAnswerId = answer.AnswerId;
-                        int safeQuestionId = answer.QuestionId.HasValue ? answer.QuestionId.Value : 0;
-
+                        int safeQuestionId = answer.Question?.QuestionId ?? 0;
+                        
                         // Send real-time notification to answer owner
                         await _notificationHubContext.Clients
                             .Group($"user-{answer.UserId}")

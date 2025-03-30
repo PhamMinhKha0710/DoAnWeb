@@ -10,6 +10,12 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using DoAnWeb.GitIntegration;
+using System.Linq;
+using DoAnWeb.Repositories;
+using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging;
 
 namespace DoAnWeb.Controllers
 {
@@ -17,11 +23,13 @@ namespace DoAnWeb.Controllers
     {
         private readonly IUserService _userService;
         private readonly IGiteaUserSyncService _giteaUserSyncService;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IUserService userService, IGiteaUserSyncService giteaUserSyncService)
+        public AccountController(IUserService userService, IGiteaUserSyncService giteaUserSyncService, ILogger<AccountController> logger)
         {
             _userService = userService;
             _giteaUserSyncService = giteaUserSyncService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -92,6 +100,15 @@ namespace DoAnWeb.Controllers
                         new Claim(ClaimTypes.Email, user.Email),
                         new Claim("DisplayName", user.DisplayName)
                     };
+
+                    // Add Gitea information if available
+                    if (!string.IsNullOrEmpty(user.GiteaUsername))
+                    {
+                        claims.Add(new Claim("GiteaUsername", user.GiteaUsername));
+                    }
+                    
+                    // Verify email status
+                    claims.Add(new Claim("IsEmailVerified", user.IsEmailVerified.ToString()));
 
                     // Thêm claim cho các vai trò (roles)
                     if (user.Roles != null)
@@ -520,6 +537,32 @@ namespace DoAnWeb.Controllers
         }
 
         [HttpGet]
+        [Authorize]
+        public IActionResult TestSavedItems([FromServices] IUserSavedItemRepository savedItemRepository)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return RedirectToAction("Login");
+
+            // Get all saved items for current user
+            var savedItems = savedItemRepository.GetSavedItemsByUserId(userId);
+            
+            // Check if user has any saved items
+            if (!savedItems.Any())
+            {
+                // For testing, add a dummy saved item
+                savedItemRepository.SaveItem(userId, "Question", 1); // Assuming question with ID 1 exists
+                TempData["SuccessMessage"] = "Test item saved successfully!";
+            }
+            else
+            {
+                TempData["InfoMessage"] = $"You already have {savedItems.Count()} saved items.";
+            }
+            
+            return RedirectToAction("Index", "SavedItems");
+        }
+
+        [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
@@ -606,43 +649,175 @@ namespace DoAnWeb.Controllers
         }
 
         [Authorize]
-        public IActionResult LinkGiteaAccount()
+        public async Task<IActionResult> LinkGiteaAccount()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             if (userId == 0)
             {
                 return RedirectToAction("Login");
+            }
+            
+            // Check if user already has a linked account
+            var user = _userService.GetUserById(userId);
+            if (user != null && !string.IsNullOrEmpty(user.GiteaUsername) && !string.IsNullOrEmpty(user.GiteaToken))
+            {
+                // Already linked, redirect to Gitea login
+                return RedirectToAction("GiteaLogin");
             }
             
             // Display the linking page
             return View();
         }
         
+        [Authorize]
+        public async Task<IActionResult> GiteaLogin()
+        {
+            try
+            {
+                // Get current user ID
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+                if (userId == 0)
+                {
+                    TempData["ErrorMessage"] = "You need to be logged in to access Gitea.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Get user from database
+                var user = _userService.GetUserById(userId);
+                
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction("Login");
+                }
+                
+                // Check if user has Gitea account linked
+                if (string.IsNullOrEmpty(user.GiteaUsername) || string.IsNullOrEmpty(user.GiteaToken))
+                {
+                    TempData["ErrorMessage"] = "You need to link your Gitea account first.";
+                    return RedirectToAction("LinkGiteaAccount");
+                }
+                
+                // Try to get Gitea login URL
+                try
+                {
+                    // Get Gitea login URL from the service
+                    var giteaLoginUrl = await _giteaUserSyncService.GetGiteaLoginUrlAsync(userId);
+                    
+                    if (string.IsNullOrEmpty(giteaLoginUrl))
+                    {
+                        // Try to refresh the token
+                        _logger.LogWarning($"Failed to generate login URL for user {userId}, attempting to refresh Gitea account");
+                        var userResult = await _giteaUserSyncService.EnsureGiteaUserWithDetailsAsync(userId);
+                        
+                        if (!userResult.Success)
+                        {
+                            TempData["ErrorMessage"] = $"Failed to access Gitea: {userResult.ErrorMessage}";
+                            return RedirectToAction("LinkGiteaAccount");
+                        }
+                        
+                        giteaLoginUrl = await _giteaUserSyncService.GetGiteaLoginUrlAsync(userId);
+                        
+                        if (string.IsNullOrEmpty(giteaLoginUrl))
+                        {
+                            TempData["ErrorMessage"] = "Failed to generate Gitea login URL. Please try again later.";
+                            return RedirectToAction("Profile");
+                        }
+                    }
+                    
+                    // If it's already a full URL, use it directly
+                    if (giteaLoginUrl.StartsWith("http"))
+                    {
+                        return Redirect(giteaLoginUrl);
+                    }
+                    
+                    // Otherwise, it's a session ID, so construct the URL
+                    return Redirect($"http://localhost:3000?_session={giteaLoginUrl}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error logging in to Gitea for user {userId}: {ex.Message}");
+                    TempData["ErrorMessage"] = $"Error logging in to Gitea: {ex.Message}";
+                    return RedirectToAction("Profile");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error: {ex.Message}";
+                return RedirectToAction("Profile");
+            }
+        }
+
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LinkGiteaAccount(LinkGiteaViewModel model)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            if (userId == 0)
-            {
-                return RedirectToAction("Login");
-            }
-            
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-            
             try
             {
-                // Sử dụng EnsureGiteaUserAsync để liên kết tài khoản
-                var result = await _giteaUserSyncService.EnsureGiteaUserAsync(userId);
+                // Get current user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    TempData["ErrorMessage"] = "You need to be logged in.";
+                    return RedirectToAction("Login");
+                }
+                
+                var userId = userIdClaim.Value;
+                
+                // Check if we need to create a new account automatically
+                if (model.CreateNewAccount)
+                {
+                    try
+                    {
+                        // Use EnsureGiteaUserAsync which will create an account
+                        var loginUrl = await _giteaUserSyncService.EnsureGiteaUserAsync(userId);
+                        
+                        if (!string.IsNullOrEmpty(loginUrl))
+                        {
+                            TempData["SuccessMessage"] = "Successfully created and linked Gitea account";
+                            
+                            // Immediately redirect to Gitea with auto-login
+                            return RedirectToAction("GiteaLogin");
+                        }
+                        else
+                        {
+                            TempData["ErrorMessage"] = "Failed to create Gitea account. Please try linking to an existing account.";
+                            model.CreateNewAccount = false;
+                            return View(model);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Error creating Gitea account: {ex.Message}");
+                        ModelState.AddModelError("", $"Error creating account: {ex.Message}");
+                        model.CreateNewAccount = false;
+                        return View(model);
+                    }
+                }
+                
+                // If we get here, we're linking to an existing account
+                // Manual linking with provided credentials
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+                
+                if (string.IsNullOrEmpty(model.GiteaUsername) || string.IsNullOrEmpty(model.GiteaPassword))
+                {
+                    ModelState.AddModelError("", "Username and password are required for linking to an existing account");
+                    return View(model);
+                }
+                
+                var result = await _giteaUserSyncService.LinkGiteaAccountAsync(
+                    int.Parse(userId), 
+                    model.GiteaUsername, 
+                    model.GiteaPassword);
                 
                 if (result.Success)
                 {
-                    TempData["SuccessMessage"] = $"Successfully linked to Gitea with username {result.Username}";
-                    return RedirectToAction("Profile");
+                    TempData["SuccessMessage"] = $"Successfully linked to Gitea account {result.Username}";
+                    return RedirectToAction("GiteaLogin");
                 }
                 else
                 {
@@ -657,10 +832,56 @@ namespace DoAnWeb.Controllers
             }
         }
         
+        // New method to automatically create and link a Gitea account
+        [Authorize]
+        public async Task<IActionResult> AutoLinkGiteaAccount()
+        {
+            try
+            {
+                // Get current user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    TempData["ErrorMessage"] = "You need to be logged in to access Gitea.";
+                    return RedirectToAction("Login");
+                }
+                
+                var userId = int.Parse(userIdClaim.Value);
+                
+                // Automatically create and link a Gitea account
+                try
+                {
+                    var userResult = await _giteaUserSyncService.EnsureGiteaUserWithDetailsAsync(userId);
+                    
+                    if (userResult.Success)
+                    {
+                        TempData["SuccessMessage"] = "Successfully created and linked Gitea account";
+                        return RedirectToAction("GiteaLogin");
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = $"Failed to create Gitea account: {userResult.ErrorMessage}";
+                        return RedirectToAction("LinkGiteaAccount");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error creating Gitea account for user {userId}: {ex.Message}");
+                    TempData["ErrorMessage"] = $"Failed to create Gitea account: {ex.Message}";
+                    return RedirectToAction("LinkGiteaAccount");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error: {ex.Message}";
+                return RedirectToAction("Profile");
+            }
+        }
+        
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult UnlinkGiteaAccount()
+        public async Task<IActionResult> UnlinkGiteaAccount()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             if (userId == 0)
@@ -668,15 +889,15 @@ namespace DoAnWeb.Controllers
                 return RedirectToAction("Login");
             }
             
-            var user = _userService.GetUserById(userId);
-            if (user != null)
+            bool result = await _giteaUserSyncService.UnlinkGiteaAccountAsync(userId);
+            
+            if (result)
             {
-                // Xóa thông tin Gitea từ tài khoản người dùng
-                user.GiteaUsername = null;
-                user.GiteaToken = null;
-                _userService.UpdateUser(user);
-                
                 TempData["SuccessMessage"] = "Successfully unlinked Gitea account";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to unlink Gitea account";
             }
             
             return RedirectToAction("Profile");

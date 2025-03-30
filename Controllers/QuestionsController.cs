@@ -284,11 +284,13 @@ namespace DoAnWeb.Controllers
         /// </summary>
         /// <param name="questionId">ID of the question being answered</param>
         /// <param name="Body">Content of the answer with Markdown support</param>
+        /// <param name="Attachments">Optional file attachments for the answer</param>
+        /// <param name="referencedAnswerId">Optional ID of an answer this is referencing (for re-answers)</param>
         /// <returns>Redirect to question details</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult Answer(int questionId, string Body, List<IFormFile> AnswerAttachments)
+        public async Task<IActionResult> Answer(int questionId, string Body, List<IFormFile> Attachments, int? referencedAnswerId = null)
         {
             if (string.IsNullOrEmpty(Body))
             {
@@ -311,22 +313,37 @@ namespace DoAnWeb.Controllers
                 Body = Body, // Store the raw markdown
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow,
-                Attachments = new List<AnswerAttachment>()
+                Attachments = new List<AnswerAttachment>(),
+                ParentAnswerId = referencedAnswerId // Set the parent answer ID if provided
             };
 
-            _questionService.AddAnswer(answer);
+            await _questionService.AddAnswerAsync(answer);
 
             // Process attachments if any
-            if (AnswerAttachments != null && AnswerAttachments.Count > 0)
+            if (Attachments != null && Attachments.Count > 0)
             {
-                ProcessAnswerAttachments(answer.AnswerId, AnswerAttachments);
+                ProcessAnswerAttachments(answer.AnswerId, Attachments);
+            }
+
+            // Send notification to question author
+            var question = await _questionService.GetQuestionByIdAsync(questionId);
+            if (question?.UserId != null && question.UserId != userId)
+            {
+                // Question author notification is handled in AddAnswer
+            }
+
+            // Send notification to parent answer author if this is a re-answer
+            if (referencedAnswerId.HasValue)
+            {
+                var parentAnswer = await _answerService.GetAnswerByIdAsync(referencedAnswerId.Value);
+                if (parentAnswer?.UserId != null && parentAnswer.UserId != userId)
+                {
+                    // You can add code here to notify the parent answer author
+                    // _notificationService.NotifyReAnswerAsync(parentAnswer.UserId.Value, answer);
+                }
             }
 
             TempData["SuccessMessage"] = "Your answer has been posted successfully";
-            
-            // Note: Notification is already handled in the QuestionService.AddAnswer method
-            // which calls _realTimeService.NotifyNewAnswer(answer) and
-            // _notificationService.NotifyNewAnswerAsync() is called in AnswerService.CreateAnswer()
 
             return RedirectToAction(nameof(Details), new { id = questionId });
         }
@@ -417,7 +434,7 @@ namespace DoAnWeb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult VoteAnswer(int answerId, int questionId, string voteType)
+        public async Task<IActionResult> VoteAnswer(int answerId, int questionId, string voteType)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
@@ -426,19 +443,19 @@ namespace DoAnWeb.Controllers
             }
 
             // Get the answer
-            var answer = _answerService.GetAnswerById(answerId);
+            var answer = await _answerService.GetAnswerByIdAsync(answerId);
             if (answer == null)
             {
                 return NotFound();
             }
 
             // Check if user has already voted on this answer
-            var existingVote = _questionService.GetUserVoteOnAnswer(userId, answerId);
+            var existingVote = await _questionService.GetUserVoteOnAnswerAsync(userId, answerId);
 
             if (voteType == "remove" && existingVote != null)
             {
                 // Remove existing vote
-                _questionService.RemoveVote(existingVote.VoteId);
+                await _questionService.RemoveVoteAsync(existingVote.VoteId);
                 TempData["SuccessMessage"] = "Your vote has been removed.";
             }
             else if (voteType == "up" || voteType == "down")
@@ -458,7 +475,7 @@ namespace DoAnWeb.Controllers
                         // User is changing their vote type
                         existingVote.IsUpvote = isUpvote;
                         existingVote.VoteDate = DateTime.UtcNow;
-                        _questionService.UpdateVote(existingVote);
+                        await _questionService.UpdateVoteAsync(existingVote);
                         TempData["SuccessMessage"] = isUpvote ? "Answer upvoted successfully." : "Answer downvoted successfully.";
                     }
                 }
@@ -474,7 +491,7 @@ namespace DoAnWeb.Controllers
                         VoteDate = DateTime.UtcNow
                     };
 
-                    _questionService.AddVote(vote);
+                    await _questionService.AddVoteAsync(vote);
                     TempData["SuccessMessage"] = isUpvote ? "Answer upvoted successfully." : "Answer downvoted successfully.";
                 }
             }
@@ -492,7 +509,7 @@ namespace DoAnWeb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult AcceptAnswer(int answerId, int questionId)
+        public async Task<IActionResult> AcceptAnswer(int answerId, int questionId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
@@ -502,7 +519,7 @@ namespace DoAnWeb.Controllers
 
             try
             {
-                _answerService.AcceptAnswer(answerId, questionId, userId);
+                await _answerService.AcceptAnswerAsync(answerId, questionId, userId);
                 TempData["SuccessMessage"] = "Answer accepted as solution";
             }
             catch (Exception ex)
@@ -738,6 +755,80 @@ namespace DoAnWeb.Controllers
             }
             
             return View(model);
+        }
+
+        /// <summary>
+        /// Shows the delete confirmation page for a question
+        /// </summary>
+        /// <param name="id">Question ID to delete</param>
+        /// <returns>Delete confirmation view</returns>
+        [Authorize]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                var question = _questionService.GetQuestionWithDetails(id);
+                if (question == null)
+                {
+                    TempData["ErrorMessage"] = "Question not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Check if current user is the owner
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId) || userId != question.UserId)
+                {
+                    TempData["ErrorMessage"] = "You do not have permission to delete this question.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                return View(question);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error accessing delete page: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        /// <summary>
+        /// Handles the actual deletion of a question
+        /// </summary>
+        /// <param name="id">Question ID to delete</param>
+        /// <returns>Redirect to questions index page</returns>
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            try
+            {
+                var question = _questionService.GetQuestionById(id);
+                if (question == null)
+                {
+                    TempData["ErrorMessage"] = "Question not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Check if current user is the owner
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId) || userId != question.UserId)
+                {
+                    TempData["ErrorMessage"] = "You do not have permission to delete this question.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                // Delete the question
+                _questionService.DeleteQuestion(id);
+                
+                TempData["SuccessMessage"] = "Question has been successfully deleted.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error deleting question: {ex.Message}";
+                return RedirectToAction(nameof(Details), new { id });
+            }
         }
     }
 }

@@ -1,0 +1,60 @@
+@model DoAnWeb.ViewModels.RepositoryLinkGiteaViewModel
+
+@{
+    ViewData["Title"] = "Link Gitea Account";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-git me-2"></i>Link Gitea Account</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex">
+                            <div class="me-3 fs-1 text-primary">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <div>
+                                <h5>Repository Access Required</h5>
+                                <p class="mb-0">
+                                    To access and manage repositories in Gitea, you need to link your DevCommunity 
+                                    account with a Gitea account.
+                                </p>
+                                <p class="mt-2 mb-0">
+                                    After linking, you'll be able to:
+                                </p>
+                                <ul class="mt-2">
+                                    <li>Access all repositories in Gitea</li>
+                                    <li>Create and manage your own repositories</li>
+                                    <li>Share code snippets in questions and answers</li>
+                                    <li>Participate in collaborative development</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center my-4">
+                        <a asp-controller="Account" asp-action="LinkGiteaAccount" asp-route-returnUrl="@Model.ReturnUrl" 
+                           class="btn btn-lg btn-primary px-5">
+                            <i class="bi bi-git me-2"></i>Link Gitea Account Now
+                        </a>
+                        
+                        <a href="@Model.ReturnUrl" class="btn btn-lg btn-outline-secondary px-5 mt-3 mt-md-0 ms-md-3">
+                            <i class="bi bi-arrow-left me-2"></i>Return to Previous Page
+                        </a>
+                    </div>
+                    
+                    <div class="alert alert-light border mt-4">
+                        <p class="mb-0">
+                            <strong>Note:</strong> By linking your account, a new Gitea account will be automatically created for you. 
+                            You'll use your DevCommunity credentials to access both platforms.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

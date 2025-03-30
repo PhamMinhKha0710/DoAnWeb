@@ -27,6 +27,20 @@ const CommentUI = {
                 this.handleCommentSubmit(button);
             }
             
+            // Handle "Reply" link clicks
+            if (event.target.matches('.reply-link') || event.target.closest('.reply-link')) {
+                event.preventDefault();
+                const link = event.target.matches('.reply-link') ? event.target : event.target.closest('.reply-link');
+                this.showReplyForm(link);
+            }
+            
+            // Handle "View replies" toggle
+            if (event.target.matches('.view-replies-toggle') || event.target.closest('.view-replies-toggle')) {
+                event.preventDefault();
+                const toggle = event.target.matches('.view-replies-toggle') ? event.target : event.target.closest('.view-replies-toggle');
+                this.toggleReplies(toggle);
+            }
+            
             // Handle pressing Enter in comment textarea (like Facebook)
             if (event.target.matches('.comment-text')) {
                 event.target.addEventListener('keypress', (e) => {
@@ -130,6 +144,75 @@ const CommentUI = {
     },
     
     /**
+     * Show reply form when "Reply" is clicked
+     */
+    showReplyForm: function(replyLink) {
+        // Get the comment element
+        const commentElement = replyLink.closest('.comment-item');
+        if (!commentElement) return;
+        
+        // Get comment ID - either from the closest comment-item or from data attribute
+        const commentId = replyLink.dataset.parentCommentId || commentElement.dataset.commentId;
+        if (!commentId) return;
+        
+        // Get the name of the user being replied to
+        const replyToUser = replyLink.dataset.replyTo || commentElement.querySelector('.comment-author')?.textContent || 'this user';
+        
+        // Add reply form if it doesn't exist
+        this.addReplyFormTo(commentElement, commentId, replyToUser);
+        
+        // Show the form
+        const replyForm = commentElement.querySelector('.reply-form-container');
+        if (replyForm) {
+            replyForm.classList.remove('d-none');
+            
+            // Focus the textarea
+            const textarea = replyForm.querySelector('.comment-text');
+            if (textarea) {
+                textarea.focus();
+            }
+        }
+    },
+    
+    /**
+     * Hide reply form
+     */
+    hideReplyForm: function(commentElement) {
+        const replyForm = commentElement.querySelector('.reply-form-container');
+        if (replyForm) {
+            replyForm.classList.add('d-none');
+            
+            // Clear the textarea
+            const textarea = replyForm.querySelector('.comment-text');
+            if (textarea) {
+                textarea.value = '';
+            }
+        }
+    },
+    
+    /**
+     * Toggle showing/hiding replies
+     */
+    toggleReplies: function(toggle) {
+        const commentElement = toggle.closest('.comment-item');
+        if (!commentElement) return;
+        
+        const repliesContainer = commentElement.querySelector('.comment-replies');
+        if (!repliesContainer) return;
+        
+        // Toggle visibility
+        if (repliesContainer.classList.contains('d-none')) {
+            repliesContainer.classList.remove('d-none');
+            toggle.innerHTML = `<i class="bi bi-dash-circle"></i> Hide replies`;
+            toggle.classList.add('text-primary');
+        } else {
+            repliesContainer.classList.add('d-none');
+            toggle.innerHTML = `<i class="bi bi-plus-circle"></i> View ${repliesContainer.dataset.replyCount || ''} replies`;
+            toggle.classList.remove('text-primary');
+        }
+    },
+    
+    /**
      * Show the comment form when user clicks "Add a comment"
      */
     showCommentForm: function(link) {
@@ -174,6 +257,99 @@ const CommentUI = {
     },
     
     /**
+     * Render a comment with replies structure
+     */
+    renderCommentWithReplies: function(comment, parentContainer) {
+        // Create base comment HTML
+        const commentHtml = this.createCommentHtml(comment);
+        
+        // Add to container
+        parentContainer.insertAdjacentHTML('beforeend', commentHtml);
+        
+        // If there are replies, create a replies container
+        if (comment.replies && comment.replies.length > 0) {
+            const commentElement = parentContainer.querySelector(`.comment-item[data-comment-id="${comment.commentId}"]`);
+            
+            // Add replies container
+            const repliesHtml = `
+                <div class="comment-replies ms-4 mt-2">
+                    ${comment.replies.map(reply => this.createCommentHtml(reply, true)).join('')}
+                </div>
+            `;
+            
+            commentElement.insertAdjacentHTML('beforeend', repliesHtml);
+        }
+    },
+    
+    /**
+     * Create HTML for a single comment or reply
+     */
+    createCommentHtml: function(comment, isReply = false) {
+        const date = new Date(comment.createdDate);
+        const dateStr = date.toLocaleDateString('en-US', { 
+            year: 'numeric', month: 'short', day: 'numeric', 
+            hour: '2-digit', minute: '2-digit'
+        });
+        
+        const hasReplies = comment.replies && comment.replies.length > 0;
+        const replyCountBadge = hasReplies ? 
+            `<a href="#" class="view-replies-toggle text-decoration-none small">
+                <i class="bi bi-plus-circle"></i> View ${comment.replies.length} replies
+            </a>` : '';
+            
+        const replyLink = !isReply ? 
+            `<a href="#" class="reply-link text-decoration-none small text-muted ms-2">
+                <i class="bi bi-reply"></i> Reply
+            </a>` : '';
+        
+        return `
+            <div class="comment-item py-2 ${isReply ? 'comment-reply' : ''}" data-comment-id="${comment.commentId}">
+                <div class="d-flex">
+                    <div class="comment-avatar me-2">
+                        <img src="${comment.userAvatar || '/images/default-avatar.png'}" 
+                             alt="${comment.userDisplayName || comment.userName}" class="rounded-circle" width="36" height="36">
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="comment-content">
+                            <div class="comment-text">${comment.body}</div>
+                        </div>
+                        <div class="comment-meta">
+                            <span class="comment-author fw-medium">${comment.userDisplayName || comment.userName}</span>
+                            <span class="mx-1">•</span>
+                            <span class="comment-date text-secondary" title="${dateStr}">
+                                ${this.getRelativeTime(date)}
+                            </span>
+                            ${replyLink}
+                        </div>
+                        ${replyCountBadge}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Get relative time string (e.g. "2 hours ago")
+     */
+    getRelativeTime: function(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSeconds = Math.floor(diffMs / 1000);
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        
+        if (diffSeconds < 60) return 'Just now';
+        if (diffMinutes < 60) return `${diffMinutes}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+    },
+    
+    /**
      * Handle the comment form submission
      */
     handleCommentSubmit: function(submitButton) {
@@ -201,69 +377,25 @@ const CommentUI = {
         DevCommunitySignalR.submitComment(commentText, targetType, targetId, (success, result) => {
             // Re-enable the button
             submitButton.disabled = false;
-            submitButton.innerHTML = '<i class="bi bi-send-fill"></i>';
+            submitButton.innerHTML = targetType === 'Comment' ? 
+                '<i class="bi bi-send-fill me-1"></i> Reply' : 
+                '<i class="bi bi-send-fill"></i>';
             
             if (success) {
-                // Hide the form - will be replaced by the real-time comment
-                this.hideCommentForm(form.closest('.comment-form-container'));
+                // If this is a reply, hide the reply form
+                if (targetType === 'Comment') {
+                    const commentElement = form.closest('.comment-item');
+                    if (commentElement) {
+                        this.hideReplyForm(commentElement);
+                    }
+                } else {
+                    // Hide the regular comment form
+                    this.hideCommentForm(form.closest('.comment-form-container'));
+                }
                 
                 // If not using real-time, manually add the comment
                 if (!window.DevCommunitySignalR.isConnected) {
-                    // Get container to append comment
-                    let container;
-                    if (targetType === 'Question') {
-                        container = document.querySelector('.question-comments-container');
-                    } else if (targetType === 'Answer') {
-                        container = document.querySelector(`.answer-card [name="answerId"][value="${targetId}"]`)
-                            ?.closest('.answer-card')?.querySelector('.answer-comments-container');
-                    }
-                    
-                    if (container) {
-                        // Remove "no comments" message if present
-                        const noCommentsMsg = container.querySelector('.no-comments-message');
-                        if (noCommentsMsg) noCommentsMsg.remove();
-                        
-                        // Get current user details
-                        const username = document.querySelector('.navbar .nav-item.dropdown .dropdown-toggle')?.textContent.trim() || 'You';
-                        const avatar = document.querySelector('.navbar .nav-item.dropdown img')?.src || '/images/default-avatar.png';
-                        
-                        // Create comment HTML
-                        const date = new Date();
-                        const dateStr = date.toLocaleDateString('en-US', { 
-                            year: 'numeric', month: 'short', day: 'numeric', 
-                            hour: '2-digit', minute: '2-digit'
-                        });
-                        
-                        const commentHtml = `
-                            <div class="comment-item highlight-new" data-comment-id="${result.commentId || 'new'}">
-                                <div class="card-body py-2">
-                                    <div class="d-flex">
-                                        <div class="comment-avatar me-2">
-                                            <img src="${avatar}" alt="${username}" class="rounded-circle">
-                                        </div>
-                                        <div class="comment-content flex-grow-1">
-                                            <div class="comment-text">${commentText}</div>
-                                            <div class="comment-meta small text-muted">
-                                                <span class="comment-author">${username}</span>
-                                                <span class="mx-1">•</span>
-                                                <span class="comment-date" title="${dateStr}">Vừa xong</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        // Append to container
-                        container.insertAdjacentHTML('beforeend', commentHtml);
-                        
-                        // Update comment count
-                        const countBadge = container.closest('.comment-section').querySelector('.comment-count');
-                        if (countBadge) {
-                            const currentCount = parseInt(countBadge.textContent || '0');
-                            countBadge.textContent = currentCount + 1;
-                        }
-                    }
+                    // TODO: Handle manual comment/reply rendering if SignalR is not connected
                 }
             } else {
                 // Show error message
@@ -279,6 +411,61 @@ const CommentUI = {
                 }, 3000);
             }
         });
+    },
+    
+    /**
+     * Add a reply form to a comment
+     */
+    addReplyFormTo: function(commentElement, commentId, replyToUser) {
+        if (!commentElement) return;
+        
+        // Remove any existing reply form
+        const existingForm = commentElement.querySelector('.reply-form-container');
+        if (existingForm) {
+            existingForm.remove();
+        }
+        
+        // Get current user avatar
+        let currentUserAvatar = document.querySelector('.navbar .nav-item.dropdown img')?.src || '/images/default-avatar.png';
+        
+        // Create reply form HTML
+        const replyFormHtml = `
+            <div class="reply-form-container mt-2 animate__animated animate__fadeIn">
+                <div class="d-flex align-items-start">
+                    <img src="${currentUserAvatar}" class="current-user-avatar" alt="Your avatar">
+                    <form class="reply-form flex-grow-1">
+                        <div class="replying-to text-muted small mb-1">
+                            <i class="bi bi-reply"></i> Trả lời <span class="fw-medium">@${replyToUser}</span>
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control comment-text" 
+                                  placeholder="Viết trả lời cho ${replyToUser}..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-2 cancel-reply-btn">
+                                Hủy
+                            </button>
+                            <button type="submit" class="btn btn-sm btn-primary comment-submit-btn">
+                                <i class="bi bi-send-fill me-1"></i> Gửi
+                            </button>
+                        </div>
+                        <input type="hidden" name="targetType" value="Comment">
+                        <input type="hidden" name="targetId" value="${commentId}">
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        // Add to comment element
+        commentElement.querySelector('.flex-grow-1').insertAdjacentHTML('beforeend', replyFormHtml);
+        
+        // Add cancel button handler
+        const cancelBtn = commentElement.querySelector('.cancel-reply-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.hideReplyForm(commentElement);
+            });
+        }
     }
 };
 

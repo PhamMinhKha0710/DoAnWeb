@@ -48,5 +48,12 @@ namespace DoAnWeb.Repositories
                 .Where(r => r.RepositoryName.Contains(searchTerm) || r.Description.Contains(searchTerm))
                 .ToList();
         }
+
+        public IEnumerable<Repository> GetAllWithOwners()
+        {
+            return _dbSet
+                .Include(r => r.Owner)
+                .ToList();
+        }
     }
 }

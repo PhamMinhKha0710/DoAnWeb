@@ -20,14 +20,29 @@ namespace DoAnWeb.Repositories
             return [.. _dbSet];
         }
 
+        public async Task<IEnumerable<T>> GetAllAsync()
+        {
+            return await _dbSet.ToListAsync();
+        }
+
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate)
         {
             return _dbSet.Where(predicate).ToList();
         }
 
+        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.Where(predicate).ToListAsync();
+        }
+
         public T GetById(int id)
         {
             return _dbSet.Find(id); 
+        }
+
+        public async Task<T> GetByIdAsync(int id)
+        {
+            return await _dbSet.FindAsync(id);
         }
 
         public void Add(T entity)
@@ -59,9 +74,23 @@ namespace DoAnWeb.Repositories
             }
         }
 
+        public async Task DeleteAsync(int id)
+        {
+            T entityToDelete = await _dbSet.FindAsync(id);
+            if (entityToDelete != null)
+            {
+                Delete(entityToDelete);
+            }
+        }
+
         public void Save()
         {
             _context.SaveChanges();
+        }
+        
+        public async Task SaveAsync()
+        {
+            await _context.SaveChangesAsync();
         }
         
         /// <summary>

@@ -1,0 +1,153 @@
+@model DoAnWeb.ViewModels.UploadFolderViewModel
+
+@{
+    ViewData["Title"] = "Upload Folder";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-folder-plus me-2"></i>Upload Folder
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Repository:</strong> @Model.Owner/@Model.Repository
+                        <br>
+                        <strong>Target Directory:</strong> @(string.IsNullOrEmpty(Model.TargetDirectory) ? "Root directory" : Model.TargetDirectory)
+                    </div>
+                    
+                    <form asp-action="UploadFolder" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="Owner" />
+                        <input type="hidden" asp-for="Repository" />
+                        <input type="hidden" asp-for="TargetDirectory" />
+                        
+                        <div class="mb-3">
+                            <label asp-for="Branch" class="form-label">Target Branch</label>
+                            <select asp-for="Branch" class="form-select">
+                                @if (ViewBag.Branches != null)
+                                {
+                                    foreach (var branch in ViewBag.Branches)
+                                    {
+                                        <option value="@branch.Name" selected="@(branch.Name == Model.Branch)">@branch.Name</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="main">main</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Branch" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="CommitMessage" class="form-label">Commit Message</label>
+                            <input asp-for="CommitMessage" class="form-control" placeholder="Add files via upload" />
+                            <span asp-validation-for="CommitMessage" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                A brief description of the changes you're making with this upload.
+                            </small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label asp-for="Files" class="form-label">Select Files to Upload</label>
+                            <input asp-for="Files" type="file" class="form-control" multiple />
+                            <span asp-validation-for="Files" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                You can select multiple files at once. Hold Ctrl (or Cmd on Mac) to select individual files.
+                            </small>
+                            
+                            <div class="mt-2 p-3 border rounded bg-light">
+                                <div id="selectedFiles"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 border rounded p-3 bg-light">
+                            <label class="form-check-label mb-2">
+                                <strong>Notes about uploading folders:</strong>
+                            </label>
+                            <ul class="small mb-0">
+                                <li>For uploading entire directories with folder structure, use the Gitea web interface or Git client.</li>
+                                <li>This interface allows you to upload multiple files at once, but not folder structure.</li>
+                                <li>Maximum file size limit is 50MB per file.</li>
+                                <li>For larger uploads or complex directory structures, consider cloning the repository and pushing changes.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="javascript:history.back()" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cloud-upload"></i> Upload Files
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Hiển thị danh sách file được chọn
+        document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+            const fileList = document.getElementById('selectedFiles');
+            fileList.innerHTML = '';
+            
+            if (this.files.length > 0) {
+                const header = document.createElement('h6');
+                header.textContent = `Selected ${this.files.length} file(s):`;
+                fileList.appendChild(header);
+                
+                const list = document.createElement('ul');
+                list.className = 'list-unstyled small';
+                
+                let totalSize = 0;
+                
+                for (let i = 0; i < this.files.length; i++) {
+                    const file = this.files[i];
+                    totalSize += file.size;
+                    
+                    const item = document.createElement('li');
+                    item.innerHTML = `<i class="bi bi-file-earmark me-1"></i> ${file.name} <small class="text-muted">(${formatFileSize(file.size)})</small>`;
+                    list.appendChild(item);
+                }
+                
+                fileList.appendChild(list);
+                
+                const footer = document.createElement('div');
+                footer.className = 'mt-2 small';
+                footer.innerHTML = `<strong>Total size:</strong> ${formatFileSize(totalSize)}`;
+                fileList.appendChild(footer);
+            } else {
+                fileList.innerHTML = '<p class="small text-muted mb-0">No files selected</p>';
+            }
+        });
+        
+        // Format file size in human-readable format
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+} 

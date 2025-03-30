@@ -1,0 +1,376 @@
+@model DoAnWeb.ViewModels.EditFileViewModel
+
+@{
+    ViewData["Title"] = "Edit File";
+    var filePath = Model.Path;
+    var fileName = System.IO.Path.GetFileName(filePath);
+    var extension = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+    
+    // Determine language for syntax highlighting
+    string language = "plaintext";
+    switch (extension) {
+        case ".cs": language = "csharp"; break;
+        case ".cshtml": language = "cshtml"; break;
+        case ".js": language = "javascript"; break;
+        case ".html": case ".htm": language = "html"; break;
+        case ".css": language = "css"; break;
+        case ".json": language = "json"; break;
+        case ".xml": language = "xml"; break;
+        case ".md": language = "markdown"; break;
+        case ".sql": language = "sql"; break;
+        case ".py": language = "python"; break;
+        case ".java": language = "java"; break;
+        case ".ts": language = "typescript"; break;
+    }
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>Edit File
+                        </h3>
+                        <span class="ms-3 text-muted">@fileName</span>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("BrowseContent", new { owner = Model.Owner, repo = Model.Repository, branch = Model.Branch, path = System.IO.Path.GetDirectoryName(Model.Path) })" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Files
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="bi bi-file-earmark-code me-1"></i>
+                            <span class="me-3">@filePath</span>
+                            <i class="bi bi-git me-1"></i>
+                            <span>Branch: @Model.Branch</span>
+                        </div>
+                        <div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editorThemeToggle" onchange="toggleEditorTheme()">
+                                <label class="form-check-label" for="editorThemeToggle">Dark mode</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger m-3">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
+                    }
+                    
+                    <form asp-action="EditFile" method="post" id="editFileForm" onsubmit="prepareSubmit()">
+                        <input type="hidden" asp-for="Owner" />
+                        <input type="hidden" asp-for="Repository" />
+                        <input type="hidden" asp-for="Branch" />
+                        <input type="hidden" asp-for="Path" />
+                        
+                        <div class="editor-container" style="height: 500px; width: 100%; border-bottom: 1px solid #dee2e6;">
+                            <div id="editor" style="height: 100%; width: 100%; font-size: 14px;">@Model.Content</div>
+                            <textarea asp-for="Content" id="hiddenContent" style="display: none;"></textarea>
+                        </div>
+                        
+                        <div class="p-3">
+                            <div class="mb-3">
+                                <label asp-for="CommitMessage" class="form-label">Commit Message</label>
+                                <input asp-for="CommitMessage" class="form-control" placeholder="Update @fileName" />
+                                <span asp-validation-for="CommitMessage" class="text-danger"></span>
+                                <div class="form-text">
+                                    Briefly describe the changes you made to this file
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <a href="@Url.Action("FileContent", new { owner = Model.Owner, repo = Model.Repository, branch = Model.Branch, path = Model.Path })" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Cancel
+                                    </a>
+                                </div>
+                                <div>
+                                    <button type="button" id="previewBtn" class="btn btn-outline-secondary me-2" onclick="togglePreview()">
+                                        <i class="bi bi-eye me-2"></i>Preview
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle me-2"></i>Commit Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Preview Panel -->
+            <div class="card shadow-sm border-0 mb-3 d-none" id="previewPanel">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-eye me-2"></i>Preview: @fileName
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="previewContent" class="markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.css" />
+    <style>
+        .ace_editor {
+            font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        .markdown-body {
+            padding: 1rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            border-radius: 3px;
+            padding: 16px;
+            overflow: auto;
+        }
+        .markdown-body code {
+            background-color: rgba(175, 184, 193, 0.2);
+            border-radius: 3px;
+            padding: 0.2em 0.4em;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+    </style>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/worker-base.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ext-language_tools.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/mode-@(language).min.js" onerror="handleAceResourceError('@language')"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/theme-github.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/theme-monokai.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    
+    <script>
+        let editor;
+        let previewActive = false;
+        let validLanguageModes = [
+            'csharp', 'cshtml', 'javascript', 'html', 'css', 'json', 
+            'xml', 'markdown', 'sql', 'python', 'java', 'typescript', 
+            'text', 'plain', 'plaintext'
+        ];
+        
+        function handleAceResourceError(lang) {
+            console.warn(`Failed to load language mode for ${lang}, falling back to text mode`);
+            // Set mode to text if the specific language mode fails to load
+            if (editor) {
+                editor.session.setMode("ace/mode/text");
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            try {
+                // Set Ace base path to ensure workers load correctly
+                ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/');
+                
+                // Initialize Ace Editor
+                editor = ace.edit("editor");
+                editor.setTheme("ace/theme/github");
+                
+                // Check if language mode is likely to be valid
+                const languageMode = "@language";
+                if (validLanguageModes.includes(languageMode)) {
+                    editor.session.setMode("ace/mode/" + languageMode);
+                } else {
+                    console.warn(`Language mode '${languageMode}' may not be supported, falling back to text mode`);
+                    editor.session.setMode("ace/mode/text");
+                }
+                
+                editor.setShowPrintMargin(false);
+                editor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableSnippets: true,
+                    enableLiveAutocompletion: true,
+                    fontSize: "14px",
+                    wrap: true  // Enable word wrapping for better readability
+                });
+                
+                // Handle content that might contain special characters
+                const contentArea = document.getElementById('editor');
+                if (contentArea && contentArea.textContent.trim() !== '') {
+                    // Content is already in the editor div from server-side
+                    // No need to set value again which might cause encoding issues
+                } else {
+                    // If empty, use the content from model
+                    const initialContent = document.getElementById('hiddenContent').value;
+                    if (initialContent) {
+                        editor.setValue(initialContent, -1); // -1 moves cursor to start
+                    }
+                }
+                
+                // Check for stored theme preference
+                if (localStorage.getItem('editorDarkMode') === 'true') {
+                    document.getElementById('editorThemeToggle').checked = true;
+                    editor.setTheme("ace/theme/monokai");
+                }
+                
+                // Handle tabs properly
+                editor.commands.bindKey("Tab", "indent");
+                
+                // Add keyboard shortcut for save (Ctrl+S)
+                editor.commands.addCommand({
+                    name: 'saveFile',
+                    bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
+                    exec: function(editor) {
+                        prepareSubmit();
+                        document.getElementById('editFileForm').submit();
+                    }
+                });
+                
+                // Initialize form submit handler
+                const form = document.getElementById('editFileForm');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        if (!prepareSubmit()) {
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error initializing editor:", error);
+                alert("There was an error initializing the code editor. Please try refreshing the page.");
+                
+                // Fallback to simple textarea
+                const editorContainer = document.querySelector('.editor-container');
+                if (editorContainer) {
+                    const textArea = document.getElementById('hiddenContent');
+                    if (textArea) {
+                        textArea.style.display = 'block';
+                        textArea.style.width = '100%';
+                        textArea.style.height = '500px';
+                        textArea.classList.add('form-control');
+                        
+                        // Hide the Ace editor
+                        const aceEditor = document.getElementById('editor');
+                        if (aceEditor) {
+                            aceEditor.style.display = 'none';
+                        }
+                    }
+                }
+            }
+        });
+        
+        function toggleEditorTheme() {
+            try {
+                const isDarkMode = document.getElementById('editorThemeToggle').checked;
+                if (editor) {
+                    editor.setTheme(isDarkMode ? "ace/theme/monokai" : "ace/theme/github");
+                    localStorage.setItem('editorDarkMode', isDarkMode);
+                }
+            } catch (error) {
+                console.error("Error toggling theme:", error);
+            }
+        }
+        
+        function prepareSubmit() {
+            try {
+                // Update hidden textarea with editor content before submit
+                const hiddenContent = document.getElementById('hiddenContent');
+                if (hiddenContent && editor) {
+                    hiddenContent.value = editor.getValue();
+                    
+                    // Check if content is empty and required
+                    if (hiddenContent.hasAttribute('required') && hiddenContent.value.trim() === '') {
+                        alert("The file content cannot be empty.");
+                        return false;
+                    }
+                    
+                    // Check if commit message is provided
+                    const commitMessage = document.querySelector('input[name="CommitMessage"]');
+                    if (commitMessage && commitMessage.hasAttribute('required') && commitMessage.value.trim() === '') {
+                        alert("Please provide a commit message.");
+                        commitMessage.focus();
+                        return false;
+                    }
+                }
+            } catch (error) {
+                console.error("Error preparing form submission:", error);
+                alert("There was an error preparing your changes for submission. Please try again.");
+                return false;
+            }
+            return true;
+        }
+        
+        function togglePreview() {
+            try {
+                const previewPanel = document.getElementById('previewPanel');
+                const previewContent = document.getElementById('previewContent');
+                const previewBtn = document.getElementById('previewBtn');
+                
+                if (!previewPanel || !previewContent || !previewBtn || !editor) {
+                    console.error("Required DOM elements not found");
+                    return;
+                }
+                
+                previewActive = !previewActive;
+                
+                if (previewActive) {
+                    // Get content from editor
+                    const content = editor.getValue();
+                    const fileExtension = '@extension';
+                    
+                    // For Markdown files, render with Marked.js
+                    if (fileExtension === '.md') {
+                        try {
+                            // Check if marked is available and use appropriate API
+                            if (typeof marked === 'object' && typeof marked.parse === 'function') {
+                                previewContent.innerHTML = marked.parse(content);
+                            } else if (typeof marked === 'function') {
+                                // Fallback for older versions
+                                previewContent.innerHTML = marked(content);
+                            } else {
+                                throw new Error("Marked.js not properly loaded");
+                            }
+                        } catch (e) {
+                            previewContent.innerHTML = '<div class="alert alert-danger">Error parsing markdown content. Try refreshing the page.</div>';
+                            console.error('Markdown parsing error:', e);
+                        }
+                    } else {
+                        // For other files, display formatted code
+                        previewContent.innerHTML = `<pre><code class="language-@language">${escapeHtml(content)}</code></pre>`;
+                    }
+                    
+                    previewPanel.classList.remove('d-none');
+                    previewBtn.innerHTML = '<i class="bi bi-code me-2"></i>Back to Editor';
+                } else {
+                    previewPanel.classList.add('d-none');
+                    previewBtn.innerHTML = '<i class="bi bi-eye me-2"></i>Preview';
+                }
+            } catch (error) {
+                console.error("Error toggling preview:", error);
+                alert("There was an error displaying the preview. Please try again.");
+            }
+        }
+        
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
+            
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+} 

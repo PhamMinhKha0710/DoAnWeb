@@ -1,0 +1,189 @@
+/**
+ * CSS cho animation khi thay đổi reputation
+ */
+
+/* Điểm số reputation có hiệu ứng */
+.user-reputation {
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+/* Hiệu ứng khi cập nhật điểm */
+.highlight-update {
+    color: #28a745 !important;
+    animation: pulse 1.5s ease;
+}
+
+/* Hiệu ứng nhấp nháy khi có thay đổi */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.15);
+    }
+    50% {
+        transform: scale(1);
+    }
+    75% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Hiệu ứng tăng điểm */
+.reputation-change-indicator {
+    position: absolute;
+    font-weight: bold;
+    font-size: 1.2em;
+    pointer-events: none;
+    z-index: 1000;
+    animation: floatUp 1.5s ease-out forwards;
+    opacity: 0;
+}
+
+.reputation-change-indicator.positive {
+    color: #28a745;
+}
+
+.reputation-change-indicator.negative {
+    color: #dc3545;
+}
+
+/* Hiệu ứng bay lên khi có thay đổi */
+@keyframes floatUp {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+}
+
+/* Hiệu ứng cho badge khi có cập nhật */
+.user-profile-badge.highlight {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Hiệu ứng chiếu sáng khi có thay đổi */
+.badge-update-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0;
+    pointer-events: none;
+    animation: shine 1.5s ease;
+}
+
+/* Hiệu ứng chuyển động ánh sáng */
+@keyframes shine {
+    0% {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* Tooltip hiển thị thông tin về thay đổi reputation */
+.reputation-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 0.85em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    max-width: 200px;
+    text-align: center;
+    transform: translateY(-100%);
+    margin-top: -10px;
+}
+
+.user-reputation:hover .reputation-tooltip {
+    opacity: 1;
+}
+
+.reputation-tooltip::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(0, 0, 0, 0.8);
+}
+
+/* Danh sách lịch sử thay đổi reputation */
+.reputation-history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.reputation-history-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reputation-history-item:last-child {
+    border-bottom: none;
+}
+
+.reputation-history-change {
+    font-weight: bold;
+}
+
+.reputation-history-positive {
+    color: #28a745;
+}
+
+.reputation-history-negative {
+    color: #dc3545;
+}
+
+.reputation-history-reason {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.reputation-history-date {
+    font-size: 0.85em;
+    color: #888;
+} 

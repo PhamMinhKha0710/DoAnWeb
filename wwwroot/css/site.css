@@ -1270,3 +1270,477 @@ small {
     background-color: rgba(200, 200, 200, 0.5);
   }
 }
+
+/* Responsive styles for main content */
+@media (max-width: 991.98px) {
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .main-content {
+        padding: 0 5px;
+    }
+    
+    .question-item, .repository-item, .user-card, .tag-item {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .page-transition-wrapper {
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .main-content {
+        width: 100%;
+        overflow-x: hidden;
+        padding: 0;
+    }
+
+    /* Add extra padding to main content on mobile */
+    .col-lg-8, .col-lg-10, .col-12 {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* Make sure alerts don't overflow */
+    .alert {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    /* Handle fixed-width elements */
+    pre, code, table {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    
+    /* Adjust any fixed-width containers */
+    .card, .question-detail, .answer-detail {
+        width: 100% !important;
+        max-width: 100%;
+    }
+}
+
+/* Fix for content that might overflow */
+img, svg, video, canvas, audio, iframe, embed, object {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Ensure table doesn't break layout */
+table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+}
+
+@media (min-width: 768px) {
+    table {
+        display: table;
+    }
+}
+
+/* Add mobile navigation for small screens */
+@media (max-width: 767.98px) {
+    .mobile-nav-bottom {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        z-index: 1000;
+    }
+    
+    .mobile-nav-item {
+        text-align: center;
+    }
+    
+    .mobile-nav-icon {
+        font-size: 1.25rem;
+        color: #6c757d;
+    }
+    
+    .mobile-nav-text {
+        font-size: 0.7rem;
+        margin-top: 2px;
+    }
+    
+    /* Add padding to main content to prevent overlap with bottom nav */
+    body {
+        padding-bottom: 60px;
+    }
+}
+
+/* Tối ưu hóa hiệu ứng chuyển trang */
+.page-transition-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.main-content {
+    opacity: 0.8;
+    transform: translateY(5px);
+    transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.main-content.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Overrides cho các animation AOS để nhanh hơn */
+[data-aos] {
+    transition-duration: 500ms !important;
+}
+
+[data-aos].aos-animate {
+    transition-duration: 500ms !important;
+}
+
+/* Tăng tốc các hiệu ứng CSS */
+.alert {
+    animation-duration: 300ms !important;
+}
+
+.dropdown-menu {
+    animation-duration: 150ms !important;
+    transition: opacity 150ms, transform 150ms !important;
+}
+
+.dropdown-toggle::after {
+    transition: transform 150ms !important;
+}
+
+.card {
+    transition: transform 150ms, box-shadow 150ms !important;
+}
+
+.nav-link {
+    transition: color 150ms !important;
+}
+
+.btn {
+    transition: all 150ms !important;
+}
+
+/* Search Suggestions Dropdown Styles */
+.search-suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 5px;
+    z-index: 1050;
+    max-height: 450px;
+    overflow-y: auto;
+    display: none;
+}
+
+.search-suggestions-dropdown.active {
+    display: block;
+    animation: fadeInDown 0.2s ease-out;
+}
+
+.search-results-container {
+    padding: 8px 0;
+}
+
+.search-result-section {
+    padding: 8px 0;
+}
+
+.search-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 4px 16px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.search-results-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background-color 0.15s ease;
+}
+
+.search-result-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.search-result-item .result-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.search-result-item .result-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-result-item .result-title .highlight {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.search-result-item .result-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.search-result-item .result-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.search-result-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: var(--tag-bg);
+    color: var(--tag-color);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 4px;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+}
+
+.search-result-tag:hover {
+    background-color: var(--tag-hover-bg);
+}
+
+.search-footer {
+    padding: 8px 16px;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark mode adjustments for search */
+@media (prefers-color-scheme: dark) {
+    .search-suggestions-dropdown {
+        background-color: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+    
+    .search-result-item:hover {
+        background-color: var(--dark-hover-bg);
+    }
+    
+    .search-result-item .result-title .highlight {
+        background-color: rgba(var(--primary-rgb), 0.2);
+    }
+    
+    .search-result-tag {
+        background-color: var(--dark-tag-bg);
+        color: var(--dark-tag-color);
+    }
+    
+    .search-result-tag:hover {
+        background-color: var(--dark-tag-hover-bg);
+    }
+}
+
+/* Sidebar avancée - Configuration pour éviter le chevauchement avec le footer */
+.sidebar-container, .right-sidebar-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+footer.footer {
+    position: relative;
+    z-index: 5;
+}
+
+/* Pour empêcher que la sidebar ne chevauche le footer */
+.sidebar, .right-sidebar {
+    transition: max-height 0.3s ease, transform 0.3s ease;
+    will-change: max-height, transform;
+}
+
+/* Effet visuel quand la sidebar atteint le footer */
+.sidebar.reached-footer, .right-sidebar.reached-footer {
+    border-bottom: 3px solid var(--primary);
+}
+
+/* Style pour la zone sous la sidebar quand elle est fixe */
+.sidebar-placeholder, .right-sidebar-placeholder {
+    flex: 1;
+    display: none;
+}
+
+.sidebar.fixed ~ .sidebar-placeholder,
+.right-sidebar.fixed ~ .right-sidebar-placeholder {
+    display: block;
+}
+
+/* SignalR Debug Panel Styles */
+.signalr-debug-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    width: 300px;
+    z-index: 9999;
+    transition: all 0.3s ease;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.signalr-debug-panel.hidden {
+    transform: translateX(350px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.signalr-debug-panel h5 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    font-size: 16px;
+}
+
+.signalr-debug-panel .connection-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.signalr-debug-panel .hub-name {
+    font-weight: 500;
+}
+
+.connection-status {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.status-connected {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-connecting {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-disconnected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.debug-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.debug-actions button {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.signalr-debug-panel-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #0d6efd;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 9998;
+    transition: all 0.3s ease;
+}
+
+.signalr-debug-panel-toggle:hover {
+    transform: scale(1.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    .signalr-debug-panel {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #f8f9fa;
+    }
+    
+    .signalr-debug-panel h5 {
+        border-bottom-color: #495057;
+    }
+    
+    .status-connected {
+        background-color: #285e33;
+        color: #d4edda;
+    }
+    
+    .status-connecting {
+        background-color: #856404;
+        color: #fff3cd;
+    }
+    
+    .status-disconnected {
+        background-color: #721c24;
+        color: #f8d7da;
+    }
+}

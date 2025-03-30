@@ -41,31 +41,65 @@
                         </div>
                     </div>
                     
-                    <form asp-action="LinkGiteaAccount" method="post">
-                        <input type="hidden" asp-for="ReturnUrl" />
-                        
-                        <div class="form-check mb-4">
-                            <input class="form-check-input" type="checkbox" asp-for="ConfirmLink" id="confirmLink" />
-                            <label class="form-check-label" for="confirmLink">
-                                I confirm that I want to create a linked Gitea account
-                            </label>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-magic me-2"></i>Automatic Setup</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Automatically create a new Gitea account that's linked to your DevCommunity profile.</p>
+                                    <p class="text-muted small">This is the easiest way to get started. We'll create a Gitea account with the same username as your DevCommunity account.</p>
+                                    <form asp-action="AutoLinkGiteaAccount" method="post">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-link-45deg me-2"></i>Create & Link Gitea Account
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="alert alert-light border">
-                            <p class="mb-0"><strong>Note:</strong> A new Gitea account will be created and linked to your DevCommunity account. You will use your DevCommunity credentials to access both platforms.</p>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-secondary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Link Existing Account</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Already have a Gitea account? Link your existing account below.</p>
+                                    <form asp-action="LinkGiteaAccount" method="post" class="mt-3">
+                                        <input asp-for="CreateNewAccount" type="hidden" value="false" />
+                                        
+                                        <div class="mb-3">
+                                            <label asp-for="GiteaUsername" class="form-label"></label>
+                                            <input asp-for="GiteaUsername" class="form-control" />
+                                            <span asp-validation-for="GiteaUsername" class="text-danger"></span>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label asp-for="GiteaPassword" class="form-label"></label>
+                                            <input asp-for="GiteaPassword" type="password" class="form-control" />
+                                            <span asp-validation-for="GiteaPassword" class="text-danger"></span>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-secondary w-100">
+                                            <i class="bi bi-link-45deg me-2"></i>Link Existing Account
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-git me-2"></i>Link Account
-                            </button>
-                            <a asp-action="Profile" class="btn btn-outline-secondary mt-2">
-                                <i class="bi bi-arrow-left me-2"></i>Return to Profile
-                            </a>
-                        </div>
-                    </form>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a asp-action="Profile" class="text-decoration-none">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Profile
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+} 

@@ -5,6 +5,7 @@
 }
 
 .repository-card {
+    position: relative;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -90,18 +91,9 @@
     gap: 1rem;
 }
 
-.repository-card {
-    background-color: var(--white);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--grey-200);
-    padding: 1.5rem;
-    transition: var(--transition);
-}
-
 .repository-card:hover {
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
-    border-color: var(--grey-300);
 }
 
 .repository-header {
@@ -118,9 +110,16 @@
 }
 
 .repository-title a {
+    position: relative;
+    z-index: 15;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    display: inline-block;
+    padding: 4px 0;
     color: var(--primary);
     text-decoration: none;
-    transition: var(--transition);
+    font-weight: 600;
+    transition: color 0.2s ease;
 }
 
 .repository-title a:hover {
@@ -646,4 +645,27 @@
         background-color: var(--grey-600);
         color: var(--grey-200);
     }
+}
+
+/* Ensure links are clickable */
+.repository-card a, 
+.repository-card .btn,
+.repository-title a {
+    position: relative;
+    z-index: 15;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Make View button more prominent */
+.repository-details-link {
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.repository-details-link:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(var(--primary-rgb), 0.25);
 }

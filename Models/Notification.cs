@@ -29,12 +29,14 @@ public partial class Notification
 }
 
 // Enum-like class for notification types
-public static class NotificationTypes
+public static class NotificationTypeConstants
 {
     public const string Answer = "Answer";
     public const string Comment = "Comment";
     public const string Vote = "Vote";
     public const string Accept = "Accept";
     public const string Mention = "Mention";
+    public const string ReputationChange = "ReputationChange";
     public const string General = "General";
+    public const string System = "System";
 }

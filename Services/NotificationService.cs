@@ -148,7 +148,7 @@ namespace DoAnWeb.Services
                     Url = $"/Questions/Details/{questionId}#answer-{answerId}",
                     IsRead = false,
                     CreatedDate = DateTime.Now,
-                    NotificationType = NotificationTypes.Answer,
+                    NotificationType = NotificationTypeConstants.Answer,
                     RelatedEntityId = answerId
                 };
 
@@ -219,7 +219,7 @@ namespace DoAnWeb.Services
                         Url = $"/Questions/Details/{questionId}#comment-{commentId}",
                         IsRead = false,
                         CreatedDate = DateTime.Now,
-                        NotificationType = NotificationTypes.Comment,
+                        NotificationType = NotificationTypeConstants.Comment,
                         RelatedEntityId = commentId
                     };
 
@@ -297,7 +297,7 @@ namespace DoAnWeb.Services
                         Url = url,
                         IsRead = false,
                         CreatedDate = DateTime.Now,
-                        NotificationType = NotificationTypes.Vote,
+                        NotificationType = NotificationTypeConstants.Vote,
                         RelatedEntityId = targetId
                     };
 
@@ -338,7 +338,7 @@ namespace DoAnWeb.Services
                     Url = $"/Questions/Details/{questionId}#answer-{answerId}",
                     IsRead = false,
                     CreatedDate = DateTime.Now,
-                    NotificationType = NotificationTypes.Accept,
+                    NotificationType = NotificationTypeConstants.Accept,
                     RelatedEntityId = answerId
                 };
 

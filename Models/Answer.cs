@@ -28,6 +28,15 @@ public partial class Answer
     
     [NotMapped]
     public string? UserVoteType { get; set; }
+    
+    // Property to track which answer this one is responding to
+    public int? ParentAnswerId { get; set; }
+    
+    [ForeignKey("ParentAnswerId")]
+    public virtual Answer? ParentAnswer { get; set; }
+    
+    [InverseProperty("ParentAnswer")]
+    public virtual ICollection<Answer>? ChildAnswers { get; set; }
 
     public virtual Question? Question { get; set; }
 

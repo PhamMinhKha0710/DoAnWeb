@@ -203,7 +203,112 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize code syntax highlighting
     initCodeHighlighting();
+    
+    // Handle sidebar position relative to footer
+    const handleSidebarFooterPosition = () => {
+        const footer = document.querySelector('.footer');
+        const sidebars = document.querySelectorAll('.sidebar, .right-sidebar');
+        
+        if (!footer || sidebars.length === 0) return;
+        
+        const footerRect = footer.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        sidebars.forEach(sidebar => {
+            const sidebarRect = sidebar.getBoundingClientRect();
+            const sidebarHeight = sidebarRect.height;
+            
+            // If footer is in viewport, make sure sidebar doesn't overlap it
+            if (footerRect.top < windowHeight) {
+                const distanceToFooter = footerRect.top - windowHeight;
+                const newMaxHeight = windowHeight - Math.abs(distanceToFooter) - 20; // 20px buffer
+                
+                // Limit sidebar height so it doesn't overlap with footer
+                if (sidebarHeight > newMaxHeight && newMaxHeight > 200) { // Keep minimum 200px height
+                    sidebar.style.maxHeight = newMaxHeight + 'px';
+                }
+            } else {
+                // Reset when footer is not in viewport
+                const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70;
+                sidebar.style.maxHeight = `calc(100vh - ${navbarHeight + 16}px)`;
+            }
+        });
+    };
+    
+    // Call the function initially and on scroll
+    handleSidebarFooterPosition();
+    window.addEventListener('scroll', handleSidebarFooterPosition, { passive: true });
+    window.addEventListener('resize', handleSidebarFooterPosition, { passive: true });
 });
+
+// Enhanced sidebar-footer interaction handling
+function setupSidebarFooterInteraction() {
+    const footer = document.querySelector('.footer');
+    const sidebars = document.querySelectorAll('.sidebar, .right-sidebar');
+    
+    if (!footer || sidebars.length === 0) return;
+    
+    // Track last scroll position to determine scroll direction
+    let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    function handleScroll() {
+        const footerRect = footer.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollingDown = currentScrollTop > lastScrollTop;
+        
+        // Update last scroll position
+        lastScrollTop = currentScrollTop;
+        
+        sidebars.forEach(sidebar => {
+            const sidebarRect = sidebar.getBoundingClientRect();
+            const sidebarHeight = sidebarRect.height;
+            const sidebarBottom = sidebarRect.bottom;
+            
+            // Distance between bottom of sidebar and top of footer
+            const distanceToFooter = footerRect.top - sidebarBottom;
+            
+            // If sidebar is about to overlap with footer
+            if (footerRect.top <= windowHeight && distanceToFooter < 20) {
+                // Add visual indication that sidebar has reached footer
+                sidebar.classList.add('reached-footer');
+                
+                // Calculate new max height to prevent footer overlap
+                const newMaxHeight = windowHeight - (Math.abs(distanceToFooter) + 20);
+                
+                // Only adjust height if it would still be reasonably tall
+                if (newMaxHeight > 200) {
+                    sidebar.style.maxHeight = `${newMaxHeight}px`;
+                }
+                
+                // If user is scrolling up and sidebar is shorter than window
+                if (!scrollingDown && sidebarHeight < (windowHeight - 100)) {
+                    // Allow sidebar to expand upward a bit for better UX
+                    const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70;
+                    sidebar.style.top = `${navbarHeight + 6}px`;
+                }
+            } else {
+                // Reset styles when not near footer
+                sidebar.classList.remove('reached-footer');
+                const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70;
+                sidebar.style.maxHeight = `calc(100vh - ${navbarHeight + 16}px)`;
+                sidebar.style.top = `${navbarHeight + 6}px`;
+            }
+        });
+    }
+    
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Call once on page load
+    handleScroll();
+    
+    // Also handle on resize
+    window.addEventListener('resize', handleScroll, { passive: true });
+}
+
+// Call the function when DOM is loaded
+document.addEventListener('DOMContentLoaded', setupSidebarFooterInteraction);
 
 // Handle Form Validation
 (function () {
@@ -332,20 +437,76 @@ function addCopyButtonToCodeBlock(preElement) {
 let notificationConnection = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize SignalR connection for notifications
-    initializeNotificationHub();
-    
-    // Initialize any toast elements
-    initializeToasts();
+    // Đảm bảo chỉ khởi tạo thông báo sau khi SignalR đã được tải
+    if (window.SignalRLoader) {
+        SignalRLoader.ready(function() {
+            console.log("SignalR loaded successfully, initializing notification hub in site.js");
+            // Initialize SignalR connection for notifications
+            initializeNotificationHub();
+            
+            // Initialize any toast elements
+            initializeToasts();
+        });
+    } else {
+        console.error("SignalRLoader not found. Make sure signalr-loader.js is loaded first.");
+        // Vẫn khởi tạo toast elements
+        initializeToasts();
+    }
 });
 
 // Initialize the notification hub connection
 function initializeNotificationHub() {
+    // Sử dụng kết nối đã được khởi tạo từ signalr-connection-check.js hoặc notification-service-fixed.js
+    if (window.notificationConnection) {
+        console.log("Using existing NotificationHub connection from window object");
+        notificationConnection = window.notificationConnection;
+        
+        // Đảm bảo đã thiết lập listener cho ReceiveNotification
+        setupVoteNotificationListener();
+        return;
+    }
+    
+    // Nếu không có kết nối sẵn, kiểm tra đăng nhập trước khi kết nối
+    const isLoggedIn = document.querySelector('form#logoutForm') !== null || 
+                        document.querySelector('.dropdown-item[onclick*="logoutForm"]') !== null;
+                        
+    if (!isLoggedIn) {
+        console.log("User not logged in. NotificationHub requires authentication.");
+        return;
+    }
+    
+    // Đảm bảo SignalR đã được tải
+    if (typeof signalR === 'undefined') {
+        console.error("SignalR is not defined. Cannot create NotificationHub connection.");
+        return;
+    }
+    
     // Create SignalR connection to notification hub
     notificationConnection = new signalR.HubConnectionBuilder()
         .withUrl("/notificationHub")
         .withAutomaticReconnect()
         .build();
+    
+    // Lưu kết nối vào đối tượng window để các script khác có thể sử dụng
+    window.notificationConnection = notificationConnection;
+    
+    // Thiết lập listener cho thông báo
+    setupVoteNotificationListener();
+    
+    // Start the connection
+    notificationConnection.start()
+        .then(function() {
+            console.log("NotificationHub connected");
+        })
+        .catch(function(err) {
+            console.error("NotificationHub connection error:", err);
+        });
+}
+
+// Thiết lập listener cho thông báo vote
+function setupVoteNotificationListener() {
+    // Xóa listener cũ để tránh trùng lặp
+    notificationConnection.off("ReceiveNotification");
     
     // Handle receiving notifications
     notificationConnection.on("ReceiveNotification", function(notification) {
@@ -364,15 +525,6 @@ function initializeNotificationHub() {
             }
         }
     });
-    
-    // Start the connection
-    notificationConnection.start()
-        .then(function() {
-            console.log("NotificationHub connected");
-        })
-        .catch(function(err) {
-            console.error("NotificationHub connection error:", err);
-        });
 }
 
 // Update score display based on notification
@@ -582,3 +734,307 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Global Search with Auto-suggestions
+document.addEventListener('DOMContentLoaded', function() {
+    initGlobalSearch();
+});
+
+function initGlobalSearch() {
+    const searchInput = document.getElementById('globalSearchInput');
+    const searchButton = document.getElementById('globalSearchButton');
+    const searchDropdown = document.getElementById('searchSuggestionsDropdown');
+    const loadingIndicator = document.getElementById('searchLoadingIndicator');
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    const viewAllButton = document.getElementById('viewAllSearchResults');
+    
+    if (!searchInput) return; // Exit if search elements don't exist
+    
+    let debounceTimeout;
+    let currentSearchTerm = '';
+    
+    // Function to show the dropdown
+    function showDropdown() {
+        searchDropdown.classList.add('active');
+    }
+    
+    // Function to hide the dropdown
+    function hideDropdown() {
+        searchDropdown.classList.remove('active');
+    }
+    
+    // Function to perform search
+    function performSearch(searchTerm) {
+        if (searchTerm.length < 2) {
+            hideDropdown();
+            return;
+        }
+        
+        currentSearchTerm = searchTerm;
+        showDropdown();
+        showLoading();
+        
+        // Create URL for the API endpoint
+        const apiUrl = `/api/search?q=${encodeURIComponent(searchTerm)}`;
+        
+        // Make the API request
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Process only if search term hasn't changed
+                if (currentSearchTerm === searchTerm) {
+                    displayResults(data, searchTerm);
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                hideLoading();
+                showNoResults();
+            });
+    }
+    
+    // Show loading indicator
+    function showLoading() {
+        loadingIndicator.classList.remove('d-none');
+        document.querySelectorAll('.search-result-section').forEach(el => {
+            el.style.display = 'none';
+        });
+        noResultsMessage.classList.add('d-none');
+    }
+    
+    // Hide loading indicator
+    function hideLoading() {
+        loadingIndicator.classList.add('d-none');
+    }
+    
+    // Show no results message
+    function showNoResults() {
+        document.querySelectorAll('.search-result-section').forEach(el => {
+            el.style.display = 'none';
+        });
+        noResultsMessage.classList.remove('d-none');
+    }
+    
+    // Display search results in the dropdown
+    function displayResults(data, searchTerm) {
+        hideLoading();
+        
+        const hasQuestions = data.questions && data.questions.length > 0;
+        const hasTags = data.tags && data.tags.length > 0;
+        const hasUsers = data.users && data.users.length > 0;
+        const hasRepos = data.repositories && data.repositories.length > 0;
+        
+        // Check if we have any results at all
+        if (!hasQuestions && !hasTags && !hasUsers && !hasRepos) {
+            showNoResults();
+            return;
+        }
+        
+        // Hide no results message
+        noResultsMessage.classList.add('d-none');
+        
+        // Update questions section
+        const questionSection = document.getElementById('questionResults');
+        const questionList = document.getElementById('questionResultsList');
+        if (hasQuestions) {
+            questionList.innerHTML = '';
+            data.questions.forEach(question => {
+                const item = document.createElement('a');
+                item.href = `/Questions/Details/${question.id}`;
+                item.className = 'search-result-item';
+                
+                // Highlight matching text
+                const titleWithHighlight = highlightText(question.title, searchTerm);
+                
+                item.innerHTML = `
+                    <div class="result-icon">
+                        <i class="bi bi-question-circle text-primary"></i>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <p class="result-title">${titleWithHighlight}</p>
+                        <p class="result-subtitle">${question.answerCount} answers · ${question.viewCount} views</p>
+                    </div>
+                `;
+                questionList.appendChild(item);
+            });
+            questionSection.style.display = 'block';
+        } else {
+            questionSection.style.display = 'none';
+        }
+        
+        // Update tags section
+        const tagSection = document.getElementById('tagResults');
+        const tagList = document.getElementById('tagResultsList');
+        if (hasTags) {
+            tagList.innerHTML = '';
+            const tagsContainer = document.createElement('div');
+            tagsContainer.className = 'd-flex flex-wrap p-2';
+            
+            data.tags.forEach(tag => {
+                const tagItem = document.createElement('a');
+                tagItem.href = `/Questions/Tagged/${tag.name}`;
+                tagItem.className = 'search-result-tag';
+                
+                // Highlight matching text
+                const tagNameWithHighlight = highlightText(tag.name, searchTerm);
+                
+                tagItem.innerHTML = `
+                    <i class="bi bi-tag me-1"></i>
+                    <span>${tagNameWithHighlight}</span>
+                `;
+                tagsContainer.appendChild(tagItem);
+            });
+            
+            tagList.appendChild(tagsContainer);
+            tagSection.style.display = 'block';
+        } else {
+            tagSection.style.display = 'none';
+        }
+        
+        // Update users section
+        const userSection = document.getElementById('userResults');
+        const userList = document.getElementById('userResultsList');
+        if (hasUsers) {
+            userList.innerHTML = '';
+            data.users.forEach(user => {
+                const item = document.createElement('a');
+                item.href = `/Users/Profile/${user.id}`;
+                item.className = 'search-result-item';
+                
+                // Highlight matching text
+                const nameWithHighlight = highlightText(user.displayName, searchTerm);
+                
+                item.innerHTML = `
+                    <img src="${user.avatar || '/images/default-avatar.png'}" alt="${user.displayName}" class="result-avatar">
+                    <div class="d-flex flex-column">
+                        <p class="result-title">${nameWithHighlight}</p>
+                        <p class="result-subtitle">@${user.username}</p>
+                    </div>
+                `;
+                userList.appendChild(item);
+            });
+            userSection.style.display = 'block';
+        } else {
+            userSection.style.display = 'none';
+        }
+        
+        // Update repositories section
+        const repoSection = document.getElementById('repoResults');
+        const repoList = document.getElementById('repoResultsList');
+        if (hasRepos) {
+            repoList.innerHTML = '';
+            data.repositories.forEach(repo => {
+                const item = document.createElement('a');
+                item.href = `/Repository/Details/${repo.id}`;
+                item.className = 'search-result-item';
+                
+                // Highlight matching text
+                const nameWithHighlight = highlightText(repo.name, searchTerm);
+                
+                // Format description or show placeholder
+                const description = repo.description 
+                    ? repo.description.substring(0, 50) + (repo.description.length > 50 ? '...' : '') 
+                    : 'No description available';
+                
+                // Format date if available
+                const dateDisplay = repo.createdDate 
+                    ? `Created: ${new Date(repo.createdDate).toLocaleDateString()}` 
+                    : '';
+                    
+                // Owner info if available
+                const ownerInfo = repo.owner ? `by ${repo.owner}` : '';
+                
+                item.innerHTML = `
+                    <div class="result-icon">
+                        <i class="bi bi-git text-success"></i>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <p class="result-title">${nameWithHighlight}</p>
+                        <p class="result-subtitle">${description}</p>
+                        <small class="text-muted">${ownerInfo} ${dateDisplay}</small>
+                    </div>
+                `;
+                repoList.appendChild(item);
+            });
+            repoSection.style.display = 'block';
+        } else {
+            repoSection.style.display = 'none';
+        }
+        
+        // Update view all results button link
+        viewAllButton.href = `/Questions/Index?search=${encodeURIComponent(searchTerm)}`;
+    }
+    
+    // Function to highlight matching text parts
+    function highlightText(text, query) {
+        if (!text) return '';
+        
+        // Escape special regex characters
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+        
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+    
+    // Event listeners
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.trim();
+        
+        // Clear any existing timeout
+        if (debounceTimeout) {
+            clearTimeout(debounceTimeout);
+        }
+        
+        // Debounce input to avoid too many requests
+        debounceTimeout = setTimeout(() => {
+            if (searchTerm.length >= 2) {
+                performSearch(searchTerm);
+            } else {
+                hideDropdown();
+            }
+        }, 300);
+    });
+    
+    // Focus event - show dropdown if there's text
+    searchInput.addEventListener('focus', function() {
+        const searchTerm = searchInput.value.trim();
+        if (searchTerm.length >= 2) {
+            performSearch(searchTerm);
+        }
+    });
+    
+    // Handle click on search button
+    searchButton.addEventListener('click', function() {
+        const searchTerm = searchInput.value.trim();
+        if (searchTerm.length > 0) {
+            window.location.href = `/Questions/Index?search=${encodeURIComponent(searchTerm)}`;
+        }
+    });
+    
+    // Handle Enter key press
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length > 0) {
+                window.location.href = `/Questions/Index?search=${encodeURIComponent(searchTerm)}`;
+            }
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const isClickInside = searchInput.contains(e.target) || 
+                             searchDropdown.contains(e.target) ||
+                             searchButton.contains(e.target);
+        
+        if (!isClickInside && searchDropdown.classList.contains('active')) {
+            hideDropdown();
+        }
+    });
+}

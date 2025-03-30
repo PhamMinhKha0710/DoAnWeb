@@ -12,6 +12,43 @@
                     <h3>Create New Repository</h3>
                 </div>
                 <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-circle-fill me-2"></i> @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    
+                    @if (TempData["WarningMessage"] != null)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["WarningMessage"]
+                        </div>
+                    }
+
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-info-circle-fill fs-3"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-2">Repository Integration</h5>
+                                <p class="mb-1">Your repository will be created in both:</p>
+                                <ul class="mb-0">
+                                    <li><strong>DevCommunity</strong> - For integration with our platform features</li>
+                                    <li><strong>Gitea</strong> - For Git-based version control and code management</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <form asp-action="Create" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         
@@ -41,14 +78,34 @@
                             </div>
                         </div>
                         
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            A Git repository will be created to store your code. You'll be able to push code using Git commands.
+                        <div class="mb-3 form-check">
+                            <input asp-for="AutoInit" class="form-check-input" />
+                            <label asp-for="AutoInit" class="form-check-label"></label>
+                            <div class="form-text text-muted">
+                                Initialize with a README file to help people learn about your project.
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-secondary">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-git fs-4"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Git Access</h6>
+                                    <p class="mb-0 small">
+                                        After creating the repository, you'll be able to push code using Git commands.
+                                        Clone URLs will be provided on the repository details page.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a asp-action="Index" class="btn btn-secondary me-md-2">Cancel</a>
-                            <button type="submit" class="btn btn-success">Create Repository</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle me-2"></i>Create Repository
+                            </button>
                         </div>
                     </form>
                 </div>

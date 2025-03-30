@@ -22,13 +22,16 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/fast-animations.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/questions.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/repositories.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/tags.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tags-modern.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/signalr-styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DoAnWeb.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" integrity="sha512-vswe+cgvic/XBoF1OcM/TeJ2FW0OofqAVdCZiEYkd6dwGXthvkSFWOoGGJgS2CW70VK5dQM5Oh+7ne47s74VTg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
+    <link rel="stylesheet" href="~/css/sidebar.css" />
+    <link rel="stylesheet" href="~/css/reputation-animations.css" />
     
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -46,15 +49,59 @@
                 
                 <div class="collapse navbar-collapse flex-grow-1" id="navbarContent">
                     <div class="d-flex flex-grow-1 search-container mx-lg-4" data-aos="fade-down" data-aos-delay="100">
-                        <form class="w-100 position-relative" asp-controller="Questions" asp-action="Index" method="get">
+                        <div class="w-100 position-relative" id="globalSearchContainer">
                             <div class="input-group">
-                                <input type="text" name="search" class="form-control py-2 ps-3 pe-5 border rounded-pill" 
-                                       placeholder="Search questions, tags, or users..." aria-label="Search" value="@ViewData["SearchTerm"]">
-                                <button class="btn position-absolute end-0 top-0 h-100 px-3 bg-transparent border-0" type="submit">
+                                <input type="text" id="globalSearchInput" class="form-control py-2 ps-3 pe-5 border rounded-pill" 
+                                       placeholder="Search questions, tags, or users..." aria-label="Search" 
+                                       value="@ViewData["SearchTerm"]" autocomplete="off">
+                                <button class="btn position-absolute end-0 top-0 h-100 px-3 bg-transparent border-0" type="button" id="globalSearchButton">
                                     <i class="bi bi-search text-grey-500"></i>
                                 </button>
                             </div>
-                        </form>
+                            <!-- Search Results Dropdown -->
+                            <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown shadow-sm rounded">
+                                <div class="search-results-container">
+                                    <div id="searchLoadingIndicator" class="py-3 text-center d-none">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <div class="search-results-sections">
+                                        <!-- Questions Section -->
+                                        <div id="questionResults" class="search-result-section">
+                                            <h6 class="search-section-title"><i class="bi bi-question-circle me-2"></i>Questions</h6>
+                                            <div class="search-results-list" id="questionResultsList"></div>
+                                        </div>
+                                        
+                                        <!-- Tags Section -->
+                                        <div id="tagResults" class="search-result-section">
+                                            <h6 class="search-section-title"><i class="bi bi-tags me-2"></i>Tags</h6>
+                                            <div class="search-results-list" id="tagResultsList"></div>
+                                        </div>
+                                        
+                                        <!-- Users Section -->
+                                        <div id="userResults" class="search-result-section">
+                                            <h6 class="search-section-title"><i class="bi bi-people me-2"></i>Users</h6>
+                                            <div class="search-results-list" id="userResultsList"></div>
+                                        </div>
+                                        
+                                        <!-- Repositories Section -->
+                                        <div id="repoResults" class="search-result-section">
+                                            <h6 class="search-section-title"><i class="bi bi-git me-2"></i>Repositories</h6>
+                                            <div class="search-results-list" id="repoResultsList"></div>
+                                        </div>
+                                    </div>
+                                    <div id="noResultsMessage" class="py-3 text-center d-none">
+                                        <p class="text-muted mb-0">No results found</p>
+                                    </div>
+                                    <div class="search-footer border-top">
+                                        <a href="#" id="viewAllSearchResults" class="btn btn-sm btn-light w-100">
+                                            View all results <i class="bi bi-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <ul class="navbar-nav ms-auto d-flex align-items-center flex-row flex-wrap">
@@ -64,10 +111,7 @@
                             <li class="nav-item mx-1" data-aos="fade-left" data-aos-delay="200">
                                 <a class="nav-link d-flex align-items-center p-2" asp-controller="SavedItems" asp-action="Index">
                                     <i class="bi bi-bookmark fs-5"></i>
-                                    @if (ViewBag.SavedItemsCount > 0)
-                                    {
-                                        <span class="badge rounded-pill bg-primary saved-items-count ms-1">@ViewBag.SavedItemsCount</span>
-                                    }
+                                    @await Component.InvokeAsync("SavedItemsCount")
                                 </a>
                             </li>
                             
@@ -146,7 +190,8 @@
                                     {
                                         <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle notification-badge">
                                             @ViewBag.UnreadNotificationsCount
-                                    </span>
+                                            <script>console.log('Unread notifications: @ViewBag.UnreadNotificationsCount');</script>
+                                        </span>
                                     }
                                 </a>
                                 
@@ -238,6 +283,9 @@
                                     <a class="dropdown-item d-flex align-items-center py-2" asp-controller="SavedItems" asp-action="Index">
                                         <i class="bi bi-bookmark me-2 text-primary"></i> Saved Items
                                     </a>
+                                    <a class="dropdown-item d-flex align-items-center py-2" asp-controller="Account" asp-action="TestSavedItems">
+                                        <i class="bi bi-plus-circle me-2 text-success"></i> Test Saved Items
+                                    </a>
                                     <a class="dropdown-item d-flex align-items-center py-2" asp-controller="Account" asp-action="Settings">
                                         <i class="bi bi-gear me-2 text-primary"></i> Settings
                                     </a>
@@ -281,7 +329,7 @@
                     @if (IsSectionDefined("FullWidth") || isAccountController)
                     {
                         <!-- Contenido de ancho completo -->
-                        <div class="col-12" data-aos="fade-up" data-aos-duration="800">
+                        <div class="col-12" data-aos="fade-up" data-aos-duration="500">
                             @if (TempData["SuccessMessage"] != null)
                             {
                                 <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
@@ -322,8 +370,8 @@
                     else
                     {
                         <!-- Sidebar -->
-                        <div class="col-md-2 col-lg-2 col-xl-2 d-none d-md-block">
-                            <div class="sidebar" data-aos="fade-right" data-aos-duration="800">
+                        <div class="col-lg-2 col-md-3 d-none d-md-block sidebar-container">
+                            <div class="sidebar" data-aos="fade-right" data-aos-duration="500">
                                 <ul class="nav flex-column">
                                     <li class="nav-item">
                                         <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")" 
@@ -396,7 +444,7 @@
                         </div>
                         
                         <!-- Main Content -->
-                        <div class="@(ViewBag.HideRightSidebar == true ? "col-md-10 col-lg-10 col-xl-10" : "col-md-8 col-lg-8 col-xl-8")" data-aos="fade-up" data-aos-duration="800">
+                        <div class="@(ViewBag.HideRightSidebar == true ? "col-lg-10 col-md-9" : "col-lg-8 col-md-6") px-4 px-md-3" data-aos="fade-up" data-aos-duration="800">
                             @if (TempData["SuccessMessage"] != null)
                             {
                                 <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
@@ -427,27 +475,7 @@
                             @RenderBody()
                         </div>
                         
-                        <!-- Right Sidebar -->
-                        @if (ViewBag.HideRightSidebar != true)
-                        {
-                            <div class="col-md-2 col-lg-2 col-xl-2 d-none d-md-block">
-                                <div class="right-sidebar" data-aos="fade-left" data-aos-duration="800">
-                                    @if (!User.Identity.IsAuthenticated)
-                                    {
-                                        <div class="bg-light rounded p-3 mb-4 shadow-sm">
-                                            <h6 class="fw-bold">Join the Community</h6>
-                                            <p class="small text-muted mb-3">Sign up to ask questions, answer, vote, and connect with other developers.</p>
-                                            <div class="d-grid gap-2">
-                                                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm">Sign Up</a>
-                                                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-sm">Sign In</a>
-                                            </div>
-                                        </div>
-                                    }
-                                    
-                                    @await Component.InvokeAsync("PopularTags")
-                                </div>
-                </div>
-            }
+                       
                     }
                 </div>
             </div>
@@ -486,91 +514,311 @@
         </div>
     </footer>
 
+    <!-- Toast container for real-time notifications -->
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        <!-- Toasts will be dynamically added here -->
+    </div>
+
+    <!-- Audio element for notification sounds -->
+    <audio id="notification-sound" preload="auto" style="display: none;">
+        <source src="/audio/notification.mp3" type="audio/mpeg">
+        <source src="/audio/notification.ogg" type="audio/ogg">
+    </audio>
+
+    <!-- Mobile Navigation for small screens -->
+    <div class="mobile-nav-bottom d-md-none">
+        <a href="@Url.Action("Index", "Home")" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="bi bi-house"></i></div>
+            <div class="mobile-nav-text">Home</div>
+        </a>
+        <a href="@Url.Action("Index", "Questions")" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="bi bi-question-circle"></i></div>
+            <div class="mobile-nav-text">Questions</div>
+        </a>
+        <a href="@Url.Action("Index", "Tags")" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="bi bi-tags"></i></div>
+            <div class="mobile-nav-text">Tags</div>
+        </a>
+        <a href="@Url.Action("Index", "Users")" class="mobile-nav-item">
+            <div class="mobile-nav-icon"><i class="bi bi-people"></i></div>
+            <div class="mobile-nav-text">Users</div>
+        </a>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a href="@Url.Action("Profile", "Account")" class="mobile-nav-item">
+                <div class="mobile-nav-icon"><i class="bi bi-person"></i></div>
+                <div class="mobile-nav-text">Profile</div>
+            </a>
+        }
+        else
+        {
+            <a href="@Url.Action("Login", "Account")" class="mobile-nav-item">
+                <div class="mobile-nav-icon"><i class="bi bi-box-arrow-in-right"></i></div>
+                <div class="mobile-nav-text">Sign In</div>
+            </a>
+        }
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js" integrity="sha512-kUEWhpU1blEGvTb3vw2SVR+uDKLvR7F5DM3N7WLmxYDZl9wCbPS6cEGJHq9MqW9Mh5gzlL/Vu7U1UJ4P2jxmPw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4GW5tftyJ3VLthbUZ+/UxdFi86ADU5VG0zP0TCMnMo9IQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js" integrity="sha512-iuOGnKjmtRJjhxdbxJt9uyJa9FYt721g/0ESJYMxu/Z7siC+MSZ8iNVYHSLUxcXaRdX0YcDpw+mBULXDrQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js" integrity="sha512-jwrwRWZWW9J6bjmBOJxPcbRvEBSQeY4Ad0NEXSfP0vwYi/Yu9x5VhDBl3wz6Pnxs8Rx/ultUUc2LG7ZDs6hOsQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- Real-time features scripts -->
+    <script src="~/js/signalr-loader.js" asp-append-version="true"></script>
+    <script src="~/js/signalr-connection-check.js" asp-append-version="true"></script>
+    <script src="~/js/activity-handler.js" asp-append-version="true"></script>
+    <script src="~/js/presence-handler.js" asp-append-version="true"></script>
+    <script src="~/js/notification-service-fixed.js" asp-append-version="true"></script>
+    <script src="~/js/view-counter-fixed.js" asp-append-version="true"></script>
+    <script src="~/js/reputation-sync.js" asp-append-version="true"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     
     <script>
-        // Initialize AOS animations
+        // Khởi tạo animation nhanh hơn
         document.addEventListener('DOMContentLoaded', function() {
+            // Tối ưu AOS
             AOS.init({
                 once: true,
-                duration: 800,
-                easing: 'ease-out-cubic'
+                duration: 400, // Giảm xuống còn 400ms
+                easing: 'ease-out', // Sử dụng easing đơn giản và nhanh hơn
+                offset: 20, // Giảm offset để trigger animation sớm hơn
+                delay: 0, // Bỏ delay mặc định
+                throttleDelay: 0, // Giảm throttle delay
+                disable: window.innerWidth < 768 // Tắt hiệu ứng trên thiết bị di động để cải thiện hiệu suất
             });
             
-            // Initialize page transition
-            setTimeout(() => {
+            // Hiển thị nội dung ngay lập tức trên mobile
+            if (window.innerWidth < 768) {
                 document.querySelector('.main-content').classList.add('loaded');
-            }, 100);
+            } else {
+                // Hiệu ứng load nhanh hơn trên desktop
+                setTimeout(() => {
+                    document.querySelector('.main-content').classList.add('loaded');
+                }, 30); // Chỉ chờ 30ms
+            }
             
-            // Add scroll behavior to navbar
+            // Optimize navbar shadow
             const navbar = document.querySelector('.navbar');
-            window.addEventListener('scroll', function() {
-                if (window.scrollY > 20) {
-                    navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
-                } else {
-                    navbar.style.boxShadow = '0 2px 15px rgba(0, 0, 0, 0.05)';
+            function updateNavbarShadow() {
+                navbar.style.boxShadow = window.scrollY > 10 ? 
+                    '0 4px 20px rgba(0, 0, 0, 0.08)' : 
+                    '0 2px 15px rgba(0, 0, 0, 0.05)';
+            }
+            
+            // Hiệu năng tốt hơn với passive listener
+            window.addEventListener('scroll', updateNavbarShadow, { passive: true });
+            updateNavbarShadow(); // Gọi ngay lập tức
+            
+            // Tối ưu hiệu ứng chuyển trang - nhanh và nhẹ nhàng hơn
+            document.querySelectorAll('a').forEach(anchor => {
+                // Bỏ qua các liên kết đặc biệt
+                if (anchor.hasAttribute('data-bs-toggle') || 
+                    anchor.hostname !== window.location.hostname ||
+                    anchor.getAttribute('href')?.startsWith('#') ||
+                    anchor.getAttribute('href')?.includes('javascript:') ||
+                    anchor.getAttribute('target') === '_blank' ||
+                    anchor.classList.contains('dropdown-toggle') ||
+                    (anchor.classList.contains('nav-link') && anchor.hasAttribute('data-bs-toggle'))) {
+                    return;
                 }
+                
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetHref = anchor.getAttribute('href');
+                    
+                    // Nếu là trang chủ, chuyển ngay lập tức
+                    if (targetHref === '/' || targetHref === '/Home' || targetHref === '/Home/Index') {
+                        window.location.href = targetHref;
+                        return;
+                    }
+                    
+                    // Hiệu ứng mờ nhẹ, không dịch chuyển để tránh giật
+                    const mainContent = document.querySelector('.main-content');
+                    mainContent.style.opacity = '0.9';
+                    mainContent.style.transition = 'opacity 100ms ease';
+                    
+                    // Chỉ chờ 100ms
+                    setTimeout(() => {
+                        window.location.href = targetHref;
+                    }, 100);
+                });
             });
             
-            // Initialize soft page transitions
-            document.querySelectorAll('a').forEach(anchor => {
-                if (!anchor.hasAttribute('data-bs-toggle') && 
-                    anchor.hostname === window.location.hostname &&
-                    !anchor.getAttribute('href')?.startsWith('#') &&
-                    !anchor.getAttribute('href')?.includes('javascript:') &&
-                    anchor.getAttribute('target') !== '_blank') {
+            // Xử lý sticky sidebar khi cuộn
+            const handleStickyElements = () => {
+                const navbar = document.querySelector('.navbar');
+                const navbarHeight = navbar ? navbar.offsetHeight : 70;
+                const footer = document.querySelector('.footer');
+                const footerTop = footer ? footer.getBoundingClientRect().top : 0;
+                const windowHeight = window.innerHeight;
+                
+                // Đặt lại top cho sidebar để đảm bảo nó nằm dưới navbar
+                document.querySelectorAll('.sidebar, .right-sidebar').forEach(sidebar => {
+                    // Đảm bảo sidebar không bị che khuất bởi navbar
+                    sidebar.style.top = `${navbarHeight + 6}px`;
                     
-                    anchor.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const targetHref = anchor.getAttribute('href');
+                    // Kiểm tra nếu footer đến gần viewport
+                    if (footer && footerTop < windowHeight) {
+                        // Tính khoảng cách từ bottom của viewport đến top của footer
+                        const distanceToFooter = footerTop - windowHeight;
                         
-                        document.querySelector('.main-content').style.opacity = '0';
-                        document.querySelector('.main-content').style.transform = 'translateY(10px)';
-                        
-                        setTimeout(() => {
-                            window.location.href = targetHref;
-                        }, 300);
-                    });
-                }
-            });
+                        // Điều chỉnh max-height để không bị che khuất bởi footer
+                        sidebar.style.maxHeight = `calc(100vh - ${navbarHeight + 16}px - ${Math.abs(distanceToFooter)}px)`;
+                    } else {
+                        // Đặt max-height bình thường khi không gần footer
+                        sidebar.style.maxHeight = `calc(100vh - ${navbarHeight + 16}px)`;
+                    }
+                    
+                    // Thêm padding-bottom để không bị che khuất bởi footer trên màn hình ngắn
+                    if (window.innerHeight < 700) {
+                        sidebar.style.paddingBottom = '60px';
+                    }
+                });
+            };
+            
+            // Gọi hàm xử lý sticky elements khi trang load và resize
+            handleStickyElements();
+            window.addEventListener('scroll', handleStickyElements, { passive: true });
+            window.addEventListener('resize', handleStickyElements, { passive: true });
             
             // Responsive handling for mobile devices
-            const handleResize = () => {
+            const handleMobileResize = () => {
                 const windowWidth = window.innerWidth;
-                const contentColumn = document.querySelector('.col-md-8, .col-md-10');
                 
-                if (windowWidth < 768 && contentColumn) {
-                    contentColumn.classList.add('mt-3');
-                } else if (contentColumn) {
-                    contentColumn.classList.remove('mt-3');
+                const contentColumns = document.querySelectorAll('.col-lg-8, .col-lg-10, .col-12');
+                
+                if (windowWidth < 768) {
+                    contentColumns.forEach(col => {
+                        col.classList.add('mt-3');
+                        col.style.width = '100%';
+                        col.style.maxWidth = '100%';
+                        col.style.overflowX = 'hidden';
+                    });
+                    
+                    document.querySelectorAll('.container-fluid').forEach(container => {
+                        container.style.paddingLeft = '10px';
+                        container.style.paddingRight = '10px';
+                    });
+                    
+                    const mainContent = document.querySelector('.main-content');
+                    if (mainContent) {
+                        mainContent.style.width = '100%';
+                        mainContent.style.overflowX = 'hidden';
+                    }
+                } else {
+                    contentColumns.forEach(col => {
+                        col.classList.remove('mt-3');
+                        col.style.width = '';
+                        col.style.maxWidth = '';
+                        col.style.overflowX = '';
+                    });
+                    
+                    document.querySelectorAll('.container-fluid').forEach(container => {
+                        container.style.paddingLeft = '';
+                        container.style.paddingRight = '';
+                    });
+                    
+                    const mainContent = document.querySelector('.main-content');
+                    if (mainContent) {
+                        mainContent.style.width = '';
+                        mainContent.style.overflowX = '';
+                    }
+                }
+                
+                if (windowWidth < 768) {
+                    document.querySelectorAll('pre, table, .card').forEach(el => {
+                        el.style.maxWidth = '100%';
+                        if (el.tagName === 'TABLE') {
+                            el.style.display = 'block';
+                            el.style.overflowX = 'auto';
+                        }
+                    });
+                } else {
+                    document.querySelectorAll('pre, table, .card').forEach(el => {
+                        el.style.maxWidth = '';
+                        if (el.tagName === 'TABLE') {
+                            el.style.display = '';
+                            el.style.overflowX = '';
+                        }
+                    });
                 }
             };
             
-            // Call once on load and add resize listener
-            handleResize();
-            window.addEventListener('resize', handleResize);
+            handleMobileResize();
+            
+            let mobileResizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(mobileResizeTimer);
+                mobileResizeTimer = setTimeout(handleMobileResize, 100);
+            });
         });
     </script>
     
     @await RenderSectionAsync("Scripts", required: false)
+    
+    <!-- Fix for click issues -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Debugging - log all clicks
+            document.addEventListener('click', function(e) {
+                console.log('Clicked element:', e.target);
+                
+                // Find repository card if we're inside one
+                const repoCard = findParentWithClass(e.target, 'repository-card');
+                if (repoCard) {
+                    console.log('Inside repository card:', repoCard);
+                    
+                    // Find the Details link in the card
+                    const detailsLink = repoCard.querySelector('.repository-details-link') || 
+                                        repoCard.querySelector('.repository-title a');
+                    
+                    if (detailsLink && !isClickingLink(e.target)) {
+                        console.log('Redirecting to:', detailsLink.href);
+                        // If we clicked the card but not a link or button, navigate to details
+                        window.location.href = detailsLink.href;
+                    }
+                }
+            });
+            
+            // Add hover effect to repository cards for better UX
+            const repoCards = document.querySelectorAll('.repository-card');
+            repoCards.forEach(card => {
+                card.style.cursor = 'pointer';
+            });
+            
+            // Helper function to check if clicking a link or button
+            function isClickingLink(element) {
+                if (!element) return false;
+                
+                // Check if the element or any parent is a link or button
+                let current = element;
+                while (current !== document.body && current !== null) {
+                    const tagName = current.tagName.toLowerCase();
+                    if (tagName === 'a' || tagName === 'button' || 
+                        current.classList.contains('btn') || 
+                        current.hasAttribute('role') && current.getAttribute('role') === 'button') {
+                        return true;
+                    }
+                    current = current.parentElement;
+                }
+                return false;
+            }
+            
+            // Helper function to find parent with specific class
+            function findParentWithClass(element, className) {
+                while (element && !element.classList.contains(className)) {
+                    element = element.parentElement;
+                }
+                return element;
+            }
+        });
+    </script>
 </body>
 </html>
 
-@@media (max-width: 768px) {
-    .col-md-8, .col-md-10, .col-md-2 {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-}
 
-.d-flex { display: flex !important; }
-.flex-row { flex-direction: row !important; }
-.flex-column { flex-direction: column !important; }
 
