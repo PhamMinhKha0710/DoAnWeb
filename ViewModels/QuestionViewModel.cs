@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
+using DoAnWeb.Models;
 
 namespace DoAnWeb.ViewModels
 {
@@ -58,6 +59,12 @@ namespace DoAnWeb.ViewModels
         /// </summary>
         [Display(Name = "Attachments")]
         public List<IFormFile> Attachments { get; set; } = new List<IFormFile>();
+        
+        /// <summary>
+        /// Collection of existing attachments for the question
+        /// Used for displaying and managing existing attachments during editing
+        /// </summary>
+        public List<QuestionAttachment> ExistingAttachments { get; set; } = new List<QuestionAttachment>();
         
         /// <summary>
         /// Collection of image URLs that have been uploaded via the Markdown editor

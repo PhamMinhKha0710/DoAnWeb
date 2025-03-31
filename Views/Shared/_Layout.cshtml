@@ -1,27 +1,83 @@
 @using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http.Extensions
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
 @{
-    // Detectar si estamos en el controlador Account
+    // Detect if we are in the Account controller
     bool isAccountController = ViewContext.RouteData.Values["controller"].ToString() == "Account";
+    
+    // Get theme from cookie or default to "light"
+    string currentTheme = "light";
+    if (HttpContextAccessor.HttpContext.Request.Cookies.ContainsKey("theme"))
+    {
+        currentTheme = HttpContextAccessor.HttpContext.Request.Cookies["theme"];
+    }
+
+    // Helper to get current absolute URL
+    string GetCurrentUrl()
+    {
+        return $"{HttpContextAccessor.HttpContext.Request.Scheme}://{HttpContextAccessor.HttpContext.Request.Host}{HttpContextAccessor.HttpContext.Request.Path}{HttpContextAccessor.HttpContext.Request.QueryString}";
+    }
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="@currentTheme">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>@ViewData["Title"] - DevCommunity</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="@ViewData["Title"] - DevCommunity">
+    <meta name="description" content="@(ViewData["Description"] ?? "DevCommunity - Nền tảng kết nối lập trình viên, nơi chia sẻ mã nguồn và giải đáp thắc mắc kỹ thuật từ cộng đồng")">
+    <meta name="keywords" content="community, developers, programming, coding, questions, answers, repository, git">
+    <meta name="author" content="DevCommunity Team">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="@GetCurrentUrl()">
+    <meta property="og:title" content="@ViewData["Title"] - DevCommunity">
+    <meta property="og:description" content="@(ViewData["Description"] ?? "DevCommunity - Nền tảng kết nối lập trình viên, nơi chia sẻ mã nguồn và giải đáp thắc mắc kỹ thuật từ cộng đồng")">
+    <meta property="og:image" content="@(ViewData["OgImage"] ?? Url.Content("~/images/dev-community-social.png"))">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="@GetCurrentUrl()">
+    <meta property="twitter:title" content="@ViewData["Title"] - DevCommunity">
+    <meta property="twitter:description" content="@(ViewData["Description"] ?? "DevCommunity - Nền tảng kết nối lập trình viên, nơi chia sẻ mã nguồn và giải đáp thắc mắc kỹ thuật từ cộng đồng")">
+    <meta property="twitter:image" content="@(ViewData["TwitterImage"] ?? Url.Content("~/images/dev-community-social.png"))">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="shortcut icon" href="~/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="~/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="~/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="~/apple-touch-icon.png">
+    <link rel="manifest" href="~/site.webmanifest">
+    <meta name="theme-color" content="#2a1a87">
+    <meta name="msapplication-TileColor" content="#2a1a87">
     <script type="importmap"></script>
-    <!-- Google Fonts -->
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="~/lib/bootstrap/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" as="script">
+    <link rel="preload" href="~/lib/jquery/dist/jquery.min.js" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" as="style">
+    
+    <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Main stylesheets -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/themes.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/fast-animations.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/questions.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/repositories.css" asp-append-version="true" />
@@ -33,30 +89,590 @@
     <link rel="stylesheet" href="~/css/sidebar.css" />
     <link rel="stylesheet" href="~/css/reputation-animations.css" />
     
+    <!-- Conditional IE polyfills -->
+    <!--[if IE]>
+    <script src="https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2"></script>
+    <script>cssVars({ watch: true });</script>
+    <![endif]-->
+    
     @await RenderSectionAsync("Styles", required: false)
+    
+    <!-- Inline critical CSS -->
+    <style>
+        /* Avoid Flash of Unstyled Content */
+        html {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Smooth scrolling for entire page */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        @@media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+        }
+        
+        /* Initial theme styles to prevent flicker */
+        :root {
+            --theme-primary: #2a1a87;
+            --theme-secondary: #4130c0;
+            --theme-bg-light: #f4f2ff;
+            --theme-bg-dark: #121020;
+        }
+        
+        [data-theme="dark"] {
+            color-scheme: dark;
+        }
+        
+        [data-theme="light"] {
+            color-scheme: light;
+        }
+        
+        /* Background color for body */
+        body {
+            background-color: var(--theme-bg-light);
+            transition: background-color 0.3s ease;
+        }
+        
+        [data-theme="dark"] body {
+            background-color: var(--theme-bg-dark);
+        }
+        
+        /* Account page styles with building background image */
+        body.account-page {
+            background: none;
+            background-color: transparent;
+        }
+        
+        .account-bg-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .account-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/images/cta-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.8);
+            transform: scale(1.05);
+            animation: slowZoom 30s infinite alternate ease-in-out;
+        }
+        
+        .account-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(26, 16, 66, 0.8) 0%, rgba(65, 48, 192, 0.7) 100%);
+            backdrop-filter: blur(2px);
+        }
+        
+        /* Login/Register form styling */
+        .auth-container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 40px;
+            border-radius: 16px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        [data-theme="dark"] .auth-container {
+            background-color: rgba(30, 27, 46, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .auth-container h2 {
+            margin-bottom: 24px;
+            color: var(--theme-primary);
+            font-weight: 700;
+        }
+        
+        [data-theme="dark"] .auth-container h2 {
+            color: white;
+        }
+        
+        .auth-container .form-control {
+            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        [data-theme="dark"] .auth-container .form-control {
+            background-color: rgba(18, 16, 32, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .auth-container .btn-primary {
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+            border: none;
+            box-shadow: 0 4px 15px rgba(65, 48, 192, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .auth-container .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(65, 48, 192, 0.4);
+        }
+        
+        @@keyframes slowZoom {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.1);
+            }
+        }
+        
+        /* Card styling adjustments for new background */
+        .card {
+            border: none;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        [data-theme="dark"] .card {
+            background-color: #1e1b2e;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Animation for page load */
+        .page-transition {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Social links from footer */
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .footer-link {
+            color: rgba(255, 255, 255, 0.75);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .footer-link:hover {
+            color: white;
+            transform: translateX(3px);
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .footer-input {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding-right: 50px;
+            height: 46px;
+            border-radius: 8px;
+        }
+        
+        .footer-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .footer-input:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1);
+        }
+        
+        .subscribe-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 46px;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .subscribe-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        
+        .opacity-80 {
+            opacity: 0.8;
+        }
+        
+        .hover-opacity-100:hover {
+            opacity: 1;
+        }
+        
+        /* Hero background for navbar */
+        .hero-nav-bg {
+            position: relative;
+            background-image: url('/images/blog-page-title-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .hero-nav-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 16, 66, 0.85); /* Dark purple overlay */
+            backdrop-filter: blur(3px);
+            z-index: 1;
+        }
+        
+        .navbar {
+            position: relative;
+            z-index: 2;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 25px 0; /* Tăng padding từ 15px lên 25px */
+        }
+        
+        /* Page title styles */
+        .page-title-container {
+            position: relative;
+            z-index: 2;
+            padding: 25px 0 60px; /* Tăng padding từ 20px 0 50px lên 25px 0 60px */
+        }
+        
+        /* Ensure good text contrast on dark background */
+        .navbar-brand, .navbar .nav-link, .navbar .dropdown-toggle {
+            color: #fff !important;
+        }
+        
+        /* Adjust brand styling for new background */
+        .brand-logo-container {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            height: 42px; /* Tăng chiều cao của container logo */
+            width: 42px; /* Tăng chiều rộng của container logo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+        
+        .brand-icon {
+            font-size: 1.4rem !important; /* Tăng kích thước icon */
+        }
+        
+        .navbar-brand {
+            font-size: 1.3rem; /* Tăng kích thước chữ brand */
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        
+        /* Search box styling for hero background */
+        .nav-search-group {
+            border-radius: 9999px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.15);
+            height: 46px; /* Tăng chiều cao của search box */
+        }
+        
+        .nav-search-group:focus-within {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+        
+        .nav-search-input {
+            background: transparent;
+            color: white;
+        }
+        
+        .nav-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .nav-search-group .input-group-text {
+            color: white;
+        }
+        
+        /* Button styling for new background */
+        .nav-icon-btn {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.2s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 0 3px;
+            color: white;
+        }
+        
+        .nav-icon-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            color: white;
+        }
+        
+        /* Theme switch styling for new background */
+        .theme-switch-label {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .theme-switch-label:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Sign In/Up buttons */
+        .btn-sign-in {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white !important;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn-sign-in:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .btn-sign-up {
+            background: rgba(255, 255, 255, 0.85);
+            border: none;
+            color: #2a1a87 !important;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-sign-up:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Mobile menu */
+        @@media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(26, 16, 66, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 1rem;
+                border-radius: 8px;
+                margin-top: 10px;
+            }
+            
+            .nav-mobile-links {
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            
+            .nav-link-mobile {
+                color: white;
+            }
+            
+            .nav-link-mobile:hover, .nav-link-mobile.active {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+        }
+        
+        /* Preserve existing dropdown styling */
+        .dropdown-menu {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: dropdownFadeIn 0.3s ease-out;
+        }
+        
+        [data-theme="dark"] .dropdown-menu {
+            background-color: #1e1e1e;
+        }
+        
+        [data-theme="light"] .dropdown-menu {
+            background-color: #ffffff;
+        }
+        
+        /* Other existing styles remain unchanged */
+        .user-dropdown {
+            width: 280px;
+        }
+        
+        .notification-dropdown, .chat-dropdown {
+            width: 320px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        @@keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    
+    <!-- Prefetch popular pages -->
+    <link rel="prefetch" href="@Url.Action("Index", "Home")">
+    <link rel="prefetch" href="@Url.Action("Index", "Questions")">
+    <link rel="prefetch" href="@Url.Action("Index", "Tags")">
+    
+    <!-- Page load optimization -->
+    <script>
+        // Set visibility after DOM loads to prevent FOUC
+        document.documentElement.style.visibility = 'hidden';
+        document.addEventListener('DOMContentLoaded', function() {
+            document.documentElement.style.visibility = 'visible';
+            document.body.classList.add('page-transition');
+        });
+        
+        // Theme handling
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+                }
+            } catch (e) {
+                console.warn('Theme setting failed:', e);
+            }
+        })();
+    </script>
 </head>
-<body class="d-flex flex-column">
-    <header class="flex-shrink-0">
-        <nav class="navbar navbar-expand-lg sticky-top">
-            <div class="container-fluid d-flex justify-content-between align-items-center flex-wrap">
-                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index" data-aos="fade-right" data-aos-duration="800">
-                    <i class="bi bi-code-square me-2 text-primary"></i>
-                    DevCommunity
+<body class="d-flex flex-column @(isAccountController ? "account-page" : "")" data-bs-theme="@currentTheme">
+    @if (isAccountController)
+    {
+        <div class="account-bg-wrapper">
+            <div class="account-bg"></div>
+            <div class="account-overlay"></div>
+        </div>
+        
+        <!-- Simple header for account pages -->
+        <header class="flex-shrink-0 py-4">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                        <div class="brand-logo-container me-2">
+                            <i class="bi bi-code-square fs-4 brand-icon"></i>
+                        </div>
+                        <span class="fw-semibold text-white">DevCommunity</span>
+                    </a>
+                    <div>
+                        @if (ViewContext.RouteData.Values["action"].ToString() == "Login")
+                        {
+                            <a class="btn btn-outline-light rounded-pill px-4" asp-controller="Account" asp-action="Register">
+                                <i class="bi bi-person-plus me-2"></i> Create Account
+                            </a>
+                        }
+                        else if (ViewContext.RouteData.Values["action"].ToString() == "Register")
+                        {
+                            <a class="btn btn-outline-light rounded-pill px-4" asp-controller="Account" asp-action="Login">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                            </a>
+                        }
+                        <a class="btn btn-light rounded-pill ms-2 px-4" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-house me-2"></i> Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+    }
+    else
+    {
+        <header class="flex-shrink-0">
+            <div class="hero-nav-bg">
+                <div class="hero-nav-overlay"></div>
+                <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index" data-aos="fade-right" data-aos-duration="600">
+                        <div class="brand-logo-container me-2">
+                            <i class="bi bi-code-square fs-4 brand-icon"></i>
+                        </div>
+                    <span class="fw-semibold">DevCommunity</span>
                 </a>
-                <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 
-                <div class="collapse navbar-collapse flex-grow-1" id="navbarContent">
-                    <div class="d-flex flex-grow-1 search-container mx-lg-4" data-aos="fade-down" data-aos-delay="100">
-                        <div class="w-100 position-relative" id="globalSearchContainer">
-                            <div class="input-group">
-                                <input type="text" id="globalSearchInput" class="form-control py-2 ps-3 pe-5 border rounded-pill" 
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <div class="search-container mx-lg-4 flex-grow-1" data-aos="fade-down" data-aos-delay="100">
+                        <div class="position-relative" id="globalSearchContainer">
+                                <div class="input-group nav-search-group">
+                                <span class="input-group-text bg-transparent border-end-0">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                    <input type="text" id="globalSearchInput" class="form-control py-2 border-start-0 nav-search-input" 
                                        placeholder="Search questions, tags, or users..." aria-label="Search" 
                                        value="@ViewData["SearchTerm"]" autocomplete="off">
-                                <button class="btn position-absolute end-0 top-0 h-100 px-3 bg-transparent border-0" type="button" id="globalSearchButton">
-                                    <i class="bi bi-search text-grey-500"></i>
-                                </button>
                             </div>
                             <!-- Search Results Dropdown -->
                             <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown shadow-sm rounded">
@@ -104,30 +720,66 @@
                         </div>
                     </div>
                     
-                    <ul class="navbar-nav ms-auto d-flex align-items-center flex-row flex-wrap">
+                    <ul class="navbar-nav ms-auto d-flex align-items-center">
+                            <!-- Main Nav Links - Only visible on mobile -->
+                            <li class="nav-item d-lg-none border-bottom pb-2 mb-2 w-100">
+                                <div class="nav-mobile-links">
+                                    <a class="nav-link-mobile mb-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")" 
+                                       asp-controller="Home" asp-action="Index">
+                                        <i class="bi bi-house-door me-2"></i> Home
+                                    </a>
+                                    <a class="nav-link-mobile mb-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Questions" ? "active" : "")" 
+                                       asp-controller="Questions" asp-action="Index">
+                                        <i class="bi bi-question-circle me-2"></i> Questions
+                                    </a>
+                                    <a class="nav-link-mobile mb-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Tags" ? "active" : "")" 
+                                       asp-controller="Tags" asp-action="Index">
+                                        <i class="bi bi-tags me-2"></i> Tags
+                                    </a>
+                                    <a class="nav-link-mobile mb-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Users" ? "active" : "")" 
+                                       asp-controller="Users" asp-action="Index">
+                                        <i class="bi bi-people me-2"></i> Users
+                                    </a>
+                                    <a class="nav-link-mobile mb-2 @(ViewContext.RouteData.Values["controller"].ToString() == "Repositories" ? "active" : "")" 
+                                       asp-controller="Repositories" asp-action="Index">
+                                        <i class="bi bi-git me-2"></i> Repositories
+                                    </a>
+                                </div>
+                            </li>
+                            
+                        <li class="nav-item d-none d-lg-block me-2">
+                            <div class="theme-switch">
+                                <input type="checkbox" id="theme-switch-checkbox" />
+                                    <label for="theme-switch-checkbox" class="btn btn-icon theme-switch-label" aria-label="Toggle theme">
+                                    <i class="bi bi-sun-fill theme-icon-light"></i>
+                                    <i class="bi bi-moon-fill theme-icon-dark"></i>
+                                </label>
+                            </div>
+                        </li>
+                        
                         @if (User.Identity.IsAuthenticated)
                         {
                             <!-- Saved Items -->
                             <li class="nav-item mx-1" data-aos="fade-left" data-aos-delay="200">
-                                <a class="nav-link d-flex align-items-center p-2" asp-controller="SavedItems" asp-action="Index">
+                                    <a class="nav-link d-flex align-items-center p-2 btn-icon nav-icon-btn" asp-controller="SavedItems" asp-action="Index" title="Saved items">
                                     <i class="bi bi-bookmark fs-5"></i>
-                                    @await Component.InvokeAsync("SavedItemsCount")
+                                    <span class="badge-container">@await Component.InvokeAsync("SavedItemsCount")</span>
                                 </a>
                             </li>
                             
                             <!-- Chat Dropdown -->
                             <li class="nav-item dropdown mx-1" data-aos="fade-left" data-aos-delay="250">
-                                <a class="nav-link d-flex align-items-center p-2" href="#" id="chatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <a class="nav-link d-flex align-items-center p-2 btn-icon nav-icon-btn" href="#" id="chatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Messages">
                                     <i class="bi bi-chat fs-5"></i>
                                     @if (ViewBag.UnreadChatsCount > 0)
                                     {
                                         <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle chat-badge">
                                             @ViewBag.UnreadChatsCount
-                                    </span>
+                                        </span>
                                     }
                                 </a>
                                 
-                                <div class="dropdown-menu dropdown-menu-end chat-dropdown shadow" aria-labelledby="chatDropdown" style="width: 320px;">
+                                <div class="dropdown-menu dropdown-menu-end chat-dropdown shadow-sm" aria-labelledby="chatDropdown">
                                     <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
                                         <h6 class="fw-bold m-0">Messages</h6>
                                         <a href="@Url.Action("Index", "Chat")" class="text-decoration-none small">See all</a>
@@ -138,64 +790,54 @@
                                         {
                                             @foreach (var chat in ViewBag.RecentChats)
                                             {
-                                                <a href="@Url.Action("Conversation", "Chat", new { userId = chat.OtherUserId })" class="text-decoration-none text-reset">
-                                                    <div class="chat-item @(chat.HasUnreadMessages ? "unread" : "")">
-                                                        <div class="d-flex">
-                                                            <div class="me-2">
-                                                                <img src="@(string.IsNullOrEmpty(chat.OtherUserAvatar) ? "/images/default-avatar.png" : chat.OtherUserAvatar)" 
-                                                                     alt="@chat.OtherUserName" class="rounded-circle" width="40" height="40">
-                                                            </div>
-                                                            <div class="flex-grow-1 overflow-hidden">
-                                                                <div class="d-flex justify-content-between align-items-start">
-                                                                    <span class="chat-title">@chat.OtherUserName</span>
-                                                                    <span class="chat-time">@chat.LastMessageTime</span>
-                                                                </div>
-                                                                <p class="chat-message mb-0">@chat.LastMessageText</p>
-                                                            </div>
-                                                            @if (chat.HasUnreadMessages)
-                                                            {
-                                                                <span class="position-relative">
-                                                                    <span class="badge rounded-pill bg-primary position-absolute top-50 start-100 translate-middle-y">
-                                                                        @chat.UnreadCount
-                                                                    </span>
-                                                                </span>
-                                                            }
-                                                        </div>
+                                                <a href="@Url.Action("Conversation", "Chat", new { userId = chat.OtherUserId })" class="dropdown-item d-flex align-items-center p-2 @(chat.HasUnreadMessages ? "unread" : "")">
+                                                    <div class="position-relative">
+                                                        <img src="@(string.IsNullOrEmpty(chat.OtherUserProfileImage) ? "/images/default-profile.png" : chat.OtherUserProfileImage)" 
+                                                             class="rounded-circle me-2" width="40" height="40" alt="@chat.OtherUserName's profile">
+                                                        @if (chat.IsOnline)
+                                                        {
+                                                            <span class="status-indicator online"></span>
+                                                        }
                                                     </div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <h6 class="mb-0 text-truncate fw-medium">@chat.OtherUserName</h6>
+                                                            <small class="text-muted ms-2">@chat.LastMessageTime</small>
+                                                        </div>
+                                                        <p class="text-truncate mb-0 small @(chat.HasUnreadMessages ? "fw-medium" : "text-muted")">
+                                                            @chat.LastMessage
+                                                        </p>
+                                                    </div>
+                                                    @if (chat.HasUnreadMessages)
+                                                    {
+                                                        <span class="badge rounded-pill bg-primary ms-2">New</span>
+                                                    }
                                                 </a>
                                             }
                                         }
                                         else
                                         {
                                             <div class="text-center py-4">
-                                                <i class="bi bi-chat-square-text text-muted mb-2" style="font-size: 2rem;"></i>
-                                                <p class="text-muted mb-0">No messages yet</p>
+                                                <p class="text-muted mb-0">No recent messages</p>
                                             </div>
                                         }
                                     </div>
-                                    
-                                    <div class="p-3 border-top">
-                                        <a href="@Url.Action("New", "Chat")" class="btn btn-primary btn-sm w-100">
-                                            <i class="bi bi-pencil-square me-1"></i> New Message
-                                        </a>
-                                    </div>
                                 </div>
                             </li>
-
+                            
                             <!-- Notifications Dropdown -->
                             <li class="nav-item dropdown mx-1" data-aos="fade-left" data-aos-delay="300">
-                                <a class="nav-link d-flex align-items-center p-2" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <a class="nav-link d-flex align-items-center p-2 btn-icon nav-icon-btn" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                                     <i class="bi bi-bell fs-5"></i>
                                     @if (ViewBag.UnreadNotificationsCount > 0)
                                     {
                                         <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle notification-badge">
                                             @ViewBag.UnreadNotificationsCount
-                                            <script>console.log('Unread notifications: @ViewBag.UnreadNotificationsCount');</script>
                                         </span>
                                     }
                                 </a>
                                 
-                                <div class="dropdown-menu dropdown-menu-end notification-dropdown shadow" aria-labelledby="notificationDropdown" style="width: 320px;">
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown shadow-sm" aria-labelledby="notificationDropdown">
                                     <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
                                         <h6 class="fw-bold m-0">Notifications</h6>
                                         <div>
@@ -249,7 +891,7 @@
                                             <div class="text-center py-4">
                                                 <i class="bi bi-bell-slash text-muted mb-2" style="font-size: 2rem;"></i>
                                                 <p class="text-muted mb-0">No notifications yet</p>
-                                        </div>
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -257,15 +899,15 @@
 
                             <!-- User Profile Dropdown -->
                             <li class="nav-item dropdown mx-1" data-aos="fade-left" data-aos-delay="350">
-                                <a class="nav-link d-flex align-items-center p-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <a class="nav-link d-flex align-items-center p-2 btn-icon nav-icon-btn nav-avatar-btn" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">
                                     <div class="position-relative">
                                         <img src="@(ViewBag.CurrentUserAvatar != null ? ViewBag.CurrentUserAvatar : "/images/default-avatar.png")" 
-                                             alt="User Avatar" class="rounded-circle" width="32" height="32">
-                                        <span class="position-absolute bottom-0 end-0 bg-success rounded-circle p-1 border border-white" style="width:10px;height:10px;"></span>
+                                                 alt="User Avatar" class="rounded-circle user-avatar-img" width="32" height="32">
+                                            <span class="position-absolute bottom-0 end-0 bg-success rounded-circle p-1 border border-white online-indicator"></span>
                                     </div>
                                 </a>
                                 
-                                <div class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                                    <div class="dropdown-menu dropdown-menu-end user-dropdown shadow-sm" aria-labelledby="userDropdown">
                                     <div class="px-4 py-3 border-bottom">
                                         <div class="d-flex align-items-center">
                                             <img src="@(ViewBag.CurrentUserAvatar != null ? ViewBag.CurrentUserAvatar : "/images/default-avatar.png")" 
@@ -309,210 +951,648 @@
                         }
                         else
                         {
-                            <li class="nav-item mx-1" data-aos="fade-left" data-aos-delay="200">
-                                <a class="nav-link btn btn-outline-primary rounded-pill px-3 me-2" asp-controller="Account" asp-action="Login">Sign In</a>
+                                <li class="nav-item mx-1 d-none d-sm-block" data-aos="fade-left" data-aos-delay="200">
+                                    <a class="nav-link btn btn-outline-light rounded-pill px-3 me-2 btn-sign-in" asp-controller="Account" asp-action="Login">Sign In</a>
                             </li>
                             <li class="nav-item mx-1" data-aos="fade-left" data-aos-delay="250">
-                                <a class="nav-link btn btn-primary rounded-pill px-3" asp-controller="Account" asp-action="Register">Sign Up</a>
+                                    <a class="nav-link btn btn-light rounded-pill px-3 btn-sign-up" asp-controller="Account" asp-action="Register">Sign Up</a>
                             </li>
                         }
                     </ul>
                 </div>
             </div>
         </nav>
+            
+            @if (ViewContext.RouteData.Values["controller"].ToString() == "Questions" && 
+                 ViewContext.RouteData.Values["action"].ToString() == "Index")
+            {
+                <div class="container page-title-container">
+                    <h1 class="display-4 text-white fw-bold py-3">Newest Questions</h1>
+                </div>
+            }
+            else if (ViewContext.RouteData.Values["controller"].ToString() == "Tags" && 
+                    ViewContext.RouteData.Values["action"].ToString() == "Index")
+            {
+                <div class="container page-title-container">
+                    <h1 class="display-4 text-white fw-bold py-3">Tags</h1>
+                </div>
+            }
+            else if (ViewContext.RouteData.Values["controller"].ToString() == "Users" && 
+                    ViewContext.RouteData.Values["action"].ToString() == "Index")
+            {
+                <div class="container page-title-container">
+                    <h1 class="display-4 text-white fw-bold py-3">Community Users</h1>
+                </div>
+            }
+            else if (ViewContext.RouteData.Values["controller"].ToString() == "Repositories" && 
+                    ViewContext.RouteData.Values["action"].ToString() == "Index")
+            {
+                <div class="container page-title-container">
+                    <h1 class="display-4 text-white fw-bold py-3">Code Repositories</h1>
+                </div>
+            }
+        </div>
     </header>
+    }
+    
+    <!-- Update styles for new navbar with background image -->
+    <style>
+        /* Hero background for navbar */
+        .hero-nav-bg {
+            position: relative;
+            background-image: url('/images/blog-page-title-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .hero-nav-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 16, 66, 0.85); /* Dark purple overlay */
+            backdrop-filter: blur(3px);
+            z-index: 1;
+        }
+        
+        .navbar {
+            position: relative;
+            z-index: 2;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 25px 0; /* Tăng padding từ 15px lên 25px */
+        }
+        
+        /* Page title styles */
+        .page-title-container {
+            position: relative;
+            z-index: 2;
+            padding: 25px 0 60px; /* Tăng padding từ 20px 0 50px lên 25px 0 60px */
+        }
+        
+        /* Ensure good text contrast on dark background */
+        .navbar-brand, .navbar .nav-link, .navbar .dropdown-toggle {
+            color: #fff !important;
+        }
+        
+        /* Adjust brand styling for new background */
+        .brand-logo-container {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            height: 42px; /* Tăng chiều cao của container logo */
+            width: 42px; /* Tăng chiều rộng của container logo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+        
+        .brand-icon {
+            font-size: 1.4rem !important; /* Tăng kích thước icon */
+        }
+        
+        .navbar-brand {
+            font-size: 1.3rem; /* Tăng kích thước chữ brand */
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        
+        /* Search box styling for hero background */
+        .nav-search-group {
+            border-radius: 9999px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.15);
+            height: 46px; /* Tăng chiều cao của search box */
+        }
+        
+        .nav-search-group:focus-within {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+        
+        .nav-search-input {
+            background: transparent;
+            color: white;
+        }
+        
+        .nav-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .nav-search-group .input-group-text {
+            color: white;
+        }
+        
+        /* Button styling for new background */
+        .nav-icon-btn {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.2s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 0 3px;
+            color: white;
+        }
+        
+        .nav-icon-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            color: white;
+        }
+        
+        /* Theme switch styling for new background */
+        .theme-switch-label {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .theme-switch-label:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Sign In/Up buttons */
+        .btn-sign-in {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white !important;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn-sign-in:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .btn-sign-up {
+            background: rgba(255, 255, 255, 0.85);
+            border: none;
+            color: #2a1a87 !important;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-sign-up:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Mobile menu */
+        @@media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(26, 16, 66, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 1rem;
+                border-radius: 8px;
+                margin-top: 10px;
+            }
+            
+            .nav-mobile-links {
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            
+            .nav-link-mobile {
+                color: white;
+            }
+            
+            .nav-link-mobile:hover, .nav-link-mobile.active {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+        }
+        
+        /* Preserve existing dropdown styling */
+        .dropdown-menu {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: dropdownFadeIn 0.3s ease-out;
+        }
+        
+        [data-theme="dark"] .dropdown-menu {
+            background-color: #1e1e1e;
+        }
+        
+        [data-theme="light"] .dropdown-menu {
+            background-color: #ffffff;
+        }
+        
+        /* Other existing styles remain unchanged */
+        .user-dropdown {
+            width: 280px;
+        }
+        
+        .notification-dropdown, .chat-dropdown {
+            width: 320px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        @@keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
     
     <main class="py-4 flex-grow-1">
-        <div class="container-fluid page-transition-wrapper">
-            <div class="main-content">
-                <div class="row g-4">
-                    @if (IsSectionDefined("FullWidth") || isAccountController)
-                    {
-                        <!-- Contenido de ancho completo -->
-                        <div class="col-12" data-aos="fade-up" data-aos-duration="500">
-                            @if (TempData["SuccessMessage"] != null)
-                            {
-                                <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
-                                    <i class="bi bi-check-circle-fill me-2"></i>
-                                    <div>@TempData["SuccessMessage"]</div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            }
-
-                            @if (TempData["ErrorMessage"] != null)
-                            {
-                                <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <div>@TempData["ErrorMessage"]</div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            }
-
-                            @if (TempData["WarningMessage"] != null)
-                            {
-                                <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center" role="alert">
-                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
-                                    <div>@TempData["WarningMessage"]</div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            }
-
-                            @if (IsSectionDefined("FullWidth"))
-                            {
-                                @RenderSection("FullWidth", required: false)
-                            }
-                            else
-                            {
-                                @RenderBody()
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <!-- Sidebar -->
-                        <div class="col-lg-2 col-md-3 d-none d-md-block sidebar-container">
-                            <div class="sidebar" data-aos="fade-right" data-aos-duration="500">
-                                <ul class="nav flex-column">
-                                    <li class="nav-item">
-                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")" 
-                                           asp-controller="Home" asp-action="Index">
-                                            <i class="bi bi-house me-2"></i> Home
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Questions" ? "active" : "")" 
-                                           asp-controller="Questions" asp-action="Index">
-                                            <i class="bi bi-question-circle me-2"></i> Questions
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Tags" ? "active" : "")" 
-                                           asp-controller="Tags" asp-action="Index">
-                                            <i class="bi bi-tags me-2"></i> Tags
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Users" ? "active" : "")" 
-                                           asp-controller="Users" asp-action="Index">
-                                            <i class="bi bi-people me-2"></i> Users
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Repository" ? "active" : "")" 
-                                           asp-controller="Repository" asp-action="Index">
-                                            <i class="bi bi-git me-2"></i> Repositories
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Chat" ? "active" : "")" 
-                                           asp-controller="Chat" asp-action="Index">
-                                            <i class="bi bi-chat-dots me-2"></i> Chat
-                                        </a>
-                                    </li>
-                                </ul>
-                                
-                                <hr class="my-3">
-                                
-                        @if (User.Identity.IsAuthenticated)
+        @if (isAccountController)
+        {
+            <div class="container">
+                @RenderBody()
+            </div>
+        }
+        else
+        {
+            <div class="container-fluid">
+                <div class="main-content">
+                    <div class="row g-4">
+                        @if (IsSectionDefined("FullWidth"))
                         {
-                                    <div class="bg-light rounded-3 p-3 mb-3">
-                                        <h6 class="fw-bold">Your Tags</h6>
-                                        @if (ViewBag.UserPreferredTags != null && ViewBag.UserPreferredTags.Count > 0)
-                                        {
-                                            <div class="d-flex flex-wrap gap-1 mt-2">
-                                                @foreach (var tag in ViewBag.UserPreferredTags)
+                            <!-- Full width content -->
+                            <div class="col-12" data-aos="fade-up" data-aos-duration="500">
+                                @RenderSection("FullWidth", required: false)
+                                @RenderBody()
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Left Sidebar -->
+                            <div class="col-lg-2 col-md-3 d-none d-md-block">
+                                <div class="card sidebar shadow-sm border-0" data-aos="fade-right" data-aos-duration="500">
+                                    <div class="sidebar-inner">
+                                        <nav class="sidebar-nav">
+                                            <div class="nav-section">
+                                                <div class="nav-section-header"></div>
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")" 
+                                                           asp-controller="Home" asp-action="Index">
+                                                            <i class="bi bi-house-door me-2"></i> Home
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Questions" ? "active" : "")" 
+                                                           asp-controller="Questions" asp-action="Index">
+                                                            <i class="bi bi-question-circle me-2"></i> Questions
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Tags" ? "active" : "")" 
+                                                           asp-controller="Tags" asp-action="Index">
+                                                            <i class="bi bi-tags me-2"></i> Tags
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Users" ? "active" : "")" 
+                                                           asp-controller="Users" asp-action="Index">
+                                                            <i class="bi bi-people me-2"></i> Users
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Repositories" ? "active" : "")" 
+                                                           asp-controller="Repositories" asp-action="Index">
+                                                            <i class="bi bi-git me-2"></i> Repositories
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            
+                                            @if (User.Identity.IsAuthenticated)
+                                            {
+                                                <div class="nav-section mt-4">
+                                                    <div class="nav-section-header">Your Space</div>
+                                                    <ul class="nav flex-column">
+                                                        <li class="nav-item">
+                                                            <a class="nav-link" asp-controller="Account" asp-action="Profile">
+                                                                <i class="bi bi-person me-2"></i> Profile
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link" asp-controller="SavedItems" asp-action="Index">
+                                                                <i class="bi bi-bookmark me-2"></i> Saved Items
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link" asp-controller="Chat" asp-action="Index">
+                                                                <i class="bi bi-chat-dots me-2"></i> Messages
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                
+                                                @if (ViewBag.UserPreferredTags != null && ViewBag.UserPreferredTags.Count > 0)
                                                 {
-                                                    <a href="@Url.Action("Tagged", "Questions", new { tagName = tag.Name })" 
-                                                       class="badge text-bg-primary text-decoration-none">
-                                                        @tag.Name
-                                                    </a>
+                                                    <div class="nav-section mt-4">
+                                                        <div class="nav-section-header">Your Tags</div>
+                                                        <div class="question-tags-container">
+                                                            @foreach (var tag in ViewBag.UserPreferredTags)
+                                                            {
+                                                                <a href="@Url.Action("Tagged", "Questions", new { tagName = tag.Name })" class="tag-item">
+                                                                    @tag.Name
+                                                                </a>
+                                                            }
+                                                        </div>
+                                                    </div>
                                                 }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="small text-muted">
-                                                <p class="mb-1">You haven't selected any tags yet.</p>
-                                                <a asp-controller="TagPreferences" asp-action="Index" class="text-decoration-none">
-                                                    <small>Customize your tags ?</small>
-                                                </a>
-                                            </div>
-                                        }
+                                            }
+                                        </nav>
                                     </div>
-                                }
+                                </div>
+                            </div>
+                                
+                            <!-- Main Content -->
+                            <div class="col-lg-8 col-md-10" data-aos="fade-up" data-aos-duration="500">
+                                @RenderBody()
+                            </div>
+                                
+                            <!-- Right Sidebar -->
+                            <div class="col-lg-2 d-none d-lg-block">
+                                <div class="card right-sidebar shadow-sm border-0" data-aos="fade-left" data-aos-duration="500">
+                                    <!-- Right Sidebar Content -->
+                                    @if (IsSectionDefined("RightSidebar"))
+                                    {
+                                        @RenderSection("RightSidebar", false)
+                                    }
+                                    else if (ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "Index")
+                                    {
+                                        <div class="p-3">
+                                            <!-- Developer Resources -->
+                                            <div class="mb-4">
+                                                <h6 class="text-uppercase text-muted fw-bold small mb-3">Developer Resources</h6>
+                                                <div class="resource-links">
+                                                    <a href="https://docs.microsoft.com/en-us/dotnet/" target="_blank" class="resource-link">
+                                                        <i class="bi bi-file-earmark-code me-2"></i>
+                                                        .NET Documentation
+                                                    </a>
+                                                    <a href="https://github.com/trending" target="_blank" class="resource-link">
+                                                        <i class="bi bi-github me-2"></i>
+                                                        Trending on GitHub
+                                                    </a>
+                                                    <a href="https://stackoverflow.com/" target="_blank" class="resource-link">
+                                                        <i class="bi bi-stack me-2"></i>
+                                                        Stack Overflow
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Community Stats -->
+                                            <div class="mb-4">
+                                                <h6 class="text-uppercase text-muted fw-bold small mb-3">Community Stats</h6>
+                                                <div class="stats-container">
+                                                    <div class="stat-item">
+                                                        <i class="bi bi-people-fill text-primary"></i>
+                                                        <span>@ViewBag.TotalUsers Users</span>
+                                                    </div>
+                                                    <div class="stat-item">
+                                                        <i class="bi bi-question-circle-fill text-success"></i>
+                                                        <span>@ViewBag.TotalQuestions Questions</span>
+                                                    </div>
+                                                    <div class="stat-item">
+                                                        <i class="bi bi-chat-fill text-info"></i>
+                                                        <span>@ViewBag.TotalAnswers Answers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Trending Tags -->
+                                            @if (ViewBag.TrendingTags != null && ViewBag.TrendingTags.Count > 0)
+                                            {
+                                                <div class="mb-4">
+                                                    <h6 class="text-uppercase text-muted fw-bold small mb-3">Trending Tags</h6>
+                                                    <div class="question-tags-container">
+                                                        @foreach (var tag in ViewBag.TrendingTags)
+                                                        {
+                                                            <a href="@Url.Action("Tagged", "Questions", new { tagName = tag.Name })" class="tag-item">
+                                                                @tag.Name
+                                                                <span class="tag-count">@tag.Count</span>
+                                                            </a>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <!-- Empty or minimal sidebar for non-home pages -->
+                                        <div class="p-3">
+                                            <!-- You can leave this empty or add minimal content for other pages -->
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </main>
+    
+    <!-- Simple footer for account pages -->
+    @if (isAccountController)
+    {
+        <footer class="py-3 text-center text-white">
+            <div class="container">
+                <p class="mb-1 opacity-75">&copy; @DateTime.Now.Year DevCommunity. All Rights Reserved</p>
+                <p class="mb-0 opacity-50">A modern community platform for developers.</p>
+            </div>
+        </footer>
+    }
+    else
+    {
+        <footer class="footer border-top flex-shrink-0 py-0" style="background: linear-gradient(135deg, #1e0f5e 0%, #4130c0 100%);">
+            <!-- Footer top section with wave shape divider -->
+            <div class="footer-wave-top">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-100" style="height: 40px;">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" style="fill: #fff;"></path>
+                </svg>
+            </div>
+            
+            <!-- Main footer content -->
+            <div class="py-5">
+                <div class="container">
+                    <div class="row g-5">
+                        <!-- Brand and info section -->
+                        <div class="col-lg-4 col-md-6">
+                            <div class="d-flex flex-column h-100">
+                                <div class="mb-4">
+                                    <a href="/" class="d-inline-block text-white">
+                                        <img src="~/images/devCommunity-logo.png" alt="Dev Community" style="max-width: 180px;" />
+                                    </a>
+                                </div>
+                                <p class="text-white opacity-80 mb-4">Nền tảng kết nối lập trình viên, nơi chia sẻ mã nguồn và giải đáp thắc mắc kỹ thuật từ cộng đồng.</p>
+                                <div class="social-links d-flex gap-2 mb-4">
+                                    <a href="#" class="social-link" aria-label="Email">
+                                        <i class="bi bi-envelope-fill"></i>
+                                    </a>
+                                    <a href="#" class="social-link" aria-label="GitHub">
+                                        <i class="bi bi-github"></i>
+                                    </a>
+                                    <a href="#" class="social-link" aria-label="Messenger">
+                                        <i class="bi bi-messenger"></i>
+                                    </a>
+                                    <a href="#" class="social-link" aria-label="Discord">
+                                        <i class="bi bi-discord"></i>
+                                    </a>
+                                </div>
+                                <div class="mt-auto">
+                                    <p class="text-white opacity-80 mb-0 small">© @DateTime.Now.Year Dev Community. All Rights Reserved</p>
+                                </div>
                             </div>
                         </div>
                         
-                        <!-- Main Content -->
-                        <div class="@(ViewBag.HideRightSidebar == true ? "col-lg-10 col-md-9" : "col-lg-8 col-md-6") px-4 px-md-3" data-aos="fade-up" data-aos-duration="800">
-                            @if (TempData["SuccessMessage"] != null)
-                            {
-                                <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
-                                    <i class="bi bi-check-circle-fill me-2"></i>
-                                    <div>@TempData["SuccessMessage"]</div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            }
-
-                            @if (TempData["ErrorMessage"] != null)
-                            {
-                                <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <div>@TempData["ErrorMessage"]</div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            }
-
-                            @if (TempData["WarningMessage"] != null)
-                            {
-                                <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center" role="alert">
-                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
-                                    <div>@TempData["WarningMessage"]</div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            }
-                        
-                            @RenderBody()
+                        <!-- Site links section -->
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <h5 class="text-white fw-bold mb-4">Khám phá</h5>
+                            <ul class="footer-links p-0">
+                                <li class="mb-2">
+                                    <a asp-controller="Questions" asp-action="Index" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> Câu hỏi
+                                    </a>
+                                </li>
+                                <li class="mb-2">
+                                    <a asp-controller="Tags" asp-action="Index" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> Tags
+                                    </a>
+                                </li>
+                                <li class="mb-2">
+                                    <a asp-controller="Users" asp-action="Index" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> Thành viên
+                                    </a>
+                                </li>
+                                <li class="mb-2">
+                                    <a asp-controller="Repository" asp-action="Index" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> Repositories
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                         
-                       
-                    }
+                        <!-- Resources section -->
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <h5 class="text-white fw-bold mb-4">Công cụ</h5>
+                            <ul class="footer-links p-0">
+                                <li class="mb-2">
+                                    <a href="#" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> Markdown Editor
+                                    </a>
+                                </li>
+                                <li class="mb-2">
+                                    <a href="#" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> Code Snippets
+                                    </a>
+                                </li>
+                                <li class="mb-2">
+                                    <a asp-controller="Chat" asp-action="Index" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> Chat
+                                    </a>
+                                </li>
+                                <li class="mb-2">
+                                    <a href="#" class="footer-link">
+                                        <i class="bi bi-chevron-right me-1 small"></i> API Docs
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Contact section -->
+                        <div class="col-lg-4 col-md-6">
+                            <h5 class="text-white fw-bold mb-4">Liên hệ</h5>
+                            <div class="mb-4">
+                                <div class="footer-contact-item d-flex align-items-center mb-3">
+                                    <div class="icon-box me-3 flex-shrink-0">
+                                        <i class="bi bi-envelope"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-medium mb-0 text-white">Email</h6>
+                                        <a href="mailto:devcommunity@gmail.com" class="text-decoration-none text-white opacity-80">devcommunity@gmail.com</a>
+                                    </div>
+                                </div>
+                                <div class="footer-contact-item d-flex align-items-center mb-3">
+                                    <div class="icon-box me-3 flex-shrink-0">
+                                        <i class="bi bi-telephone"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-medium mb-0 text-white">Điện thoại</h6>
+                                        <a href="tel:0935876370" class="text-decoration-none text-white opacity-80">0935876370</a>
+                                    </div>
+                                </div>
+                                <div class="footer-contact-item d-flex align-items-center">
+                                    <div class="icon-box me-3 flex-shrink-0">
+                                        <i class="bi bi-geo-alt"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-medium mb-0 text-white">Địa chỉ</h6>
+                                        <p class="text-white opacity-80 mb-0">Việt Nam</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="newsletter mt-4">
+                                <h6 class="text-white fw-medium mb-3">Đăng ký nhận thông báo</h6>
+                                <div class="position-relative">
+                                    <input type="email" class="form-control footer-input" placeholder="Email của bạn">
+                                    <button class="btn subscribe-btn position-absolute end-0 top-0 h-100">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-                    </main>
-
-    <footer class="footer py-4 border-top flex-shrink-0" style="position: relative; z-index: 10;">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-code-square me-2 text-primary"></i>
-                        <span class="fw-semibold">DevCommunity</span>
-                    </div>
-                    <div class="text-muted small mt-1">
-                        &copy; @DateTime.Now.Year - All rights reserved
+            
+            <!-- Bottom copyright section with different background -->
+            <div class="footer-bottom py-3" style="background: rgba(0,0,0,0.2);">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <p class="text-white opacity-80 mb-md-0 mb-3 text-center text-md-start small">
+                                © Copyright Dev Community All Rights Reserved
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-inline mb-0 text-center text-md-end">
+                                <li class="list-inline-item">
+                                    <a href="#" class="text-white small opacity-80 text-decoration-none hover-opacity-100">Điều khoản</a>
+                                </li>
+                                <li class="list-inline-item ms-3">
+                                    <a href="#" class="text-white small opacity-80 text-decoration-none hover-opacity-100">Quyền riêng tư</a>
+                                </li>
+                                <li class="list-inline-item ms-3">
+                                    <a href="#" class="text-white small opacity-80 text-decoration-none hover-opacity-100">Cookie</a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <ul class="nav justify-content-center justify-content-md-end">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link px-2 text-muted">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link px-2 text-muted">Contact</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link px-2 text-muted">Terms</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link px-2 text-muted">Privacy</a>
-                        </li>
-                    </ul>
-        </div>
-    </div>
-        </div>
-    </footer>
+            </div>
+        </footer>
+    }
 
     <!-- Toast container for real-time notifications -->
     <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
@@ -525,43 +1605,41 @@
         <source src="/audio/notification.ogg" type="audio/ogg">
     </audio>
 
-    <!-- Mobile Navigation for small screens -->
-    <div class="mobile-nav-bottom d-md-none">
-        <a href="@Url.Action("Index", "Home")" class="mobile-nav-item">
-            <div class="mobile-nav-icon"><i class="bi bi-house"></i></div>
-            <div class="mobile-nav-text">Home</div>
-        </a>
-        <a href="@Url.Action("Index", "Questions")" class="mobile-nav-item">
-            <div class="mobile-nav-icon"><i class="bi bi-question-circle"></i></div>
-            <div class="mobile-nav-text">Questions</div>
-        </a>
-        <a href="@Url.Action("Index", "Tags")" class="mobile-nav-item">
-            <div class="mobile-nav-icon"><i class="bi bi-tags"></i></div>
-            <div class="mobile-nav-text">Tags</div>
-        </a>
-        <a href="@Url.Action("Index", "Users")" class="mobile-nav-item">
-            <div class="mobile-nav-icon"><i class="bi bi-people"></i></div>
-            <div class="mobile-nav-text">Users</div>
-        </a>
-        @if (User.Identity.IsAuthenticated)
-        {
-            <a href="@Url.Action("Profile", "Account")" class="mobile-nav-item">
-                <div class="mobile-nav-icon"><i class="bi bi-person"></i></div>
-                <div class="mobile-nav-text">Profile</div>
+    <!-- Mobile Navigation for small screens - only show for non-account pages -->
+    @if (!isAccountController)
+    {
+        <div class="mobile-nav-bottom d-md-none">
+            <a href="@Url.Action("Index", "Home")" class="mobile-nav-item">
+                <div class="mobile-nav-icon"><i class="bi bi-house"></i></div>
+                <div class="mobile-nav-text">Home</div>
             </a>
-        }
-        else
-        {
-            <a href="@Url.Action("Login", "Account")" class="mobile-nav-item">
-                <div class="mobile-nav-icon"><i class="bi bi-box-arrow-in-right"></i></div>
-                <div class="mobile-nav-text">Sign In</div>
+            <a href="@Url.Action("Index", "Questions")" class="mobile-nav-item">
+                <div class="mobile-nav-icon"><i class="bi bi-question-circle"></i></div>
+                <div class="mobile-nav-text">Questions</div>
             </a>
-        }
-    </div>
+            <a href="@Url.Action("Index", "Tags")" class="mobile-nav-item">
+                <div class="mobile-nav-icon"><i class="bi bi-tags"></i></div>
+                <div class="mobile-nav-text">Tags</div>
+            </a>
+            <a href="@Url.Action("Index", "Users")" class="mobile-nav-item">
+                <div class="mobile-nav-icon"><i class="bi bi-people"></i></div>
+                <div class="mobile-nav-text">Users</div>
+            </a>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <a href="@Url.Action("Profile", "Account")" class="mobile-nav-item">
+                    <div class="mobile-nav-icon"><i class="bi bi-person"></i></div>
+                    <div class="mobile-nav-text">Profile</div>
+                </a>
+            }
+        </div>
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/theme-switcher.js" asp-append-version="true"></script>
+    <script src="~/js/theme-fix.js" asp-append-version="true"></script>
     
     <!-- Real-time features scripts -->
     <script src="~/js/signalr-loader.js" asp-append-version="true"></script>
@@ -569,7 +1647,7 @@
     <script src="~/js/activity-handler.js" asp-append-version="true"></script>
     <script src="~/js/presence-handler.js" asp-append-version="true"></script>
     <script src="~/js/notification-service-fixed.js" asp-append-version="true"></script>
-    <script src="~/js/view-counter-fixed.js" asp-append-version="true"></script>
+    <script src="~/js/view-counter.js" asp-append-version="true"></script>
     <script src="~/js/reputation-sync.js" asp-append-version="true"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -612,78 +1690,6 @@
             // Hiệu năng tốt hơn với passive listener
             window.addEventListener('scroll', updateNavbarShadow, { passive: true });
             updateNavbarShadow(); // Gọi ngay lập tức
-            
-            // Tối ưu hiệu ứng chuyển trang - nhanh và nhẹ nhàng hơn
-            document.querySelectorAll('a').forEach(anchor => {
-                // Bỏ qua các liên kết đặc biệt
-                if (anchor.hasAttribute('data-bs-toggle') || 
-                    anchor.hostname !== window.location.hostname ||
-                    anchor.getAttribute('href')?.startsWith('#') ||
-                    anchor.getAttribute('href')?.includes('javascript:') ||
-                    anchor.getAttribute('target') === '_blank' ||
-                    anchor.classList.contains('dropdown-toggle') ||
-                    (anchor.classList.contains('nav-link') && anchor.hasAttribute('data-bs-toggle'))) {
-                    return;
-                }
-                
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const targetHref = anchor.getAttribute('href');
-                    
-                    // Nếu là trang chủ, chuyển ngay lập tức
-                    if (targetHref === '/' || targetHref === '/Home' || targetHref === '/Home/Index') {
-                        window.location.href = targetHref;
-                        return;
-                    }
-                    
-                    // Hiệu ứng mờ nhẹ, không dịch chuyển để tránh giật
-                    const mainContent = document.querySelector('.main-content');
-                    mainContent.style.opacity = '0.9';
-                    mainContent.style.transition = 'opacity 100ms ease';
-                    
-                    // Chỉ chờ 100ms
-                    setTimeout(() => {
-                        window.location.href = targetHref;
-                    }, 100);
-                });
-            });
-            
-            // Xử lý sticky sidebar khi cuộn
-            const handleStickyElements = () => {
-                const navbar = document.querySelector('.navbar');
-                const navbarHeight = navbar ? navbar.offsetHeight : 70;
-                const footer = document.querySelector('.footer');
-                const footerTop = footer ? footer.getBoundingClientRect().top : 0;
-                const windowHeight = window.innerHeight;
-                
-                // Đặt lại top cho sidebar để đảm bảo nó nằm dưới navbar
-                document.querySelectorAll('.sidebar, .right-sidebar').forEach(sidebar => {
-                    // Đảm bảo sidebar không bị che khuất bởi navbar
-                    sidebar.style.top = `${navbarHeight + 6}px`;
-                    
-                    // Kiểm tra nếu footer đến gần viewport
-                    if (footer && footerTop < windowHeight) {
-                        // Tính khoảng cách từ bottom của viewport đến top của footer
-                        const distanceToFooter = footerTop - windowHeight;
-                        
-                        // Điều chỉnh max-height để không bị che khuất bởi footer
-                        sidebar.style.maxHeight = `calc(100vh - ${navbarHeight + 16}px - ${Math.abs(distanceToFooter)}px)`;
-                    } else {
-                        // Đặt max-height bình thường khi không gần footer
-                        sidebar.style.maxHeight = `calc(100vh - ${navbarHeight + 16}px)`;
-                    }
-                    
-                    // Thêm padding-bottom để không bị che khuất bởi footer trên màn hình ngắn
-                    if (window.innerHeight < 700) {
-                        sidebar.style.paddingBottom = '60px';
-                    }
-                });
-            };
-            
-            // Gọi hàm xử lý sticky elements khi trang load và resize
-            handleStickyElements();
-            window.addEventListener('scroll', handleStickyElements, { passive: true });
-            window.addEventListener('resize', handleStickyElements, { passive: true });
             
             // Responsive handling for mobile devices
             const handleMobileResize = () => {
@@ -817,8 +1823,99 @@
             }
         });
     </script>
+    
+    <!-- Fix cho trang tags -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra nếu là trang Tags
+            const isTagsPage = window.location.pathname.includes('/Tags');
+            if (isTagsPage) {
+                console.log('Tags page detected, running fix...');
+                
+                // Chạy force reflow để đảm bảo các phần tử được hiển thị đúng
+                forceReflow();
+                
+                // Chờ một chút rồi gọi fix styling
+                setTimeout(() => {
+                    if (window.themeFixUtils) {
+                        console.log('Applying fixes from layout...');
+                        window.themeFixUtils.fixAllStyling();
+                        
+                        // Gọi lại nhiều lần ở các thời điểm khác nhau để đảm bảo tất cả các thứ đều được hiển thị đúng
+                        setTimeout(() => window.themeFixUtils.fixAllStyling(), 200);
+                        setTimeout(() => window.themeFixUtils.fixAllStyling(), 500);
+                        setTimeout(() => window.themeFixUtils.fixAllStyling(), 1000);
+                    }
+                }, 100);
+                
+                // Thêm sự kiện click cho toàn bộ trang để đảm bảo mọi tương tác đều kích hoạt fix
+                document.addEventListener('click', function() {
+                    if (window.themeFixUtils) {
+                        setTimeout(() => window.themeFixUtils.fixAllStyling(), 100);
+                    }
+                });
+                
+                // Theo dõi theme change
+                const observer = new MutationObserver(mutations => {
+                    mutations.forEach(mutation => {
+                        if (mutation.attributeName === 'data-theme' || 
+                            mutation.attributeName === 'data-bs-theme') {
+                            console.log('Theme change detected in _Layout');
+                            // Force reflow sau khi theme thay đổi
+                            forceReflow();
+                            
+                            // Áp dụng styling fix
+                            if (window.themeFixUtils) {
+                                setTimeout(() => window.themeFixUtils.fixAllStyling(), 100);
+                                setTimeout(() => window.themeFixUtils.fixAllStyling(), 300);
+                                setTimeout(() => window.themeFixUtils.fixAllStyling(), 500);
+                            }
+                        }
+                    });
+                });
+                
+                // Theo dõi document.documentElement
+                observer.observe(document.documentElement, { attributes: true });
+            }
+            
+            // Hàm force reflow để đảm bảo các style được áp dụng
+            function forceReflow() {
+                // Lấy tất cả các container cần reflow
+                const containers = document.querySelectorAll('.tags-grid-container');
+                if (containers.length === 0) return;
+                
+                console.log('Forcing reflow on tag containers...');
+                containers.forEach(container => {
+                    // Lưu lại display ban đầu
+                    const originalDisplay = window.getComputedStyle(container).display;
+                    
+                    // Force một reflow bằng cách thay đổi style
+                    container.style.display = 'none';
+                    container.offsetHeight; // Đọc offset để buộc trình duyệt reflow
+                    
+                    // Đặt lại style ban đầu
+                    setTimeout(() => {
+                        container.style.display = '';
+                        
+                        // Kiểm tra xem có bị reset về giá trị không phải grid
+                        if (window.getComputedStyle(container).display !== 'grid') {
+                            container.style.display = 'grid';
+                            container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
+                            container.style.gap = '1.5rem';
+                        }
+                        
+                        // Kiểm tra các thẻ tag-card
+                        Array.from(container.children).forEach(card => {
+                            if (window.getComputedStyle(card).display !== 'flex') {
+                                card.style.display = 'flex';
+                                card.style.flexDirection = 'column';
+                                card.style.height = '100%';
+                            }
+                        });
+                    }, 0);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-
-
-

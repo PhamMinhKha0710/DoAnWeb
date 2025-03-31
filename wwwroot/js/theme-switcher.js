@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if a theme preference is stored
     if (currentTheme) {
         document.documentElement.setAttribute('data-theme', currentTheme);
+        document.documentElement.setAttribute('data-bs-theme', currentTheme);
+        document.body.setAttribute('data-bs-theme', currentTheme);
         
         // Update the toggle switch if dark theme is active
         if (currentTheme === 'dark') {
@@ -37,6 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (e.target.checked) {
             document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+            document.body.setAttribute('data-bs-theme', 'dark');
             localStorage.setItem('theme', 'dark');
             if (lightIcon && darkIcon) {
                 lightIcon.style.display = 'none';
@@ -44,6 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else {
             document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            document.body.setAttribute('data-bs-theme', 'light');
             localStorage.setItem('theme', 'light');
             if (lightIcon && darkIcon) {
                 lightIcon.style.display = 'block';
@@ -53,6 +59,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Preserve code formatting in markdown content
         preserveCodeFormatting();
+        
+        // Update tag styling for the current theme
+        updateTagStyling();
         
         // Remove transition class after theme change is complete
         setTimeout(() => {
@@ -97,8 +106,51 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Function to update tag styling based on the current theme
+    function updateTagStyling() {
+        // Check the current theme
+        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        // Update tag card styling for dark theme
+        const tagCards = document.querySelectorAll('.tag-card');
+        tagCards.forEach(card => {
+            if (isDarkTheme) {
+                card.style.background = '#2d3748';
+                card.style.borderColor = 'rgba(108, 92, 231, 0.2)';
+                card.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.15)';
+            } else {
+                card.style.background = 'white';
+                card.style.borderColor = 'rgba(108, 92, 231, 0.05)';
+                card.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.05)';
+            }
+        });
+        
+        // Update tag text colors for dark theme
+        const tagDescriptions = document.querySelectorAll('.tag-description');
+        tagDescriptions.forEach(desc => {
+            if (isDarkTheme) {
+                desc.style.color = '#e2e8f0';
+            } else {
+                desc.style.color = '#4a5568';
+            }
+        });
+        
+        // Update tag action links
+        const tagActionLinks = document.querySelectorAll('.tag-action-link:not(.primary)');
+        tagActionLinks.forEach(link => {
+            if (isDarkTheme) {
+                link.style.color = '#a0aec0';
+            } else {
+                link.style.color = '#718096';
+            }
+        });
+    }
+    
     // Apply code formatting on page load
     preserveCodeFormatting();
+    
+    // Apply tag styling on page load
+    updateTagStyling();
     
     // Listen for toggle changes
     if (toggleSwitch) {
@@ -119,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mutations.forEach(function(mutation) {
             if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                 preserveCodeFormatting();
+                updateTagStyling();
             }
         });
     });
@@ -126,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start observing the question and answer containers
     const questionBody = document.querySelector('.question-body');
     const answerContainer = document.querySelector('.answers-container');
+    const tagsContainer = document.querySelector('.tags-grid-container');
     
     if (questionBody) {
         observer.observe(questionBody, { childList: true, subtree: true });
@@ -135,6 +189,11 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(answerContainer, { childList: true, subtree: true });
     }
     
-    // Export the preserveCodeFormatting function to make it globally available
+    if (tagsContainer) {
+        observer.observe(tagsContainer, { childList: true, subtree: true });
+    }
+    
+    // Export the functions to make them globally available
     window.preserveCodeFormatting = preserveCodeFormatting;
+    window.updateTagStyling = updateTagStyling;
 });

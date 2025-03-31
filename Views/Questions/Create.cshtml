@@ -5,7 +5,7 @@
 }
 
 <!-- Main container for the question creation page -->
-<div class="container">
+<div class="container py-4">
     <!-- Breadcrumb navigation for better user orientation -->
     <div class="row mb-4">
         <div class="col">
@@ -21,45 +21,62 @@
 
     <div class="row">
         <!-- Main content area (8 columns on medium screens and up) -->
-        <div class="col-md-8">
-            <div class="card create-question-card">
-                <div class="card-header bg-transparent py-3">
-                    <h1 class="card-title fs-4 fw-bold mb-0">Ask a Question</h1>
+        <div class="col-lg-8">
+            <div class="card create-question-card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-primary text-white py-3 rounded-top-4">
+                    <h1 class="card-title fs-4 fw-bold mb-0"><i class="bi bi-question-circle-fill me-2"></i>Ask a Question</h1>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <!-- Question creation form with file upload support -->
                     <form asp-action="Create" method="post" enctype="multipart/form-data" id="question-form">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                         <!-- Question title input field -->
                         <div class="mb-4">
-                            <label asp-for="Title" class="form-label fw-medium">Title</label>
-                            <input asp-for="Title" class="form-control form-control-lg" placeholder="What's your question? Be specific." />
+                            <label asp-for="Title" class="form-label fw-medium"><i class="bi bi-type-h1 me-1 text-primary"></i>Title</label>
+                            <input asp-for="Title" class="form-control form-control-lg rounded-3" placeholder="What's your question? Be specific." />
                             <span asp-validation-for="Title" class="text-danger"></span>
                             <!-- Helpful guidance for users -->
-                            <div class="form-text">
-                                <i class="bi bi-info-circle me-1"></i> Be specific and imagine you're asking a question to another person.
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-info-circle"></i></div>
+                                    <div>Be specific and imagine you're asking a question to another person.</div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Question body with Markdown editor -->
                         <div class="mb-4">
-                            <label asp-for="Body" class="form-label fw-medium">Body</label>
+                            <label asp-for="Body" class="form-label fw-medium"><i class="bi bi-textarea-t me-1 text-primary"></i>Body</label>
                             <!-- Custom Markdown editor container -->
-                            <div class="markdown-editor-container border rounded">
+                            <div class="markdown-editor-container border rounded-3 overflow-hidden shadow-sm">
+                                <div class="editor-toolbar bg-light p-2 border-bottom d-flex align-items-center">
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="**bold**"><i class="bi bi-type-bold"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="*italic*"><i class="bi bi-type-italic"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="# "><i class="bi bi-type-h1"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="## "><i class="bi bi-type-h2"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="`code`"><i class="bi bi-code"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="[Link](url)"><i class="bi bi-link"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="![Image](url)"><i class="bi bi-image"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="- "><i class="bi bi-list-ul"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light" data-markdown="1. "><i class="bi bi-list-ol"></i></button>
+                                </div>
                                 <textarea asp-for="Body" class="form-control border-0 markdown-editor" rows="12" placeholder="Include all the information someone would need to answer your question"></textarea>
                             </div>
                             <span asp-validation-for="Body" class="text-danger"></span>
                             <!-- Markdown support information -->
-                            <div class="form-text">
-                                <i class="bi bi-markdown me-1"></i> Supports Markdown formatting. You can also paste screenshots directly into the editor.
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-markdown"></i></div>
+                                    <div>Supports Markdown formatting. You can also paste screenshots directly into the editor.</div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Tags input with icon (now optional) -->
                         <div class="mb-4">
-                            <label asp-for="Tags" class="form-label fw-medium">Tags (Optional)</label>
-                            <div class="input-group">
+                            <label asp-for="Tags" class="form-label fw-medium"><i class="bi bi-tags-fill me-1 text-primary"></i>Tags (Optional)</label>
+                            <div class="input-group shadow-sm rounded-3 overflow-hidden">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="bi bi-tags"></i>
                                 </span>
@@ -67,20 +84,34 @@
                             </div>
                             <span asp-validation-for="Tags" class="text-danger"></span>
                             <!-- Tag guidance -->
-                            <div class="form-text">
-                                <i class="bi bi-info-circle me-1"></i> Add up to 5 tags to describe what your question is about. Use comma to separate tags.
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-info-circle"></i></div>
+                                    <div>Add up to 5 tags to describe what your question is about. Use comma to separate tags.</div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- File upload section with image preview -->
                         <div class="mb-4">
-                            <label asp-for="Attachments" class="form-label fw-medium">Attachments (Optional)</label>
-                            <input type="file" asp-for="Attachments" class="form-control" multiple id="file-upload" />
-                            <div class="form-text">
-                                <i class="bi bi-paperclip me-1"></i> Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR, JPG, JPEG, PNG, GIF, BMP, WEBP (Max 10MB per file)
+                            <label asp-for="Attachments" class="form-label fw-medium"><i class="bi bi-paperclip me-1 text-primary"></i>Attachments (Optional)</label>
+                            <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-upload"></i>
+                                </span>
+                                <input type="file" asp-for="Attachments" class="form-control border-start-0" multiple id="file-upload" />
+                            </div>
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-paperclip"></i></div>
+                                    <div>Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR, JPG, JPEG, PNG, GIF, BMP, WEBP (Max 10MB per file)</div>
+                                </div>
                             </div>
                             <div class="form-text mt-1">
-                                <i class="bi bi-info-circle me-1"></i> You can post your question without any attachments. Add files only if they help illustrate your question.
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-info-circle"></i></div>
+                                    <div>You can post your question without any attachments. Add files only if they help illustrate your question.</div>
+                                </div>
                             </div>
                             
                             <!-- Image preview container -->
@@ -91,10 +122,10 @@
 
                         <!-- Form action buttons -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a asp-action="Index" class="btn btn-outline-secondary">
+                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
                                 <i class="bi bi-x-lg me-1"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm" id="submit-button">
                                 <i class="bi bi-send me-1"></i> Post Your Question
                             </button>
                         </div>
@@ -104,17 +135,17 @@
         </div>
         
         <!-- Sidebar with helpful information (4 columns) -->
-        <div class="col-md-4">
+        <div class="col-lg-4">
             <!-- Tips card with guidance on asking good questions -->
-            <div class="card mb-4 tips-card">
-                <div class="card-header bg-transparent py-3">
-                    <h5 class="mb-0 fw-bold">How to Ask</h5>
+            <div class="card mb-4 tips-card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-info text-white rounded-top-4 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-lightbulb-fill me-2"></i>How to Ask</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <!-- Tip 1: Search first -->
-                    <div class="tip-item mb-3">
+                    <div class="tip-item mb-3 p-3 bg-light rounded-3 hover-action">
                         <div class="d-flex">
-                            <div class="tip-icon me-2 text-primary">
+                            <div class="tip-icon rounded-circle bg-primary text-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                                 <i class="bi bi-search"></i>
                             </div>
                             <div>
@@ -124,9 +155,9 @@
                         </div>
                     </div>
                     <!-- Tip 2: Be specific -->
-                    <div class="tip-item mb-3">
+                    <div class="tip-item mb-3 p-3 bg-light rounded-3 hover-action">
                         <div class="d-flex">
-                            <div class="tip-icon me-2 text-primary">
+                            <div class="tip-icon rounded-circle bg-primary text-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                                 <i class="bi bi-chat-quote"></i>
                             </div>
                             <div>
@@ -136,9 +167,9 @@
                         </div>
                     </div>
                     <!-- Tip 3: Add code -->
-                    <div class="tip-item mb-3">
+                    <div class="tip-item mb-3 p-3 bg-light rounded-3 hover-action">
                         <div class="d-flex">
-                            <div class="tip-icon me-2 text-primary">
+                            <div class="tip-icon rounded-circle bg-primary text-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                                 <i class="bi bi-code-square"></i>
                             </div>
                             <div>
@@ -148,9 +179,9 @@
                         </div>
                     </div>
                     <!-- Tip 4: Add relevant tags -->
-                    <div class="tip-item">
+                    <div class="tip-item p-3 bg-light rounded-3 hover-action">
                         <div class="d-flex">
-                            <div class="tip-icon me-2 text-primary">
+                            <div class="tip-icon rounded-circle bg-primary text-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                                 <i class="bi bi-tags"></i>
                             </div>
                             <div>
@@ -163,186 +194,157 @@
             </div>
             
             <!-- Markdown formatting help card -->
-            <div class="card formatting-help-card">
-                <div class="card-header bg-transparent py-3">
-                    <h5 class="mb-0 fw-bold">Markdown Formatting</h5>
+            <div class="card formatting-help-card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-success text-white rounded-top-4 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-markdown me-2"></i>Markdown Formatting</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <!-- Heading example -->
-                    <div class="format-example mb-2">
-                        <code class="d-block mb-1"># Heading</code>
-                        <div class="example-result small text-muted">Creates a heading</div>
+                    <div class="format-example mb-3 p-2 border-bottom">
+                        <code class="d-block mb-1 bg-light p-2 rounded-2"># Heading</code>
+                        <div class="example-result small text-muted mt-1">Creates a heading</div>
                     </div>
                     <!-- Bold text example -->
-                    <div class="format-example mb-2">
-                        <code class="d-block mb-1">**bold text**</code>
-                        <div class="example-result small text-muted">Creates <strong>bold text</strong></div>
-                    </div>
-                    <!-- Italic text example -->
-                    <div class="format-example mb-2">
-                        <code class="d-block mb-1">*italic text*</code>
-                        <div class="example-result small text-muted">Creates <em>italic text</em></div>
-                    </div>
-                    <!-- Link example -->
-                    <div class="format-example mb-2">
-                        <code class="d-block mb-1">[link](https://example.com)</code>
-                        <div class="example-result small text-muted">Creates a hyperlink</div>
+                    <div class="format-example mb-3 p-2 border-bottom">
+                        <code class="d-block mb-1 bg-light p-2 rounded-2">**Bold text**</code>
+                        <div class="example-result small text-muted mt-1">Makes text <strong>bold</strong></div>
                     </div>
                     <!-- Code block example -->
-                    <div class="format-example">
-                        <code class="d-block mb-1">```code block```</code>
-                        <div class="example-result small text-muted">Creates a code block</div>
+                    <div class="format-example mb-3 p-2 border-bottom">
+                        <code class="d-block mb-1 bg-light p-2 rounded-2">```<br>code block<br>```</code>
+                        <div class="example-result small text-muted mt-1">Creates a code block with syntax highlighting</div>
                     </div>
+                    <!-- Link example -->
+                    <div class="format-example mb-3 p-2 border-bottom">
+                        <code class="d-block mb-1 bg-light p-2 rounded-2">[Link text](URL)</code>
+                        <div class="example-result small text-muted mt-1">Creates a hyperlink</div>
+                    </div>
+                    <!-- Image example -->
+                    <div class="format-example mb-3 p-2">
+                        <code class="d-block mb-1 bg-light p-2 rounded-2">![Alt text](image-url)</code>
+                        <div class="example-result small text-muted mt-1">Embeds an image</div>
+                    </div>
+                    <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" class="btn btn-outline-success btn-sm w-100 rounded-pill mt-2">
+                        <i class="bi bi-book me-1"></i> Full Markdown Guide
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Include custom CSS for questions -->
-@section Styles {
-    <link rel="stylesheet" href="~/css/questions.css" />
-    <link rel="stylesheet" href="~/css/questions-fix.css" />
-    <link rel="stylesheet" href="~/css/code-blocks.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
-    <style>
-        /* Additional styles to ensure submit button is visible */
-        #submit-button {
-            display: inline-block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            z-index: 9999 !important;
-            position: relative !important;
-            pointer-events: auto !important;
-            cursor: pointer !important;
-        }
-        
-        /* Fix for form layout */
-        .d-grid.gap-2.d-md-flex {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        /* Ensure the button container is visible */
-        .justify-content-md-end {
-            display: flex !important;
-            visibility: visible !important;
-        }
-        
-        /* Image preview styling */
-        .image-preview {
-            position: relative;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .image-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            object-fit: contain;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .image-preview .remove-preview {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #dc3545;
-            border: none;
-        }
-    </style>
-}
-
-<!-- Include scripts for validation and Markdown editor -->
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <!-- Markdown parser library -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- Syntax highlighting library -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
-    <!-- HTML Sanitizer script (must be loaded before markdown editor) -->
-    <script src="~/js/html-sanitizer.js"></script>
-    <!-- Custom Markdown editor implementation -->
-    <script src="~/js/markdown-editor.js"></script>
-    <!-- Enhanced file attachment handling -->
-    <script src="~/js/question-attachments.js"></script>
-    <!-- Form fix script -->
-    <script src="~/js/form-fix.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
     
-    <!-- Image preview script -->
+    <!-- Image Upload Preview Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Image upload preview
             const fileUpload = document.getElementById('file-upload');
             const previewContainer = document.getElementById('image-preview-container');
             
-            // Handle file selection
             fileUpload.addEventListener('change', function() {
-                // Clear previous previews
                 previewContainer.innerHTML = '';
                 
-                // Process each selected file
-                Array.from(this.files).forEach((file, index) => {
-                    // Check if file is an image
-                    if (file.type.startsWith('image/')) {
-                        // Create preview element
-                        const previewCol = document.createElement('div');
-                        previewCol.className = 'col-md-4 col-sm-6';
-                        
-                        const previewDiv = document.createElement('div');
-                        previewDiv.className = 'image-preview';
-                        
-                        // Create image element
-                        const img = document.createElement('img');
-                        img.alt = file.name;
-                        
-                        // Create remove button
-                        const removeBtn = document.createElement('button');
-                        removeBtn.className = 'remove-preview';
-                        removeBtn.innerHTML = '<i class="bi bi-x"></i>';
-                        removeBtn.type = 'button';
-                        removeBtn.dataset.index = index;
-                        removeBtn.addEventListener('click', function() {
-                            previewCol.remove();
+                if (this.files) {
+                    Array.from(this.files).forEach(file => {
+                        if (!file.type.match('image.*')) {
+                            // Create a generic file preview for non-image files
+                            const fileCol = document.createElement('div');
+                            fileCol.className = 'col-md-4 mb-3';
                             
-                            // Create a new FileList without the removed file
-                            // This is complex due to FileList being immutable,
-                            // so we just notify the user that the file will be removed when submitting
-                            // The actual removal will happen on the server side
-                            const notification = document.createElement('div');
-                            notification.className = 'alert alert-info mt-2';
-                            notification.textContent = `${file.name} will be removed when you submit the form`;
-                            previewContainer.appendChild(notification);
+                            let fileIcon = 'bi-file-earmark';
+                            if (file.name.match(/\.(pdf)$/i)) fileIcon = 'bi-file-earmark-pdf';
+                            else if (file.name.match(/\.(doc|docx)$/i)) fileIcon = 'bi-file-earmark-word';
+                            else if (file.name.match(/\.(xls|xlsx)$/i)) fileIcon = 'bi-file-earmark-excel';
+                            else if (file.name.match(/\.(zip|rar)$/i)) fileIcon = 'bi-file-earmark-zip';
+                            else if (file.name.match(/\.(txt|csv|json)$/i)) fileIcon = 'bi-file-earmark-text';
                             
-                            setTimeout(() => {
-                                notification.remove();
-                            }, 3000);
-                        });
+                            fileCol.innerHTML = `
+                                <div class="border rounded-3 p-3 h-100 shadow-sm hover-action">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="rounded-circle bg-light p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi ${fileIcon} fs-5 text-primary"></i>
+                                        </div>
+                                        <span class="text-truncate small">${file.name}</span>
+                                    </div>
+                                    <div class="text-muted small text-end">${(file.size / 1024).toFixed(2)} KB</div>
+                                </div>
+                            `;
+                            previewContainer.appendChild(fileCol);
+                            return;
+                        }
                         
-                        // Read the file and set the image source
                         const reader = new FileReader();
                         reader.onload = function(e) {
-                            img.src = e.target.result;
+                            const imgCol = document.createElement('div');
+                            imgCol.className = 'col-md-4 mb-3';
+                            imgCol.innerHTML = `
+                                <div class="border rounded-3 p-2 shadow-sm hover-action">
+                                    <img src="${e.target.result}" class="img-fluid rounded-3" style="height: 120px; width: 100%; object-fit: cover;" alt="Preview">
+                                    <div class="mt-2 text-truncate small fw-medium">${file.name}</div>
+                                    <div class="text-muted small text-end">${(file.size / 1024).toFixed(2)} KB</div>
+                                </div>
+                            `;
+                            previewContainer.appendChild(imgCol);
                         };
                         reader.readAsDataURL(file);
-                        
-                        // Add elements to the DOM
-                        previewDiv.appendChild(img);
-                        previewDiv.appendChild(removeBtn);
-                        previewCol.appendChild(previewDiv);
-                        previewContainer.appendChild(previewCol);
+                    });
+                }
+            });
+            
+            // Markdown Editor Toolbar Buttons
+            const markdownButtons = document.querySelectorAll('[data-markdown]');
+            const bodyTextarea = document.querySelector('.markdown-editor');
+            
+            markdownButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const markdownText = this.getAttribute('data-markdown');
+                    const textarea = bodyTextarea;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = textarea.value;
+                    const before = text.substring(0, start);
+                    const selection = text.substring(start, end);
+                    const after = text.substring(end);
+                    
+                    if (selection.length > 0) {
+                        // If text is selected, wrap it with markdown
+                        if (markdownText.includes('*') || markdownText.includes('`')) {
+                            textarea.value = before + markdownText.charAt(0) + selection + markdownText.charAt(markdownText.length - 1) + after;
+                        } else if (markdownText.includes('[')) {
+                            textarea.value = before + markdownText.replace('url', selection) + after;
+                        } else {
+                            textarea.value = before + markdownText + selection + after;
+                        }
+                    } else {
+                        // If no text is selected, just insert the markdown
+                        textarea.value = before + markdownText + after;
                     }
+                    
+                    textarea.focus();
+                    textarea.selectionStart = start + markdownText.length;
+                    textarea.selectionEnd = start + markdownText.length;
+                });
+            });
+            
+            // Add hover effect to tips and format examples
+            const hoverElements = document.querySelectorAll('.hover-action');
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px)';
+                    this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                });
+                element.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
                 });
             });
         });

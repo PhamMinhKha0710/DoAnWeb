@@ -13,6 +13,7 @@ using System.Linq;
 
 namespace DoAnWeb.Controllers
 {
+    [Route("[controller]")]
     public class RepositoryController : Controller
     {
         private readonly IRepositoryService _repositoryService;
@@ -38,7 +39,9 @@ namespace DoAnWeb.Controllers
             _repositoryMappingService = repositoryMappingService;
         }
 
-        // GET: /Repository
+        // GET: /Repository or /Repositories
+        [HttpGet("")]
+        [Route("~/Repositories")]
         public async Task<IActionResult> Index(string search = null)
         {
             try
@@ -74,7 +77,7 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: /Repository/Details
-        [HttpGet]
+        [HttpGet("Details")]
         public async Task<IActionResult> Details(string owner, string repo, string branch = null, string path = null)
         {
             if (!string.IsNullOrEmpty(owner) && !string.IsNullOrEmpty(repo))
@@ -88,7 +91,7 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: /Repository/Details/5
-        [HttpGet("Repository/Details/{id}")]
+        [HttpGet("Details/{id:int}")]
         public async Task<IActionResult> Details(int id, string branch = null, string path = null)
         {
             try
@@ -234,7 +237,7 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: /Repository/DetailsByName?owner=xxx&repo=yyy
-        [HttpGet("Repository/DetailsByName")]
+        [HttpGet("DetailsByName")]
         public async Task<IActionResult> DetailsByName(string owner, string repo, string branch = null, string path = null)
         {
             try
@@ -372,13 +375,14 @@ namespace DoAnWeb.Controllers
 
         // GET: /Repository/Create
         [Authorize]
+        [HttpGet("Create")]
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: /Repository/Create
-        [HttpPost]
+        [HttpPost("Create")]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateRepositoryViewModel model)
@@ -416,6 +420,7 @@ namespace DoAnWeb.Controllers
 
         // GET: /Repository/MyRepositories
         [Authorize]
+        [HttpGet("MyRepositories")]
         public async Task<IActionResult> MyRepositories()
         {
             try
@@ -503,7 +508,7 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: /Repository/FileContent
-        [HttpGet]
+        [HttpGet("FileContent")]
         public async Task<IActionResult> FileContent(string owner, string repo, string path, string branch = "main")
         {
             try
@@ -565,6 +570,7 @@ namespace DoAnWeb.Controllers
 
         // GET: /Repository/ViewGiteaRepository
         [Authorize]
+        [HttpGet("ViewGiteaRepository")]
         public async Task<IActionResult> ViewGiteaRepository(string owner, string repo)
         {
             try
@@ -608,8 +614,43 @@ namespace DoAnWeb.Controllers
             }
         }
         
+        // GET: /Repository/LinkGitea
+        [Authorize]
+        [HttpGet("LinkGitea")]
+        public IActionResult LinkGitea(string owner, string repo)
+        {
+            try
+            {
+                _logger.LogInformation($"Accessing LinkGitea with owner={owner}, repo={repo}");
+                
+                if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
+                {
+                    _logger.LogWarning("Owner or repository name is empty");
+                    TempData["ErrorMessage"] = "Owner and repository name are required.";
+                    return RedirectToAction(nameof(Index));
+                }
+                
+                // Create the view model
+                var viewModel = new RepositoryLinkGiteaViewModel
+                {
+                    Owner = owner,
+                    RepositoryName = repo,
+                    ReturnUrl = Url.Action("DetailsByName", "Repository", new { owner, repo })
+                };
+                
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error preparing Gitea link page for repository {owner}/{repo}");
+                TempData["ErrorMessage"] = "Error preparing Gitea link page. Please try again later.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+        
         // GET: /Repository/Branches
         [Authorize]
+        [HttpGet("Branches")]
         public async Task<IActionResult> Branches(string owner, string repo)
         {
             try
@@ -661,6 +702,7 @@ namespace DoAnWeb.Controllers
         
         // GET: /Repository/CommitHistory
         [Authorize]
+        [HttpGet("CommitHistory")]
         public async Task<IActionResult> CommitHistory(string owner, string repo, string branch = "main", string path = "")
         {
             try
@@ -712,6 +754,7 @@ namespace DoAnWeb.Controllers
         
         // GET: /Repository/CreateBranch
         [Authorize]
+        [HttpGet("CreateBranch")]
         public async Task<IActionResult> CreateBranch(string owner, string repo, string sourceBranch = "main")
         {
             try
@@ -767,7 +810,7 @@ namespace DoAnWeb.Controllers
         }
         
         // POST: /Repository/CreateBranch
-        [HttpPost]
+        [HttpPost("CreateBranch")]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBranch(CreateBranchViewModel model)
@@ -835,7 +878,7 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: /Repository/SyncRepository/5
-        [HttpGet]
+        [HttpGet("SyncRepository/{id:int}")]
         public async Task<IActionResult> SyncRepository(int id)
         {
             try
@@ -956,8 +999,7 @@ namespace DoAnWeb.Controllers
         }
 
         // GET: /Repository/TestGiteaConnection
-        [HttpGet]
-        [Route("Repository/TestGiteaConnection")]
+        [HttpGet("TestGiteaConnection")]
         public async Task<IActionResult> TestGiteaConnection()
         {
             try
@@ -1018,4 +1060,4 @@ namespace DoAnWeb.Controllers
             }
         }
     }
-} 
+}

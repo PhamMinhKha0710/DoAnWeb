@@ -57,6 +57,46 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Enhanced styles for question details */
+        .question-detail-card {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .content-area img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .question-body-container, .answer-body-container {
+            border-radius: 12px;
+            transition: transform 0.2s ease;
+        }
+        
+        .question-body-container:hover, .answer-body-container:hover {
+            transform: translateY(-3px);
+        }
+        
+        .answer-accepted {
+            border-left: 4px solid var(--bs-success) !important;
+        }
+        
+        .author-info-tag {
+            font-size: 0.8rem;
+            padding: 3px 10px;
+            border-radius: 15px;
+        }
+        
+        .hover-action {
+            transition: all 0.2s ease;
+        }
+        
+        .hover-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
     </style>
 }
 
@@ -65,7 +105,7 @@
     @Html.AntiForgeryToken()
 </form>
 
-<div class="container">
+<div class="container py-4">
     <div class="row mb-4">
         <div class="col">
             <nav aria-label="breadcrumb">
@@ -81,18 +121,18 @@
     <div class="row">
         <div class="col-lg-9">
             <!-- Question Card -->
-            <div class="card mb-4 question-detail-card animate__animated animate__fadeIn shadow-sm">
-                <div class="card-header position-relative py-4 px-4" style="background: linear-gradient(135deg, #2980b9, #3498db);">
+            <div class="card mb-4 question-detail-card animate__animated animate__fadeIn shadow-sm border-0 rounded-4">
+                <div class="card-header position-relative py-4 px-4 rounded-top-4" style="background: linear-gradient(135deg, #3498db, #6366f1);">
                     <div class="d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-4">
                             <h1 class="card-title fs-2 fw-bold lh-base text-white" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.3); margin: 0.5rem 0;">@Model.Title</h1>
                             @if (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.UserId.ToString())
                             {
                                 <div class="ms-3 flex-shrink-0">
-                                    <a asp-action="Edit" asp-route-id="@Model.QuestionId" class="btn btn-light text-primary btn-sm rounded-pill">
+                                    <a asp-action="Edit" asp-route-id="@Model.QuestionId" class="btn btn-light text-primary btn-sm rounded-pill hover-action">
                                         <i class="bi bi-pencil me-1"></i> Edit
                                     </a>
-                                    <a asp-action="Delete" asp-route-id="@Model.QuestionId" class="btn btn-light text-danger btn-sm rounded-pill ms-2">
+                                    <a asp-action="Delete" asp-route-id="@Model.QuestionId" class="btn btn-light text-danger btn-sm rounded-pill ms-2 hover-action">
                                         <i class="bi bi-trash me-1"></i> Delete
                                     </a>
                                 </div>
@@ -100,14 +140,14 @@
                         </div>
                         
                         <div class="d-flex gap-2 mb-2">
-                            <div class="badge bg-white text-primary rounded-pill px-3 py-2 d-flex align-items-center shadow-sm">
+                            <div class="badge bg-white text-primary rounded-pill px-3 py-2 d-flex align-items-center shadow-sm hover-action">
                                 <i class="bi bi-arrow-up-circle me-1"></i> <span class="vote-count" data-id="@Model.QuestionId" data-type="question">@Model.Score </span> votes
                             </div>
-                            <div class="badge bg-white text-secondary rounded-pill px-3 py-2 d-flex align-items-center shadow-sm">
+                            <div class="badge bg-white text-secondary rounded-pill px-3 py-2 d-flex align-items-center shadow-sm hover-action">
                                 <i class="bi bi-eye me-1"></i> <span class="view-count">@Model.ViewCount </span> views
                                 <span class="view-loading-indicator ms-1 d-none"><i class="bi bi-arrow-repeat spin-animation"></i></span>
                             </div>
-                            <div class="badge bg-white text-info rounded-pill px-3 py-2 d-flex align-items-center shadow-sm">
+                            <div class="badge bg-white text-info rounded-pill px-3 py-2 d-flex align-items-center shadow-sm hover-action">
                                 <i class="bi bi-info-circle me-1"></i> @Model.Status
                             </div>
                         </div>
@@ -115,23 +155,30 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="d-flex flex-wrap justify-content-end mb-4 pt-2 pb-3 border-bottom">
-                        <div class="question-dates d-flex align-items-center text-muted">
+                        <div class="d-flex align-items-center text-muted">
                             <div class="d-flex align-items-center">
-                                <img src="@(Model.User?.AvatarUrl ?? "/images/default-avatar.png")" class="rounded-circle me-2" width="32" height="32" alt="User avatar">
-                                <span class="fw-medium me-2">@(Model.User?.DisplayName ?? "Unknown user")</span>
-                                <i class="bi bi-calendar3 ms-2 me-1"></i> @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")
-                                @if (Model.UpdatedDate.HasValue && Model.CreatedDate.HasValue && Model.UpdatedDate.Value != Model.CreatedDate.Value)
-                                {
-                                    <span class="ms-2">
-                                        <i class="bi bi-pencil-square me-1"></i> Updated on @Model.UpdatedDate.Value.ToString("MMM dd, yyyy")
+                                <div class="position-relative me-2">
+                                    <img src="@(Model.User?.AvatarUrl ?? "/images/default-avatar.png")" class="rounded-circle border shadow-sm" width="38" height="38" alt="User avatar">
+                                    <div class="position-absolute" style="bottom: -3px; right: -3px; width: 15px; height: 15px; background-color: #4CAF50; border-radius: 50%; border: 2px solid white;"></div>
+                                </div>
+                                <div>
+                                    <span class="fw-medium me-2 d-block">@(Model.User?.DisplayName ?? "Unknown user")</span>
+                                    <span class="d-flex align-items-center small text-secondary">
+                                        <i class="bi bi-calendar3 me-1"></i> @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "unknown")
+                                        @if (Model.UpdatedDate.HasValue && Model.CreatedDate.HasValue && Model.UpdatedDate.Value != Model.CreatedDate.Value)
+                                        {
+                                            <span class="ms-2">
+                                                <i class="bi bi-pencil-square me-1"></i> Updated on @Model.UpdatedDate.Value.ToString("MMM dd, yyyy")
+                                            </span>
+                                        }
                                     </span>
-                                }
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="question-body-container p-4 mb-4 bg-white rounded-4 border shadow-sm position-relative">
-                        <div class="question-icon position-absolute" style="top: -15px; left: 20px; background-color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
+                        <div class="question-icon position-absolute" style="top: -15px; left: 20px; background-color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <i class="bi bi-question-circle-fill text-primary"></i>
                         </div>
                         <div class="question-body content-area">
@@ -143,106 +190,81 @@
                     <div class="mb-4 d-flex flex-wrap gap-2">
                         @foreach (var tag in Model.Tags)
                         {
-                            <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark text-decoration-none px-3 py-2 d-inline-block shadow-sm" style="transition: all 0.2s ease-in-out;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                                <i class="bi bi-tag me-1"></i>@tag.TagName
+                            <a asp-action="Index" asp-route-tag="@tag.TagName" class="badge bg-light text-dark text-decoration-none px-3 py-2 d-inline-block shadow-sm rounded-pill hover-action" style="transition: all 0.2s ease-in-out;">
+                                <i class="bi bi-tag-fill me-1 text-primary"></i>@tag.TagName
                             </a>
                         }
                     </div>
                     
                     @if (Model.Attachments != null && Model.Attachments.Any())
                     {
-                        <div class="mb-5 attachment-section bg-white p-4 rounded-4 shadow-sm">
+                        <div class="mb-5 attachment-section bg-white p-4 rounded-4 shadow-sm border">
                             <h5 class="mb-4 d-flex align-items-center">
                                 <i class="bi bi-paperclip text-primary me-2"></i>
                                 <span>Attachments</span>
                                 <span class="ms-2 badge bg-primary rounded-pill">@Model.Attachments.Count</span>
                             </h5>
-                            <div class="attachment-list row g-3">
+                            <div class="attachment-list row g-4">
                                 @foreach (var attachment in Model.Attachments)
                                 {
                                     <div class="col-md-6 col-lg-4 mb-3">
-                                        <div class="attachment-item p-3 border rounded-3 h-100 shadow-sm position-relative bg-white"
-                                             style="transition: all 0.3s ease;" 
-                                             onmouseover="this.style.transform='translateY(-5px)'; this.classList.add('shadow')" 
-                                             onmouseout="this.style.transform='translateY(0)'; this.classList.remove('shadow')">
+                                        <div class="attachment-item p-3 border rounded-4 h-100 shadow-sm position-relative bg-white hover-action"
+                                             style="transition: all 0.3s ease;">
                                             @{
-                                                string fileIcon = "bi-file-earmark";
-                                                bool isImage = false;
-                                                bool isPdf = false;
-                                                bool isText = false;
-                                                bool isVideo = false;
-                                                bool isAudio = false;
-                                                string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
-                                                string[] videoExtensions = { ".mp4", ".webm", ".ogg", ".mov", ".avi" };
-                                                string[] audioExtensions = { ".mp3", ".wav", ".ogg", ".m4a" };
+                                                var fileExtension = System.IO.Path.GetExtension(attachment.FileName)?.ToLower();
+                                                bool isImage = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" }.Contains(fileExtension);
+                                                bool isPdf = fileExtension == ".pdf";
+                                                bool isVideo = new[] { ".mp4", ".webm", ".avi", ".mov" }.Contains(fileExtension);
+                                                bool isAudio = new[] { ".mp3", ".wav", ".ogg" }.Contains(fileExtension);
+                                                bool isText = new[] { ".txt", ".rtf", ".md" }.Contains(fileExtension);
+                                                bool isCode = new[] { ".cs", ".js", ".html", ".css", ".xml", ".json", ".py", ".java", ".php" }.Contains(fileExtension);
+                                                bool isDocument = new[] { ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx" }.Contains(fileExtension);
+                                                bool isArchive = new[] { ".zip", ".rar", ".7z", ".tar", ".gz" }.Contains(fileExtension);
                                                 
-                                                if (attachment.FileName.EndsWith(".pdf")) {
-                                                    fileIcon = "bi-file-earmark-pdf";
-                                                    isPdf = true;
-                                                }
-                                                else if (attachment.FileName.EndsWith(".doc") || attachment.FileName.EndsWith(".docx")) fileIcon = "bi-file-earmark-word";
-                                                else if (attachment.FileName.EndsWith(".xls") || attachment.FileName.EndsWith(".xlsx")) fileIcon = "bi-file-earmark-excel";
-                                                else if (attachment.FileName.EndsWith(".ppt") || attachment.FileName.EndsWith(".pptx")) fileIcon = "bi-file-earmark-ppt";
-                                                else if (attachment.FileName.EndsWith(".zip") || attachment.FileName.EndsWith(".rar")) fileIcon = "bi-file-earmark-zip";
-                                                else if (attachment.FileName.EndsWith(".txt") || attachment.FileName.EndsWith(".csv") || attachment.FileName.EndsWith(".json")) {
-                                                    fileIcon = "bi-file-earmark-text";
-                                                    isText = true;
-                                                }
-                                                else if (videoExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext))) {
-                                                    fileIcon = "bi-film";
-                                                    isVideo = true;
-                                                }
-                                                else if (audioExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext))) {
-                                                    fileIcon = "bi-file-earmark-music";
-                                                    isAudio = true;
-                                                }
-                                                else if (imageExtensions.Any(ext => attachment.FileName.ToLower().EndsWith(ext)))
-                                                {
-                                                    fileIcon = "bi-file-earmark-image";
-                                                    isImage = true;
-                                                }
+                                                string fileIcon = "bi-file-earmark";
+                                                if (isImage) fileIcon = "bi-file-earmark-image";
+                                                else if (isPdf) fileIcon = "bi-file-earmark-pdf";
+                                                else if (isVideo) fileIcon = "bi-file-earmark-play";
+                                                else if (isAudio) fileIcon = "bi-file-earmark-music";
+                                                else if (isText) fileIcon = "bi-file-earmark-text";
+                                                else if (isCode) fileIcon = "bi-file-earmark-code";
+                                                else if (isDocument) fileIcon = "bi-file-earmark-richtext";
+                                                else if (isArchive) fileIcon = "bi-file-earmark-zip";
                                             }
-                                            
                                             <div class="d-flex align-items-center justify-content-between mb-3">
                                                 <div class="file-info d-flex align-items-center">
-                                                    <div class="file-icon-container d-flex justify-content-center align-items-center bg-light rounded-circle p-2 me-2" style="width: 40px; height: 40px;">
+                                                    <div class="file-icon-container d-flex justify-content-center align-items-center bg-light rounded-circle p-2 me-3" style="width: 45px; height: 45px;">
                                                         <i class="bi @fileIcon fs-4 text-primary"></i>
                                                     </div>
                                                     <div>
-                                                        <div class="fw-medium text-truncate" style="max-width: 160px;" title="@attachment.FileName">@attachment.FileName</div>
-                                                        <div class="text-muted small">@(attachment.FileSize / 1024) KB</div>
+                                                        <h6 class="file-name mb-0 text-truncate" style="max-width: 180px;" title="@attachment.FileName">@attachment.FileName</h6>
+                                                        <div class="file-meta d-flex align-items-center small text-muted">
+                                                            <span class="file-size me-2">@(attachment.FileSize > 1024 * 1024 ? $"{attachment.FileSize / (1024 * 1024):F2} MB" : $"{attachment.FileSize / 1024:F2} KB")</span>
+                                                            <span class="file-type badge bg-light text-dark rounded-pill">@fileExtension</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-light rounded-circle shadow-sm" type="button" id="dropdownMenuButton-@attachment.AttachmentId" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="bi bi-three-dots-vertical"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownMenuButton-@attachment.AttachmentId">
-                                                        <li><a class="dropdown-item d-flex align-items-center" href="@attachment.FilePath" download="@attachment.FileName"><i class="bi bi-download me-2 text-primary"></i>Download</a></li>
-                                                        @if (isImage || isPdf || isText || isVideo || isAudio)
-                                                        {
-                                                            <li><a class="dropdown-item d-flex align-items-center preview-file" href="#" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="@(isImage ? "image" : isPdf ? "pdf" : isText ? "text" : isVideo ? "video" : "audio")"><i class="bi bi-eye me-2 text-info"></i>Preview</a></li>
-                                                        }
-                                                        <li><a class="dropdown-item d-flex align-items-center" href="@attachment.FilePath" target="_blank"><i class="bi bi-box-arrow-up-right me-2 text-success"></i>Open in New Tab</a></li>
-                                                    </ul>
+                                                <div class="attachment-actions">
+                                                    <a href="@attachment.FilePath" download="@attachment.FileName" class="btn btn-sm btn-outline-primary rounded-circle" title="Download">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
                                                 </div>
                                             </div>
-                                            
                                             <div class="attachment-preview-container">
                                                 @if (isImage)
                                                 {
-                                                    <div class="image-preview position-relative rounded-3 overflow-hidden" style="height: 140px;">
-                                                        <img src="@attachment.FilePath" alt="@attachment.FileName" class="img-preview w-100 h-100 object-fit-cover" />
-                                                        <div class="preview-overlay d-flex align-items-center justify-content-center">
-                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file animate__animated animate__fadeIn" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="image">
-                                                                <i class="bi bi-eye me-1"></i> Preview
-                                                            </button>
-                                                        </div>
+                                                    <div class="image-preview position-relative rounded-4 overflow-hidden" style="height: 150px;">
+                                                        <a href="@attachment.FilePath" data-lightbox="question-images" data-title="@attachment.FileName">
+                                                            <img src="@attachment.FilePath" alt="@attachment.FileName" class="img-preview w-100 h-100 object-fit-cover" />
+                                                            <div class="preview-overlay position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s ease;">
+                                                                <i class="bi bi-zoom-in text-white fs-3"></i>
+                                                            </div>
+                                                        </a>
                                                     </div>
                                                 }
                                                 else if (isPdf)
                                                 {
-                                                    <div class="pdf-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
+                                                    <div class="pdf-preview text-center rounded-4 border position-relative" style="height: 150px; background-color: #f8f9fa;">
                                                         <div class="d-flex flex-column align-items-center justify-content-center h-100">
                                                             <i class="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
                                                             <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="pdf">
@@ -251,44 +273,34 @@
                                                         </div>
                                                     </div>
                                                 }
-                                                else if (isText)
-                                                {
-                                                    <div class="text-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
-                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
-                                                            <i class="bi bi-file-earmark-text text-info fs-1 mb-2"></i>
-                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="text">
-                                                                <i class="bi bi-eye me-1"></i> Preview Text
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                }
                                                 else if (isVideo)
                                                 {
-                                                    <div class="video-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
-                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
-                                                            <i class="bi bi-film text-success fs-1 mb-2"></i>
-                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="video">
-                                                                <i class="bi bi-play me-1"></i> Play Video
-                                                            </button>
+                                                    <div class="video-preview rounded-4 overflow-hidden" style="height: 150px; background-color: #000;">
+                                                        <div class="position-relative h-100">
+                                                            <video class="w-100 h-100 object-fit-cover" controls poster="/images/video-poster.jpg">
+                                                                <source src="@attachment.FilePath" type="video/mp4">
+                                                                Your browser does not support the video tag.
+                                                            </video>
                                                         </div>
                                                     </div>
                                                 }
                                                 else if (isAudio)
                                                 {
-                                                    <div class="audio-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
-                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                                    <div class="audio-preview rounded-4 border p-3" style="background-color: #f8f9fa;">
+                                                        <div class="d-flex flex-column align-items-center">
                                                             <i class="bi bi-file-earmark-music text-warning fs-1 mb-2"></i>
-                                                            <button type="button" class="btn btn-primary btn-sm rounded-pill preview-file" data-file-path="@attachment.FilePath" data-file-name="@attachment.FileName" data-file-type="audio">
-                                                                <i class="bi bi-play me-1"></i> Play Audio
-                                                            </button>
+                                                            <audio controls class="w-100 mt-2">
+                                                                <source src="@attachment.FilePath" type="audio/mpeg">
+                                                                Your browser does not support the audio element.
+                                                            </audio>
                                                         </div>
                                                     </div>
                                                 }
                                                 else
                                                 {
-                                                    <div class="generic-file-preview text-center rounded-3 border" style="height: 140px; background-color: #f8f9fa;">
+                                                    <div class="generic-preview text-center rounded-4 border" style="height: 150px; background-color: #f8f9fa;">
                                                         <div class="d-flex flex-column align-items-center justify-content-center h-100">
-                                                            <i class="bi @fileIcon text-secondary fs-1 mb-2"></i>
+                                                            <i class="bi @fileIcon fs-1 mb-2 @(isDocument ? "text-primary" : isArchive ? "text-warning" : isCode ? "text-success" : "text-secondary")"></i>
                                                             <a href="@attachment.FilePath" download="@attachment.FileName" class="btn btn-primary btn-sm rounded-pill">
                                                                 <i class="bi bi-download me-1"></i> Download
                                                             </a>
@@ -297,7 +309,7 @@
                                                 }
                                             </div>
                                             
-                                            <div class="attachment-date text-muted small mt-2 text-end d-flex align-items-center justify-content-end">
+                                            <div class="attachment-date text-muted small mt-3 text-end d-flex align-items-center justify-content-end">
                                                 <i class="bi bi-calendar3 me-1"></i> @(attachment.UploadDate.ToString("MMM dd, yyyy"))
                                             </div>
                                         </div>
@@ -307,9 +319,9 @@
                         </div>
                     }
                     
-                    <div class="card author-card border-0 mb-0 rounded-4 shadow-sm">
+                    <div class="card author-card border-0 mb-4 rounded-4 shadow-sm">
                         <div class="card-body p-4">
-                            <h5 class="mb-3 text-primary fw-bold">About the author</h5>
+                            <h5 class="mb-3 text-primary fw-bold"><i class="bi bi-person-badge me-2"></i>About the author</h5>
                             <div class="d-flex">
                                 <div class="flex-shrink-0">
                                     <div class="author-avatar rounded-circle shadow-sm overflow-hidden d-flex align-items-center justify-content-center bg-gradient-primary text-white"
@@ -418,7 +430,7 @@
                     {
                         <div id="answer-@answer.AnswerId" class="answer mb-4">
                             <div class="answer-content">
-                                <div class="answer-body-container p-4 mb-3 bg-white rounded-4 border shadow-sm">
+                                <div class="answer-body-container p-4 mb-3 bg-white rounded border shadow-sm">
                                     <div class="answer-body content-area">
                                         @Html.Raw(answer.Body)
                                     </div>
@@ -475,7 +487,7 @@
                                                 </div>
                                                 
                                                 <div class="answer-content">
-                                                    <div class="answer-body-container p-4 mb-3 bg-white rounded border">
+                                                    <div class="answer-body-container p-4 mb-3 bg-white rounded border shadow-sm">
                                                         <div class="answer-body content-area">
                                                             @Html.Raw(childAnswer.Body)
                                                         </div>
