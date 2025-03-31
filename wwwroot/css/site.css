@@ -1744,3 +1744,40 @@ footer.footer {
         color: #f8d7da;
     }
 }
+
+/* Theme switch styling */
+.theme-switch {
+  position: relative;
+  display: inline-block;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.theme-switch label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-icon-light, .theme-icon-dark {
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.theme-icon-dark {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-icon-dark {
+  display: block;
+}

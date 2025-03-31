@@ -1,0 +1,436 @@
+/* 
+ * Developer Community Theme System
+ * Supports light and dark themes with consistent content highlighting
+ */
+
+/* Base Theme Variables - Light Theme (Default) */
+html[data-theme="light"] {
+  /* Core colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --text-muted: #6c757d;
+  --border-color: #dee2e6;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  
+  /* Brand colors */
+  --primary: #0d6efd;
+  --primary-rgb: 13, 110, 253;
+  --primary-light: #e6f0ff;
+  --primary-dark: #0a58ca;
+  --success: #198754;
+  --info: #0dcaf0;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  
+  /* Developer-specific colors */
+  --code-bg: #f8f9fa;
+  --code-color: #212529;
+  --syntax-keyword: #07a;
+  --syntax-string: #690;
+  --syntax-comment: #999;
+  --syntax-number: #905;
+  --syntax-class: #dd4a68;
+  --syntax-tag: #905;
+}
+
+/* Dark Theme Variables */
+html[data-theme="dark"] {
+  /* Core colors */
+  --bg-primary: #212529;
+  --bg-secondary: #343a40;
+  --bg-tertiary: #495057;
+  --text-primary: #f8f9fa;
+  --text-secondary: #e9ecef;
+  --text-muted: #adb5bd;
+  --border-color: #495057;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  
+  /* Brand colors - keep consistent across themes but adjust for visibility */
+  --primary: #3b8bfe;
+  --primary-rgb: 59, 139, 254;
+  --primary-light: rgba(59, 139, 254, 0.15);
+  --primary-dark: #6ea8fe;
+  --success: #4dbd74;
+  --info: #39d0ff;
+  --warning: #ffd43b;
+  --danger: #ff6b6b;
+  
+  /* Developer-specific colors */
+  --code-bg: #2d3748;
+  --code-color: #e2e8f0;
+  --syntax-keyword: #88c0ff;
+  --syntax-string: #b5e88f;
+  --syntax-comment: #8b949e;
+  --syntax-number: #ff9eb6;
+  --syntax-class: #f9b8d0;
+  --syntax-tag: #ff9eb6;
+}
+
+/* Apply theme variables to elements */
+
+/* Core elements */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Navbar styling */
+.navbar {
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.navbar-scrolled {
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.navbar-brand .brand-icon {
+  color: var(--primary);
+}
+
+/* Search styling */
+#globalSearchInput {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.search-suggestions-dropdown {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.search-section-title {
+  color: var(--text-secondary);
+}
+
+/* Sidebar styling */
+.sidebar, .right-sidebar {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+.sidebar-inner {
+  padding: 1.5rem;
+}
+
+.nav-section-header {
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.nav-section {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar .nav-link {
+  color: var(--text-secondary);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.sidebar .nav-link.active {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* Button styling */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Theme toggle button */
+#themeToggle {
+  position: relative;
+}
+
+.theme-icon-light, .theme-icon-dark {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+html[data-theme="light"] .theme-icon-light {
+  opacity: 1;
+  transform: rotate(0);
+}
+
+html[data-theme="light"] .theme-icon-dark {
+  opacity: 0;
+  transform: rotate(90deg);
+  position: absolute;
+}
+
+html[data-theme="dark"] .theme-icon-light {
+  opacity: 0;
+  transform: rotate(-90deg);
+  position: absolute;
+}
+
+html[data-theme="dark"] .theme-icon-dark {
+  opacity: 1;
+  transform: rotate(0);
+}
+
+/* Tag styling */
+.question-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.tag-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.tag-item:hover {
+  background-color: var(--primary);
+  color: white;
+  text-decoration: none;
+}
+
+.tag-count {
+  margin-left: 0.25rem;
+  opacity: 0.8;
+  font-size: 0.75rem;
+}
+
+/* Card styling */
+.card {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+/* Resource links */
+.resource-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resource-link {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 0.375rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.resource-link:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  text-decoration: none;
+}
+
+/* Stats container */
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.375rem;
+}
+
+/* Status indicators */
+.status-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+}
+
+.status-indicator.online {
+  background-color: var(--success);
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.chat-dropdown, .notification-dropdown {
+  min-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.chat-dropdown .unread, .notification-dropdown .unread {
+  background-color: var(--primary-light);
+}
+
+/* Footer styling */
+.footer {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.social-link:hover {
+  background-color: var(--primary);
+  color: white;
+}
+
+/* Code blocks with consistent highlighting across themes */
+code {
+  background-color: var(--code-bg);
+  color: var(--code-color);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-family: var(--font-code);
+}
+
+pre {
+  background-color: var(--code-bg);
+  color: var(--code-color);
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+}
+
+/* Badge container for better positioning */
+.badge-container {
+  position: relative;
+}
+
+/* Animations */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .navbar .dropdown-menu {
+    box-shadow: none;
+    border: none;
+    padding-left: 1.5rem;
+  }
+  
+  .dropdown-menu-mobile {
+    position: static !important;
+    float: none;
+    width: auto;
+    margin-top: 0;
+    background-color: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+/* Print styles - optimize for code printing */
+@media print {
+  body {
+    background-color: white;
+    color: black;
+  }
+  
+  pre, code {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    color: black;
+  }
+  
+  .sidebar, .navbar, .footer {
+    display: none;
+  }
+  
+  .main-content {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

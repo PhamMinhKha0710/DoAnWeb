@@ -140,7 +140,7 @@
                                                     <div class="avatar me-2">
                                                         <i class="bi bi-person-circle"></i>
                                                     </div>
-                                                    <small class="text-muted">asked @(question.CreatedDate?.ToString("MMM dd") ?? "unknown") by <a href="#" class="text-decoration-none">@(question.User?.Username ?? "Anonymous")</a></small>
+                                                    <small class="text-muted">asked @(question.CreatedDate?.ToString("MMM dd") ?? "unknown") by <a href="#" class="text-decoration-none">@(question.User?.DisplayName ?? "Anonymous")</a></small>
                                                 </div>
                                             </div>
                                         </div>
@@ -202,7 +202,7 @@
                                             <div class="avatar me-2">
                                                 <i class="bi bi-person-circle"></i>
                                             </div>
-                                            <small class="text-muted">By <a href="#" class="text-decoration-none">@(repo.Owner?.Username ?? "Anonymous")</a> • Updated @repo.UpdatedDate?.ToString("MMM dd, yyyy")</small>
+                                            <small class="text-muted">By <a href="#" class="text-decoration-none">@(repo.Owner?.DisplayName ?? "Anonymous")</a> • Updated @repo.UpdatedDate?.ToString("MMM dd, yyyy")</small>
                                         </div>
                                     </div>
                                 </div>

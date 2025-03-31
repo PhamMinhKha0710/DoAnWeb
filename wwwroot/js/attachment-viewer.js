@@ -642,6 +642,16 @@ function getFileType(fileName) {
         return 'text';
     }
     
+    // Video files
+    if (['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv'].includes(extension)) {
+        return 'video';
+    }
+    
+    // Audio files
+    if (['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].includes(extension)) {
+        return 'audio';
+    }
+    
     // Default
     return 'other';
 }

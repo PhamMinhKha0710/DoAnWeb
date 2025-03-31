@@ -1,6 +1,6 @@
 /**
- * View Counter Fixed
- * Phiên bản cải tiến của ViewCountHub client
+ * View Counter
+ * Client-side script để xử lý đếm lượt xem theo thời gian thực
  */
 
 // Khởi tạo biến global
@@ -18,7 +18,7 @@ function logDebug(...args) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    logDebug("ViewCounter Fixed: Initializing...");
+    logDebug("ViewCounter: Initializing...");
     logDebug("Document ready - checking for question ID and SignalR availability");
 
     // Check if SignalR is loaded directly
@@ -34,33 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
             initViewCounter();
         });
     } else {
-        console.error("No SignalR found. View counter will not work. Loading SignalR directly as last resort");
-        
-        // Try to load SignalR directly as a last resort
-        var script = document.createElement('script');
-        script.src = '/lib/microsoft/signalr/dist/browser/signalr.min.js';
-        script.onload = function() {
-            logDebug("SignalR loaded as last resort");
-            initViewCounter();
-        };
-        document.head.appendChild(script);
+        console.error("No SignalR found. View counter will not work.");
     }
-    
-    // Force connection check after a delay
-    setTimeout(function() {
-        if (!isConnectionReady && questionId) {
-            logDebug("Force checking connection after timeout");
-            if (typeof signalR !== 'undefined') {
-                initializeViewCountHub();
-                
-                // Also force scroll listener setup
-                if (!scrollListenerAdded && !isViewCounted) {
-                    logDebug("Forcing scroll listener setup after timeout");
-                    setupScrollListener();
-                }
-            }
-        }
-    }, 3000);
 });
 
 // Khởi tạo View Counter
@@ -78,38 +53,10 @@ function initViewCounter() {
             isViewCounted = true;
         }
         
-        // Sử dụng kết nối hiện có nếu có hoặc tạo mới
-        if (window.viewCountConnection) {
-            logDebug("Using existing ViewCountHub connection from global scope");
-            viewCountConnection = window.viewCountConnection;
-            
-            // Kiểm tra kết nối có sẵn
-            if (viewCountConnection.state === "Connected") {
-                logDebug("Existing connection is already connected");
-                isConnectionReady = true;
-                requestCurrentViewCount();
-            } else {
-                logDebug("Existing connection is not connected, state:", viewCountConnection.state);
-                // Kết nối được thiết lập hay kết nối lại sẽ được xử lý bởi signalr-connection-check.js
-            }
-        } else {
-            // Tạo kết nối mới thông qua signalr-connection-check.js
-            if (typeof ensureViewCountConnection === 'function') {
-                logDebug("Using signalr-connection-check.js to create ViewCountHub connection");
-                ensureViewCountConnection();
-                
-                // Đợi kết nối được tạo
-                waitForConnection();
-            } else {
-                logDebug("Creating standalone ViewCountHub connection");
-                initializeViewCountHub();
-            }
-        }
+        // Khởi tạo kết nối với ViewCountHub
+        initializeViewCountHub();
         
-        // Thiết lập handler cho sự kiện ViewCountHub nếu chưa có
-        setupViewCountHandlers();
-        
-        // Thêm mới: Thiết lập scroll listener để tăng view khi cuộn đến cuối trang
+        // Thiết lập scroll listener để tăng view khi cuộn đến giữa trang
         setupScrollListener();
         
         // Bắt đầu kiểm tra vị trí cuộn ngay khi trang tải
@@ -143,23 +90,11 @@ function checkScrollPosition() {
             increaseViewCount();
         } else {
             logDebug("Content requires scrolling, waiting for scroll event");
-            // Kích hoạt kiểm tra một lần nữa sau khi trang được hiển thị hoàn toàn
-            setTimeout(() => {
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                const scrollPercent = (scrollTop / (scrollHeight - clientHeight)) * 100;
-                logDebug(`Current scroll position: ${scrollTop}px, ${scrollPercent.toFixed(2)}%`);
-                
-                // Kiểm tra nếu người dùng đã cuộn đến một vị trí nào đó
-                if (scrollPercent >= 20) {
-                    logDebug(`Already scrolled to ${scrollPercent.toFixed(2)}%, counting view`);
-                    increaseViewCount();
-                }
-            }, 1500);
         }
     }, 1000);
 }
 
-// Thêm mới: Hàm thiết lập scroll listener
+// Hàm thiết lập scroll listener
 function setupScrollListener() {
     // Chỉ thêm listener một lần
     if (scrollListenerAdded || isViewCounted) {
@@ -189,9 +124,9 @@ function setupScrollListener() {
         // Tính phần trăm đã cuộn
         const scrollPercent = (scrollTop / (scrollHeight - clientHeight)) * 100;
         
-        // Thêm log chi tiết hơn để debug
-        if (Math.floor(scrollPercent) % 5 === 0 && !scrollThresholdReached) {
-            logDebug(`Current scroll position: ${scrollPercent.toFixed(2)}%, scrollTop: ${scrollTop}, scrollHeight: ${scrollHeight}, clientHeight: ${clientHeight}`);
+        // Thêm log để debug
+        if (Math.floor(scrollPercent) % 10 === 0 && !scrollThresholdReached) {
+            logDebug(`Current scroll position: ${scrollPercent.toFixed(2)}%`);
         }
         
         // Giảm ngưỡng xuống 30% để dễ kích hoạt hơn
@@ -235,37 +170,12 @@ function setupViewCountHandlers() {
             logDebug(`ViewCountHub: Received current view count for question ${qId}: ${viewCount}`);
             if (qId === questionId) {
                 updateViewCountDisplay(viewCount);
-                
-                // Tăng view ngay lập tức nếu chưa đếm và không sử dụng scroll listener
-                if (!isViewCounted && !scrollListenerAdded) {
-                    logDebug("Connection ready, increasing view count immediately");
-                    increaseViewCount();
-                }
             }
         });
         
         // Đánh dấu đã thiết lập handler
         window.viewCountConnection._viewCountHandlersSetup = true;
         logDebug("ViewCountHub event handlers set up successfully");
-    }
-}
-
-// Đợi kết nối được tạo từ signalr-connection-check.js
-function waitForConnection() {
-    if (window.viewCountConnection) {
-        logDebug("ViewCountConnection available, state:", window.viewCountConnection.state);
-        viewCountConnection = window.viewCountConnection;
-        
-        if (viewCountConnection.state === "Connected") {
-            isConnectionReady = true;
-            requestCurrentViewCount();
-        } else {
-            // Đợi kết nối sẵn sàng
-            setTimeout(waitForConnection, 1000);
-        }
-    } else {
-        logDebug("Waiting for ViewCountConnection to be created...");
-        setTimeout(waitForConnection, 1000);
     }
 }
 
@@ -284,47 +194,35 @@ function requestCurrentViewCount() {
     }
 }
 
-// Khởi tạo kết nối với ViewCountHub (fallback nếu không có kết nối toàn cục)
+// Khởi tạo kết nối với ViewCountHub
 function initializeViewCountHub() {
-    // Nếu đã có kết nối và đang kết nối/đã kết nối, không khởi tạo lại
-    if (window.viewCountConnection && 
-        (window.viewCountConnection.state === "Connected" || 
-         window.viewCountConnection.state === "Connecting")) {
-        logDebug("ViewCountHub connection already exists and is in state:", window.viewCountConnection.state);
-        viewCountConnection = window.viewCountConnection;
-        return;
-    }
-
     try {
-        logDebug("Creating new ViewCountHub connection...");
+        logDebug("Creating ViewCountHub connection...");
         
         // Tạo kết nối SignalR
         window.viewCountConnection = new signalR.HubConnectionBuilder()
             .withUrl("/viewCountHub")
-            .withAutomaticReconnect([0, 1000, 2000, 5000, 10000]) // Thử kết nối lại nhanh hơn
-            .configureLogging(signalR.LogLevel.Information)
+            .withAutomaticReconnect()
             .build();
          
-        viewCountConnection = window.viewCountConnection;
-            
         // Đăng ký event handlers
         setupViewCountHandlers();
         
         // Xử lý kết nối/ngắt kết nối
-        viewCountConnection.onreconnected(function(connectionId) {
+        window.viewCountConnection.onreconnected(function(connectionId) {
             logDebug(`ViewCountHub: Reconnected with ID ${connectionId}`);
             isConnectionReady = true;
             requestCurrentViewCount();
         });
         
-        viewCountConnection.onclose(function(error) {
+        window.viewCountConnection.onclose(function(error) {
             logDebug("ViewCountHub: Connection closed", error);
             isConnectionReady = false;
         });
         
         // Bắt đầu kết nối
         logDebug("Starting ViewCountHub connection...");
-        viewCountConnection.start()
+        window.viewCountConnection.start()
             .then(function() {
                 logDebug("ViewCountHub: Connected successfully");
                 isConnectionReady = true;
@@ -333,21 +231,9 @@ function initializeViewCountHub() {
             .catch(function(err) {
                 console.error("ViewCountHub: Connection failed", err);
                 isConnectionReady = false;
-                
-                // Thử kết nối lại sau 5 giây
-                setTimeout(function() {
-                    logDebug("Retrying ViewCountHub connection...");
-                    initializeViewCountHub();
-                }, 5000);
             });
     } catch (err) {
         console.error("Error initializing ViewCountHub:", err);
-        
-        // Thử khởi tạo lại sau 5 giây nếu có lỗi
-        setTimeout(function() {
-            logDebug("Retrying ViewCountHub initialization after error...");
-            initializeViewCountHub();
-        }, 5000);
     }
 }
 
@@ -389,38 +275,22 @@ function increaseViewCount() {
     // Đánh dấu đã đếm ngay lập tức để tránh đếm nhiều lần
     isViewCounted = true;
     
-    // Check and ensure connection is ready
+    // Kiểm tra kết nối
     if (!window.viewCountConnection || window.viewCountConnection.state !== "Connected") {
-        logDebug("Connection not ready, will retry in 1 second. Current state:", 
-                   window.viewCountConnection ? window.viewCountConnection.state : "no connection");
+        logDebug("Connection not ready, will retry in 1 second");
         
-        // Try to initialize connection if it doesn't exist
-        if (!window.viewCountConnection && typeof signalR !== 'undefined') {
-            initializeViewCountHub();
-        }
-        
-        // Retry after a delay, but make sure we don't count multiple times
         setTimeout(function() {
             if (!window.viewCountConnection || window.viewCountConnection.state !== "Connected") {
-                logDebug("Connection still not ready after retry, saving view state locally");
-                // Lưu vào localStorage để tránh đếm lại ngay cả khi refresh trang
-                const viewedQuestions = JSON.parse(localStorage.getItem('viewedQuestions') || '{}');
-                viewedQuestions[questionId] = new Date().toISOString();
-                localStorage.setItem('viewedQuestions', JSON.stringify(viewedQuestions));
-                
+                logDebug("Connection still not ready after retry");
                 // Hide loading indicator
                 if (viewLoadingIndicator) {
                     viewLoadingIndicator.classList.add('d-none');
                 }
-                
-                // Increase view count visually even if the server call fails
-                const currentCount = parseInt(document.querySelector('.view-count')?.textContent || '0');
-                updateViewCountDisplay(currentCount + 1);
                 return;
             }
             
             sendViewCountRequest();
-        }, 2000);
+        }, 1000);
         return;
     }
     
@@ -437,15 +307,9 @@ function increaseViewCount() {
                 const viewedQuestions = JSON.parse(localStorage.getItem('viewedQuestions') || '{}');
                 viewedQuestions[questionId] = new Date().toISOString();
                 localStorage.setItem('viewedQuestions', JSON.stringify(viewedQuestions));
-                
-                // Không cần cập nhật UI vì sẽ nhận thông qua ReceiveUpdatedViewCount
             })
             .catch(function(err) {
                 console.error("Error increasing view count:", err);
-                
-                // Increase view count visually even if the server call fails
-                const currentCount = parseInt(document.querySelector('.view-count')?.textContent || '0');
-                updateViewCountDisplay(currentCount + 1);
             })
             .finally(function() {
                 // Hide loading indicator

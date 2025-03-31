@@ -43,9 +43,18 @@ namespace DoAnWeb.Repositories
 
         public IEnumerable<Repository> SearchRepositories(string searchTerm)
         {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return _dbSet
+                    .Include(r => r.Owner)
+                    .ToList();
+            }
+            
             return _dbSet
                 .Include(r => r.Owner)
-                .Where(r => r.RepositoryName.Contains(searchTerm) || r.Description.Contains(searchTerm))
+                .Where(r => 
+                    (r.RepositoryName != null && r.RepositoryName.Contains(searchTerm)) || 
+                    (r.Description != null && r.Description.Contains(searchTerm)))
                 .ToList();
         }
 

@@ -13,6 +13,85 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!searchInput || !tagCards.length) return;
     
+    // Force render tag cards with proper styling
+    function forceTagCardRendering() {
+        console.log('Forcing tag card rendering with correct styling...');
+        
+        // Force FOUC (Flash of Unstyled Content) fix
+        document.body.style.display = 'none';
+        setTimeout(() => {
+            document.body.style.display = '';
+        }, 50);
+        
+        // Force reflow to apply styles
+        tagCards.forEach(card => {
+            card.style.display = 'none';
+            // Force a reflow
+            void card.offsetHeight;
+            card.style.display = '';
+        });
+        
+        // Apply theme styling directly
+        applyThemeStyling();
+        
+        // Call theme-fix utilities if available
+        if (window.themeFixUtils && typeof window.themeFixUtils.fixTagPageStyling === 'function') {
+            setTimeout(() => {
+                window.themeFixUtils.fixTagPageStyling();
+            }, 100);
+        }
+    }
+    
+    // Ensure proper styling for the current theme
+    function applyThemeStyling() {
+        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        // Apply appropriate styles based on theme
+        tagCards.forEach(card => {
+            if (card.style.display !== 'none') {
+                if (isDarkTheme) {
+                    card.style.background = '#2d3748';
+                    card.style.borderColor = 'rgba(108, 92, 231, 0.2)';
+                    card.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.15)';
+                } else {
+                    card.style.background = 'white';
+                    card.style.borderColor = 'rgba(108, 92, 231, 0.05)';
+                    card.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.05)';
+                }
+            }
+        });
+        
+        // Also apply to tag descriptions
+        document.querySelectorAll('.tag-description').forEach(desc => {
+            if (isDarkTheme) {
+                desc.style.color = '#e2e8f0';
+            } else {
+                desc.style.color = '#4a5568';
+            }
+        });
+    }
+    
+    // Call force rendering on page load
+    forceTagCardRendering();
+    
+    // Call styling on page load
+    applyThemeStyling();
+    
+    // Listen for theme changes
+    const themeObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.attributeName === 'data-theme' || mutation.attributeName === 'data-bs-theme') {
+                applyThemeStyling();
+                
+                // Force rerender after theme change
+                setTimeout(forceTagCardRendering, 50);
+            }
+        });
+    });
+    
+    // Observe theme changes
+    themeObserver.observe(document.documentElement, { attributes: true });
+    
     // Handle search input
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.trim().toLowerCase();
@@ -43,6 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 noResultsMessage.classList.add('d-none');
             }
         }
+        
+        // Re-apply styling to ensure visible cards are properly styled
+        applyThemeStyling();
     });
     
     // Clear search when clicking the clear button

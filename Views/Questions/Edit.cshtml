@@ -4,58 +4,388 @@
     ViewData["Title"] = "Edit Question";
 }
 
-<div class="container mt-4">
-    <h2>Edit Question</h2>
-
-    <form asp-action="Edit" method="post" enctype="multipart/form-data">
-        <input type="hidden" asp-for="QuestionId" />
-        <input type="hidden" asp-for="UserId" />
-        <input type="hidden" asp-for="CreatedDate" />
-
-        <div class="form-group mb-3">
-            <label asp-for="Title" class="form-label">Title</label>
-            <input asp-for="Title" class="form-control" />
-            <span asp-validation-for="Title" class="text-danger"></span>
+<div class="container py-4">
+    <!-- Breadcrumb navigation -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Questions</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Question</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="Body" class="form-label">Body</label>
-            <div class="markdown-editor-container">
-                <textarea asp-for="Body" class="form-control" rows="10"></textarea>
+    <div class="row">
+        <!-- Main content area (8 columns on medium screens and up) -->
+        <div class="col-lg-8">
+            <div class="card edit-question-card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-primary text-white py-3 rounded-top-4">
+                    <h1 class="card-title fs-4 fw-bold mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Your Question</h1>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Question editing form with file upload support -->
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data" id="question-form">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="QuestionId" />
+
+                        <!-- Question title input field -->
+                        <div class="mb-4">
+                            <label asp-for="Title" class="form-label fw-medium"><i class="bi bi-type-h1 me-1 text-primary"></i>Title</label>
+                            <input asp-for="Title" class="form-control form-control-lg rounded-3" placeholder="What's your question? Be specific." />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                            <!-- Helpful guidance for users -->
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-info-circle"></i></div>
+                                    <div>Be specific and imagine you're asking a question to another person.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question body with Markdown editor -->
+                        <div class="mb-4">
+                            <label asp-for="Body" class="form-label fw-medium"><i class="bi bi-textarea-t me-1 text-primary"></i>Body</label>
+                            <!-- Custom Markdown editor container -->
+                            <div class="markdown-editor-container border rounded-3 overflow-hidden shadow-sm">
+                                <div class="editor-toolbar bg-light p-2 border-bottom d-flex align-items-center">
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="**bold**"><i class="bi bi-type-bold"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="*italic*"><i class="bi bi-type-italic"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="# "><i class="bi bi-type-h1"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="## "><i class="bi bi-type-h2"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="`code`"><i class="bi bi-code"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="[Link](url)"><i class="bi bi-link"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="![Image](url)"><i class="bi bi-image"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" data-markdown="- "><i class="bi bi-list-ul"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light" data-markdown="1. "><i class="bi bi-list-ol"></i></button>
+                                </div>
+                                <textarea asp-for="Body" class="form-control border-0 markdown-editor" rows="12" placeholder="Include all the information someone would need to answer your question"></textarea>
+                            </div>
+                            <span asp-validation-for="Body" class="text-danger"></span>
+                            <!-- Markdown support information -->
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-markdown"></i></div>
+                                    <div>Supports Markdown formatting. You can also paste screenshots directly into the editor.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tags input with icon -->
+                        <div class="mb-4">
+                            <label asp-for="Tags" class="form-label fw-medium"><i class="bi bi-tags-fill me-1 text-primary"></i>Tags</label>
+                            <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-tags"></i>
+                                </span>
+                                <input asp-for="Tags" class="form-control border-start-0" placeholder="e.g. javascript, react, node.js (comma separated)" />
+                            </div>
+                            <span asp-validation-for="Tags" class="text-danger"></span>
+                            <!-- Tag guidance -->
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-info-circle"></i></div>
+                                    <div>Add up to 5 tags to describe what your question is about. Use comma to separate tags.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Existing attachments section (if any) -->
+                        @if (Model.ExistingAttachments != null && Model.ExistingAttachments.Any())
+                        {
+                            <div class="existing-attachments mb-4">
+                                <label class="form-label fw-medium"><i class="bi bi-paperclip me-1 text-primary"></i>Existing Attachments</label>
+                                <div class="card border-0 shadow-sm rounded-3">
+                                    <div class="card-body p-3">
+                                        <div class="attachment-list row g-3">
+                                            @foreach (var attachment in Model.ExistingAttachments)
+                                            {
+                                                <div class="col-md-6 col-lg-4 mb-3">
+                                                    <div class="attachment-item p-3 border rounded-3 shadow-sm hover-action position-relative h-100">
+                                                        @{
+                                                            var fileExtension = System.IO.Path.GetExtension(attachment.FileName)?.ToLower();
+                                                            bool isImage = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" }.Contains(fileExtension);
+                                                            bool isPdf = fileExtension == ".pdf";
+                                                            
+                                                            string fileIcon = "bi-file-earmark";
+                                                            if (isImage) fileIcon = "bi-file-earmark-image";
+                                                            else if (isPdf) fileIcon = "bi-file-earmark-pdf";
+                                                            else if (fileExtension == ".doc" || fileExtension == ".docx") fileIcon = "bi-file-earmark-word";
+                                                            else if (fileExtension == ".xls" || fileExtension == ".xlsx") fileIcon = "bi-file-earmark-excel";
+                                                            else if (fileExtension == ".ppt" || fileExtension == ".pptx") fileIcon = "bi-file-earmark-ppt";
+                                                            else if (fileExtension == ".zip" || fileExtension == ".rar") fileIcon = "bi-file-earmark-zip";
+                                                            else if (fileExtension == ".txt") fileIcon = "bi-file-earmark-text";
+                                                        }
+                                                        
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="d-flex mb-3">
+                                                                <div class="file-icon-container d-flex justify-content-center align-items-center bg-light rounded-circle p-2 me-3" style="width: 40px; height: 40px;">
+                                                                    <i class="bi @fileIcon fs-5 text-primary"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 class="file-name mb-0 text-truncate" style="max-width: 150px;" title="@attachment.FileName">@attachment.FileName</h6>
+                                                                    <div class="file-size small text-muted">@(Math.Round((double)attachment.FileSize / 1024, 2)) KB</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input type="checkbox" name="AttachmentsToRemove" value="@attachment.AttachmentId" id="remove-@attachment.AttachmentId" class="form-check-input">
+                                                                <label for="remove-@attachment.AttachmentId" class="form-check-label small text-danger">Remove</label>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        @if (isImage)
+                                                        {
+                                                            <div class="attachment-preview mb-2">
+                                                                <img src="@attachment.FilePath" alt="@attachment.FileName" class="img-fluid rounded" style="max-height: 100px; width: 100%; object-fit: cover;">
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- File upload section with image preview -->
+                        <div class="mb-4">
+                            <label asp-for="Attachments" class="form-label fw-medium"><i class="bi bi-upload me-1 text-primary"></i>Add New Attachments (Optional)</label>
+                            <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-upload"></i>
+                                </span>
+                                <input type="file" asp-for="Attachments" class="form-control border-start-0" multiple id="file-upload" />
+                            </div>
+                            <div class="form-text mt-2">
+                                <div class="d-flex">
+                                    <div class="text-primary me-2"><i class="bi bi-paperclip"></i></div>
+                                    <div>Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR, JPG, JPEG, PNG, GIF, BMP, WEBP (Max 10MB per file)</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Image preview container -->
+                            <div id="image-preview-container" class="mt-3 row g-2">
+                                <!-- Preview images will be inserted here by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Form action buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Details" asp-route-id="@Model.QuestionId" class="btn btn-outline-secondary rounded-pill">
+                                <i class="bi bi-x-lg me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill shadow-sm" id="submit-button">
+                                <i class="bi bi-check-lg me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <span asp-validation-for="Body" class="text-danger"></span>
-            <div class="form-text">Supports Markdown formatting. You can also paste screenshots directly into the editor.</div>
         </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="Tags" class="form-label">Tags (comma separated)</label>
-            <input asp-for="Tags" class="form-control" />
-            <span asp-validation-for="Tags" class="text-danger"></span>
+        
+        <!-- Sidebar with helpful information (4 columns) -->
+        <div class="col-lg-4">
+            <!-- Tips card with guidance on asking good questions -->
+            <div class="card mb-4 tips-card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-info text-white rounded-top-4 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-lightbulb-fill me-2"></i>Editing Tips</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Tip 1: Clarity -->
+                    <div class="tip-item mb-3 p-3 bg-light rounded-3 hover-action">
+                        <div class="d-flex">
+                            <div class="tip-icon rounded-circle bg-primary text-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-brightness-high"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Improve clarity</h6>
+                                <p class="text-muted small mb-0">Make your question clearer and more focused.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tip 2: Add details -->
+                    <div class="tip-item mb-3 p-3 bg-light rounded-3 hover-action">
+                        <div class="d-flex">
+                            <div class="tip-icon rounded-circle bg-primary text-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-list-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Add relevant details</h6>
+                                <p class="text-muted small mb-0">Include any additional context that could help others answer.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tip 3: Formatting -->
+                    <div class="tip-item p-3 bg-light rounded-3 hover-action">
+                        <div class="d-flex">
+                            <div class="tip-icon rounded-circle bg-primary text-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-text-paragraph"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Use proper formatting</h6>
+                                <p class="text-muted small mb-0">Format code, use headings and lists for better readability.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Editing etiquette card -->
+            <div class="card etiquette-card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-success text-white rounded-top-4 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-check2-circle me-2"></i>Editing Etiquette</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-light border rounded-3 mb-4">
+                        <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                        <span>Editing a question after receiving answers should primarily clarify the original question, not change its meaning completely.</span>
+                    </div>
+                    
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-3 d-flex">
+                            <div class="me-2 text-success"><i class="bi bi-check-circle-fill"></i></div>
+                            <div class="small">Clarify ambiguous points</div>
+                        </li>
+                        <li class="mb-3 d-flex">
+                            <div class="me-2 text-success"><i class="bi bi-check-circle-fill"></i></div>
+                            <div class="small">Fix typos and grammar</div>
+                        </li>
+                        <li class="mb-3 d-flex">
+                            <div class="me-2 text-success"><i class="bi bi-check-circle-fill"></i></div>
+                            <div class="small">Add relevant information</div>
+                        </li>
+                        <li class="mb-3 d-flex">
+                            <div class="me-2 text-danger"><i class="bi bi-x-circle-fill"></i></div>
+                            <div class="small">Completely change the question's meaning</div>
+                        </li>
+                        <li class="d-flex">
+                            <div class="me-2 text-danger"><i class="bi bi-x-circle-fill"></i></div>
+                            <div class="small">Invalidate existing answers</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-
-        <div class="form-group">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <!-- Markdown parser library -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <!-- Prism.js for syntax highlighting -->
-    <link rel="stylesheet" href="~/css/code-blocks.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <!-- Syntax highlighting library -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
     
-    <!-- Custom Markdown editor implementation -->
-    <script src="~/js/markdown-editor.js"></script>
+    <!-- Image Upload Preview Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Image upload preview
+            const fileUpload = document.getElementById('file-upload');
+            const previewContainer = document.getElementById('image-preview-container');
+            
+            fileUpload.addEventListener('change', function() {
+                previewContainer.innerHTML = '';
+                
+                if (this.files) {
+                    Array.from(this.files).forEach(file => {
+                        if (!file.type.match('image.*')) {
+                            // Create a generic file preview for non-image files
+                            const fileCol = document.createElement('div');
+                            fileCol.className = 'col-md-4 mb-3';
+                            
+                            let fileIcon = 'bi-file-earmark';
+                            if (file.name.match(/\.(pdf)$/i)) fileIcon = 'bi-file-earmark-pdf';
+                            else if (file.name.match(/\.(doc|docx)$/i)) fileIcon = 'bi-file-earmark-word';
+                            else if (file.name.match(/\.(xls|xlsx)$/i)) fileIcon = 'bi-file-earmark-excel';
+                            else if (file.name.match(/\.(zip|rar)$/i)) fileIcon = 'bi-file-earmark-zip';
+                            else if (file.name.match(/\.(txt|csv|json)$/i)) fileIcon = 'bi-file-earmark-text';
+                            
+                            fileCol.innerHTML = `
+                                <div class="border rounded-3 p-3 h-100 shadow-sm hover-action">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="rounded-circle bg-light p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi ${fileIcon} fs-5 text-primary"></i>
+                                        </div>
+                                        <span class="text-truncate small">${file.name}</span>
+                                    </div>
+                                    <div class="text-muted small text-end">${(file.size / 1024).toFixed(2)} KB</div>
+                                </div>
+                            `;
+                            previewContainer.appendChild(fileCol);
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const imgCol = document.createElement('div');
+                            imgCol.className = 'col-md-4 mb-3';
+                            imgCol.innerHTML = `
+                                <div class="border rounded-3 p-2 shadow-sm hover-action">
+                                    <img src="${e.target.result}" class="img-fluid rounded-3" style="height: 120px; width: 100%; object-fit: cover;" alt="Preview">
+                                    <div class="mt-2 text-truncate small fw-medium">${file.name}</div>
+                                    <div class="text-muted small text-end">${(file.size / 1024).toFixed(2)} KB</div>
+                                </div>
+                            `;
+                            previewContainer.appendChild(imgCol);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+            
+            // Markdown Editor Toolbar Buttons
+            const markdownButtons = document.querySelectorAll('[data-markdown]');
+            const bodyTextarea = document.querySelector('.markdown-editor');
+            
+            markdownButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const markdownText = this.getAttribute('data-markdown');
+                    const textarea = bodyTextarea;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = textarea.value;
+                    const before = text.substring(0, start);
+                    const selection = text.substring(start, end);
+                    const after = text.substring(end);
+                    
+                    if (selection.length > 0) {
+                        // If text is selected, wrap it with markdown
+                        if (markdownText.includes('*') || markdownText.includes('`')) {
+                            textarea.value = before + markdownText.charAt(0) + selection + markdownText.charAt(markdownText.length - 1) + after;
+                        } else if (markdownText.includes('[')) {
+                            textarea.value = before + markdownText.replace('url', selection) + after;
+                        } else {
+                            textarea.value = before + markdownText + selection + after;
+                        }
+                    } else {
+                        // If no text is selected, just insert the markdown
+                        textarea.value = before + markdownText + after;
+                    }
+                    
+                    textarea.focus();
+                    textarea.selectionStart = start + markdownText.length;
+                    textarea.selectionEnd = start + markdownText.length;
+                });
+            });
+            
+            // Add hover effect to hover action elements
+            const hoverElements = document.querySelectorAll('.hover-action');
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px)';
+                    this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                });
+                element.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+        });
+    </script>
 }
