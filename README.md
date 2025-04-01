@@ -52,6 +52,7 @@ DevCommunity là nền tảng kết nối lập trình viên thông qua việc c
 
 ### 💾 Cơ Sở Dữ Liệu
 - **Microsoft SQL Server**: Hệ quản trị cơ sở dữ liệu quan hệ
+- **MySQL** :
 - **Entity Framework Migrations**: Quản lý phiên bản database
 
 ### 📁 Tính Năng Tập Tin
@@ -76,9 +77,10 @@ DevCommunity là nền tảng kết nối lập trình viên thông qua việc c
 
 ### Yêu Cầu Hệ Thống
 - .NET 8.0 SDK trở lên
-- SQL Server 2019 trở lên
+- SQL Server 2022 trở lên,  MySQL 
 - Visual Studio 2022 hoặc VS Code với C# extensions
 - Gitea server (tùy chọn cho tính năng quản lý mã nguồn)
+- 
 
 ### Các Bước Cài Đặt
 
