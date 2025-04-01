@@ -2,121 +2,121 @@
 
 ## 💻 Cộng đồng chia sẻ mã nguồn & hỏi đáp lập trình
 
-![DevCommunity](![logo](https://github.com/user-attachments/assets/4d958968-526b-446a-9379-4e0231cd9ee8)
-)
+![DevCommunity Logo](https://github.com/user-attachments/assets/4d958968-526b-446a-9379-4e0231cd9ee8)
 
-DevCommunity là nền tảng kết hợp các tính năng của GitHub và Stack Overflow, giúp lập trình viên chia sẻ mã nguồn, đặt câu hỏi, bình luận và bình chọn các nội dung kỹ thuật. Hệ thống được xây dựng trên nền tảng .NET Core theo mô hình MVC.
-
----
-
-## ✨ Tính Năng Chính
-
-### 👥 Người Dùng
-- **Đăng ký** & **đăng nhập** đơn giản
-- Quản lý hồ sơ cá nhân toàn diện
-- Theo dõi người dùng khác
-
-### ❓ Hỏi Đáp
-- Đăng câu hỏi với định dạng phong phú
-- Trả lời, bình luận với hỗ trợ Markdown
-- Đánh dấu câu trả lời chính xác
-
-### 📦 Chia Sẻ Mã Nguồn
-- Tạo kho lưu trữ công khai hoặc riêng tư
-- Commit mã nguồn với lịch sử đầy đủ
-- Quản lý file và phiên bản
-
-### 👍 Hệ Thống Bình Chọn
-- Upvote/Downvote cho câu hỏi và trả lời
-- Điểm uy tín người dùng dựa trên đóng góp
-- Huy hiệu thành tích đặc biệt
-
-### 🔍 Tìm Kiếm & Tagging
-- Tìm kiếm nâng cao với nhiều bộ lọc
-- Gán thẻ cho câu hỏi và kho mã nguồn
-- Theo dõi các thẻ yêu thích
-
-### 🔔 Hệ Thống Thông Báo
-- Thông báo realtime khi có tương tác
-- Tùy chỉnh cách nhận thông báo
-- Hỗ trợ email và push notification
-
-### 📊 Lịch Sử Hoạt Động
-- Bảng điều khiển trực quan
-- Thống kê đóng góp chi tiết
-- Xu hướng hoạt động theo thời gian
+DevCommunity là nền tảng kết nối lập trình viên thông qua việc chia sẻ mã nguồn và hỏi đáp kỹ thuật. Dự án được xây dựng trên nền tảng ASP.NET Core MVC, kết hợp các tính năng của GitHub và Stack Overflow để tạo môi trường học tập và chia sẻ kiến thức hiệu quả.
 
 ---
 
-## 🏗️ Cấu Trúc Dự Án
+## ✨ Tính Năng Đã Triển Khai
 
-### 💾 Database
-- Microsoft SQL Server với hiệu suất cao
-- Thiết kế theo mô hình quan hệ tối ưu
-- Hỗ trợ caching và indexing
+### 👥 Quản Lý Người Dùng
+- **Đăng ký** & **đăng nhập** với ASP.NET Identity
+- Quản lý hồ sơ cá nhân với avatar, thông tin liên hệ
+- Theo dõi hoạt động và đóng góp của người dùng
 
-### ⚙️ Backend
-- ASP.NET Core MVC 6.0+
-- Entity Framework Core với code-first
-- Repository Pattern và Service Layer
-- Dependency Injection
+### ❓ Hệ Thống Hỏi Đáp
+- Đăng câu hỏi với trình soạn thảo Markdown đầy đủ
+- Hỗ trợ định dạng phong phú với trình soạn thảo trực quan
+- Chức năng xem trước (Preview) nội dung Markdown
+- Đính kèm tập tin đa dạng (hình ảnh, PDF, tài liệu, mã nguồn)
+- Hệ thống tag để phân loại câu hỏi
+
+### 📦 Quản Lý Mã Nguồn
+- Tạo và quản lý repository công khai/riêng tư
+- Quản lý file và thư mục với giao diện trực quan
+- Hỗ trợ tạo file mới với nhiều template có sẵn
+- Tích hợp với Gitea cho quản lý mã nguồn
+
+### 🔍 Tìm Kiếm & Phân Loại
+- Hệ thống tag linh hoạt cho câu hỏi và repository
+- Tìm kiếm nội dung theo nhiều tiêu chí
+- Phân loại câu hỏi và mã nguồn theo danh mục
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng
+
+### 🖥️ Backend
+- **ASP.NET Core MVC 6.0**: Nền tảng phát triển ứng dụng web
+- **Entity Framework Core**: ORM để tương tác với cơ sở dữ liệu
+- **ASP.NET Identity**: Quản lý xác thực và phân quyền người dùng
+- **Gitea API Integration**: Tích hợp với Gitea cho quản lý mã nguồn
 
 ### 🎨 Frontend
-- Razor Pages và Bootstrap 5
-- Tích hợp React cho UI động
-- AJAX và SignalR cho realtime
+- **Bootstrap 5**: Framework CSS cho UI responsive
+- **jQuery**: Thư viện JavaScript cho tương tác động
+- **Marked.js**: Thư viện render Markdown
+- **PrismJS**: Syntax highlighting cho code blocks
+- **Bootstrap Icons**: Bộ icon vector đẹp và linh hoạt
 
-### 🔐 Authentication
-- ASP.NET Identity với bảo mật cao
-- OAuth2 (Google, GitHub, Facebook)
-- JWT cho API authentication
+### 💾 Cơ Sở Dữ Liệu
+- **Microsoft SQL Server**: Hệ quản trị cơ sở dữ liệu quan hệ
+- **Entity Framework Migrations**: Quản lý phiên bản database
 
-### 🔌 API
-- RESTful API với Swagger documentation
-- GraphQL endpoints cho truy vấn phức tạp
-- Rate limiting và caching
-
-### ☁️ Hosting
-- CI/CD pipeline với GitHub Actions
-- Hỗ trợ triển khai trên Azure, AWS hoặc DigitalOcean
-- Docker containers
+### 📁 Tính Năng Tập Tin
+- **Hỗ trợ upload đa dạng**: Hình ảnh, PDF, văn bản, mã nguồn
+- **Image preview**: Xem trước hình ảnh trước khi đăng tải
+- **File categorization**: Phân loại file theo định dạng
 
 ---
 
-## 🤝 Cách Thức Đóng Góp
+## 🌟 Hướng Phát Triển Tiếp Theo
 
-Chúng tôi luôn chào đón các đóng góp từ cộng đồng! Nếu bạn muốn tham gia phát triển dự án, vui lòng làm theo các bước sau:
+- **Hệ thống bình chọn**: Upvote/Downvote cho câu hỏi và câu trả lời
+- **Tích hợp thời gian thực**: Sử dụng SignalR cho thông báo tức thì
+- **Hệ thống thông báo**: Email và thông báo trong ứng dụng
+- **Hệ thống điểm uy tín**: Dựa trên đóng góp và hoạt động của người dùng
+- **Chức năng bình luận nâng cao**: Threading và Markdown trong bình luận
+- **API công khai**: Cho phép tích hợp với các dịch vụ bên thứ ba
 
-1. **Fork** repository
-2. **Clone** repository về máy local
-3. Tạo **branch** mới cho tính năng hoặc sửa lỗi của bạn
-4. **Commit** và **push** các thay đổi
-5. Tạo **Pull Request** để chúng tôi xem xét
+---
+
+## 🚀 Cài Đặt và Chạy Dự Án
+
+### Yêu Cầu Hệ Thống
+- .NET 6.0 SDK trở lên
+- SQL Server 2019 trở lên
+- Visual Studio 2022 hoặc VS Code với C# extensions
+- Gitea server (tùy chọn cho tính năng quản lý mã nguồn)
+
+### Các Bước Cài Đặt
 
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/devcommunity.git
 
-# Tạo branch mới
-git checkout -b feature/amazing-feature
+# Di chuyển vào thư mục dự án
+cd devcommunity
 
-# Commit thay đổi
-git commit -m 'Add some amazing feature'
+# Khôi phục các gói NuGet
+dotnet restore
 
-# Push branch
-git push origin feature/amazing-feature
+# Cập nhật database
+dotnet ef database update
+
+# Chạy ứng dụng
+dotnet run
 ```
+
+---
+
+## 🤝 Đóng Góp
+
+Chúng tôi luôn chào đón các đóng góp từ cộng đồng! Nếu bạn muốn tham gia phát triển dự án:
+
+1. Fork repository
+2. Tạo branch mới (`git checkout -b feature/your-feature`)
+3. Commit thay đổi (`git commit -m 'Add some feature'`)
+4. Push lên branch của bạn (`git push origin feature/your-feature`)
+5. Tạo Pull Request
 
 ---
 
 ## 📞 Liên Hệ
 
-Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, vui lòng liên hệ qua:
-
 - 📧 **Email**: support@devcommunity.com
 - 🌐 **Website**: [https://devcommunity.com](https://devcommunity.com)
-- 💬 **Discord**: [Tham gia kênh Discord](https://discord.gg/devcommunity)
-- 🐦 **Twitter**: [@DevCommunityVN](https://twitter.com/DevCommunityVN)
 
 ---
 
