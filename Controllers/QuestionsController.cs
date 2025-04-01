@@ -6,6 +6,7 @@ using DoAnWeb.ViewModels;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using System.Linq;
 
 namespace DoAnWeb.Controllers
 {
@@ -18,6 +19,7 @@ namespace DoAnWeb.Controllers
         private readonly IQuestionService _questionService;
         private readonly IAnswerService _answerService;
         private readonly IMarkdownService _markdownService;
+        private readonly DevCommunityContext _context;
 
         /// <summary>
         /// Constructor with dependency injection for required services
@@ -25,14 +27,17 @@ namespace DoAnWeb.Controllers
         /// <param name="questionService">Service for question operations</param>
         /// <param name="answerService">Service for answer operations</param>
         /// <param name="markdownService">Service for processing markdown content</param>
+        /// <param name="context">DevCommunityContext for accessing tag data</param>
         public QuestionsController(
             IQuestionService questionService, 
             IAnswerService answerService,
-            IMarkdownService markdownService)
+            IMarkdownService markdownService,
+            DevCommunityContext context)
         {
             _questionService = questionService;
             _answerService = answerService;
             _markdownService = markdownService;
+            _context = context;
         }
 
         /// <summary>
@@ -538,11 +543,19 @@ namespace DoAnWeb.Controllers
         [Authorize]
         public IActionResult Create()
         {
+            // Get all tag names for tag suggestions
+            var tagNames = _context.Tags
+                .OrderByDescending(t => t.QuestionTags.Count)
+                .Select(t => t.TagName)
+                .Take(50)  // Limit to top 50 tags
+                .ToList();
+
             return View(new QuestionViewModel
             {
                 Title = "",
                 Body = "",
-                Tags = ""
+                Tags = "",
+                AvailableTags = tagNames
             });
         }
 

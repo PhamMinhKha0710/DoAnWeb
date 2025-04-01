@@ -6,29 +6,32 @@ using DoAnWeb.Services;
 using System.Security.Claims;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DoAnWeb.Filters
 {
-    public class UserInfoFilter : IActionFilter
+    public class UserInfoFilter : IAsyncActionFilter
     {
-        private readonly IUserRepository _userRepository;
-        private readonly INotificationService _notificationService;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILogger<UserInfoFilter> _logger;
 
-        public UserInfoFilter(IUserRepository userRepository, INotificationService notificationService)
+        public UserInfoFilter(
+            IServiceScopeFactory serviceScopeFactory,
+            ILogger<UserInfoFilter> logger)
         {
-            _userRepository = userRepository;
-            _notificationService = notificationService;
+            _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
 
-        public void OnActionExecuting(ActionExecutingContext context)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            // Không làm gì ở đây
-        }
-
-        public void OnActionExecuted(ActionExecutedContext context)
-        {
+            // Trước tiên, thực thi action
+            var resultContext = await next();
+            
+            // Sau đó xử lý kết quả
             // Chỉ thiết lập ViewBag cho các kết quả ViewResult (không áp dụng cho API hoặc các kết quả khác)
-            if (context.Result is ViewResult viewResult)
+            if (resultContext.Result is ViewResult viewResult)
             {
                 // Kiểm tra xem người dùng đã xác thực chưa
                 if (context.HttpContext.User?.Identity != null && context.HttpContext.User.Identity.IsAuthenticated)
@@ -37,15 +40,20 @@ namespace DoAnWeb.Filters
                     var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
                     if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
                     {
-                        // Lấy số lượng thông báo chưa đọc và đặt vào ViewBag
+                        // Tạo scope mới để tránh vấn đề đa luồng với DbContext
+                        using var scope = _serviceScopeFactory.CreateScope();
+                        var serviceProvider = scope.ServiceProvider;
+                        
                         try
                         {
                             // 1. Lấy số lượng thông báo chưa đọc
-                            var unreadCount = _notificationService.GetUnreadNotificationCountAsync(userId).GetAwaiter().GetResult();
+                            var notificationService = serviceProvider.GetRequiredService<INotificationService>();
+                            var unreadCount = await notificationService.GetUnreadNotificationCountAsync(userId);
                             viewResult.ViewData["UnreadNotificationsCount"] = unreadCount;
                             
                             // 2. Lấy danh sách thông báo gần đây (10 thông báo mới nhất)
-                            var recentNotifications = _notificationService.GetUserNotificationsAsync(userId).GetAwaiter().GetResult()
+                            var notifications = await notificationService.GetUserNotificationsAsync(userId);
+                            var recentNotifications = notifications
                                 .OrderByDescending(n => n.CreatedDate)
                                 .Take(10)
                                 .Select(n => new {
@@ -61,39 +69,45 @@ namespace DoAnWeb.Filters
 
                             // Đặt danh sách thông báo vào ViewBag
                             viewResult.ViewData["RecentNotifications"] = recentNotifications;
-                            
-                            // In ra console để debug
-                            System.Diagnostics.Debug.WriteLine($"Unread notifications count for user {userId}: {unreadCount}");
-                            System.Diagnostics.Debug.WriteLine($"Recent notifications count: {recentNotifications.Count}");
                         }
                         catch (Exception ex)
                         {
                             // Ghi log lỗi nhưng không dừng xử lý
-                            System.Diagnostics.Debug.WriteLine($"Error getting notifications: {ex.Message}");
+                            _logger.LogError(ex, "Error getting notifications for user {UserId}", userId);
                             viewResult.ViewData["UnreadNotificationsCount"] = 0;
                             viewResult.ViewData["RecentNotifications"] = new List<object>();
                         }
                         
-                        // Lấy thông tin người dùng từ repository
-                        var user = _userRepository.GetById(userId);
-                        if (user != null)
+                        try
                         {
-                            // Thiết lập avatar người dùng vào ViewBag
-                            string avatar = null;
+                            // Lấy thông tin người dùng từ repository trong scope mới
+                            var userRepository = serviceProvider.GetRequiredService<IUserRepository>();
+                            var user = userRepository.GetById(userId);
                             
-                            // Ưu tiên ProfilePicture (hình ảnh được tải lên)
-                            if (!string.IsNullOrEmpty(user.ProfilePicture))
+                            if (user != null)
                             {
-                                avatar = user.ProfilePicture;
+                                // Thiết lập avatar người dùng vào ViewBag
+                                string avatar = null;
+                                
+                                // Ưu tiên ProfilePicture (hình ảnh được tải lên)
+                                if (!string.IsNullOrEmpty(user.ProfilePicture))
+                                {
+                                    avatar = user.ProfilePicture;
+                                }
+                                // Sau đó kiểm tra AvatarUrl (thường là từ dịch vụ bên ngoài)
+                                else if (!string.IsNullOrEmpty(user.AvatarUrl))
+                                {
+                                    avatar = user.AvatarUrl;
+                                }
+                                
+                                // Thiết lập vào ViewBag
+                                viewResult.ViewData["CurrentUserAvatar"] = avatar;
                             }
-                            // Sau đó kiểm tra AvatarUrl (thường là từ dịch vụ bên ngoài)
-                            else if (!string.IsNullOrEmpty(user.AvatarUrl))
-                            {
-                                avatar = user.AvatarUrl;
-                            }
-                            
-                            // Thiết lập vào ViewBag
-                            viewResult.ViewData["CurrentUserAvatar"] = avatar;
+                        }
+                        catch (Exception ex)
+                        {
+                            // Ghi log lỗi nhưng không dừng xử lý
+                            _logger.LogError(ex, "Error getting user information for user {UserId}", userId);
                         }
                     }
                 }

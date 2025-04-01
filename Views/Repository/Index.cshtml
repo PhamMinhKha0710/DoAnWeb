@@ -21,7 +21,8 @@
         border-radius: 5px;
         z-index: 9999;
         max-width: 300px;
-        display: none;
+        font-size: 12px;
+        word-break: break-all;
     }
 </style>
 
@@ -73,6 +74,9 @@
         </div>
     }
 
+    <!-- Debug Info Panel -->
+    <div class="debug-info" style="display: none;">Debugging information will appear here</div>
+
     <h2 class="mb-3">Public Repositories</h2>
     
     <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
@@ -99,9 +103,9 @@
                                 </a>
                             </div>
                             <h5 class="card-title">
-                                @if (!string.IsNullOrEmpty(repo.Name) && !string.IsNullOrEmpty(repo.Owner?.Login))
+                                @if (!string.IsNullOrEmpty(repo.Name) && repo.Owner != null && !string.IsNullOrEmpty(repo.Owner.Login))
                                 {
-                                    <a asp-action="DetailsByName" asp-route-owner="@repo.Owner.Login" asp-route-repo="@repo.Name" class="text-decoration-none">
+                                    <a href="@Url.Action("DetailsByName", "Repository", new { owner = repo.Owner.Login, repo = repo.Name })" class="text-decoration-none repo-link" data-owner="@repo.Owner.Login" data-repo="@repo.Name">
                                         @repo.Name
                                     </a>
                                 }
@@ -133,9 +137,9 @@
                                     }
                                 </div>
                                 <div>
-                                    @if (!string.IsNullOrEmpty(repo.Name) && !string.IsNullOrEmpty(repo.Owner?.Login))
+                                    @if (!string.IsNullOrEmpty(repo.Name) && repo.Owner != null && !string.IsNullOrEmpty(repo.Owner.Login))
                                     {
-                                        <a asp-action="DetailsByName" asp-route-owner="@repo.Owner.Login" asp-route-repo="@repo.Name" class="btn btn-sm btn-outline-primary repository-details-link" data-debug="repo-name-@repo.Name">
+                                        <a href="@Url.Action("DetailsByName", "Repository", new { owner = repo.Owner.Login, repo = repo.Name })" class="btn btn-sm btn-outline-primary repository-details-link" data-debug="repo-name-@repo.Name" data-owner="@repo.Owner.Login" data-repo="@repo.Name">
                                             <i class="bi bi-code-square"></i> View
                                         </a>
                                     }
@@ -191,7 +195,7 @@
                                 </span>
                             </div>
                             <h5 class="card-title">
-                                <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="text-decoration-none">
+                                <a href="@Url.Action("Details", "Repository", new { id = repo.RepositoryId })" class="text-decoration-none local-repo-link" data-id="@repo.RepositoryId">
                                     @repo.RepositoryName
                                 </a>
                             </h5>
@@ -218,7 +222,7 @@
                                     }
                                 </div>
                                 <div>
-                                    <a asp-action="Details" asp-route-id="@repo.RepositoryId" class="btn btn-sm btn-outline-primary repository-details-link" data-debug="repo-id-@repo.RepositoryId">
+                                    <a href="@Url.Action("Details", "Repository", new { id = repo.RepositoryId })" class="btn btn-sm btn-outline-primary repository-details-link" data-debug="repo-id-@repo.RepositoryId" data-id="@repo.RepositoryId">
                                         <i class="bi bi-code-square"></i> View
                                     </a>
                                 </div>
@@ -252,27 +256,47 @@
     </div>
 </div>
 
-<div class="debug-info"></div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Add click logging for repository links
-        const repoLinks = document.querySelectorAll('.repository-details-link');
+        // Add click logging for all repository links
+        const debugInfo = document.querySelector('.debug-info');
+        
+        // Handle Gitea repository links
+        const repoLinks = document.querySelectorAll('.repository-details-link, .repo-link, .local-repo-link');
         repoLinks.forEach(link => {
             link.addEventListener('click', function(e) {
-                console.log('Repository link clicked:', this.getAttribute('data-debug'));
+                // Show what we're clicking
+                let debugText = `Link clicked: ${this.getAttribute('data-debug') || 'unknown'}<br>`;
+                
+                // Add information about the repository
+                if (this.hasAttribute('data-owner') && this.hasAttribute('data-repo')) {
+                    debugText += `Owner: ${this.getAttribute('data-owner')}<br>`;
+                    debugText += `Repo: ${this.getAttribute('data-repo')}<br>`;
+                } else if (this.hasAttribute('data-id')) {
+                    debugText += `Repository ID: ${this.getAttribute('data-id')}<br>`;
+                }
+                
+                debugText += `Redirecting to: ${this.getAttribute('href')}`;
+                
+                // Log to console
+                console.log('Repository link clicked:', this.getAttribute('data-debug') || 'unknown');
                 console.log('Link href:', this.getAttribute('href'));
                 
                 // Show debug info
-                const debugInfo = document.querySelector('.debug-info');
                 debugInfo.style.display = 'block';
-                debugInfo.innerHTML = `Link clicked: ${this.getAttribute('data-debug')}<br>Redirecting to: ${this.getAttribute('href')}`;
+                debugInfo.innerHTML = debugText;
                 
-                // Hide after 5 seconds
-                setTimeout(() => {
-                    debugInfo.style.display = 'none';
-                }, 5000);
+                // Don't hide automatically - let user see the info while the page loads
             });
         });
+        
+        // Add a close button to the debug info
+        const closeButton = document.createElement('button');
+        closeButton.innerText = 'Close';
+        closeButton.className = 'btn btn-sm btn-light mt-2';
+        closeButton.addEventListener('click', function() {
+            debugInfo.style.display = 'none';
+        });
+        debugInfo.appendChild(closeButton);
     });
 </script> 

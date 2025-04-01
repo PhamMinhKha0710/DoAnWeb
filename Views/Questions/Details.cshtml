@@ -577,7 +577,9 @@
                             }
                             <div>
                                 <div class="fw-medium">@Model.User?.DisplayName</div>
-                                <div class="text-muted small">@Model.User?.Reputation Reputation</div>
+                                <div class="text-muted small">
+                                    <span class="user-reputation" data-user-id="@(Model.User?.UserId ?? 0)">@(Model.User?.Reputation ?? 0)</span> Reputation
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -594,7 +596,7 @@
                             </li>
                             <li class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center py-2">
                                 <span><i class="bi bi-arrow-up-circle me-2 text-secondary"></i>Votes</span>
-                                <span class="badge bg-light text-dark rounded-pill">@Model.Score</span>
+                                <span class="badge bg-light text-dark rounded-pill vote-count" data-id="@Model.QuestionId" data-type="question">@Model.Score</span>
                             </li>
                             <li class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center py-2">
                                 <span><i class="bi bi-chat-left-text me-2 text-secondary"></i>Answers</span>
@@ -691,6 +693,7 @@
     <script src="~/js/view-counter-fixed.js"></script>
     <script src="~/js/vote-handler.js"></script>
     <script src="~/js/attachment-viewer.js"></script>
+    <script src="~/js/reputation-sync.js"></script>
     
     <!-- Inline script -->
     <script>
@@ -766,6 +769,11 @@
             // Force immediate connection attempt for view counting
             if (typeof initViewCounter === 'function') {
                 setTimeout(initViewCounter, 100);
+            }
+            
+            // Force immediate connection attempt for reputation sync
+            if (typeof initReputationSync === 'function') {
+                setTimeout(initReputationSync, 100);
             }
         });
     </script>

@@ -245,8 +245,8 @@ namespace DoAnWeb.Services
                 _logger.LogDebug($"Repository: {repo.RepositoryName}, " +
                                 $"Owner: {ownerUsername ?? "null"}, " +
                                 $"Owner.GiteaUsername: {ownerGiteaUsername ?? "null"}, " + 
-                                $"Is Match Username: {ownerUsername == owner}, " +
-                                $"Is Match GiteaUsername: {ownerGiteaUsername == owner}, " +
+                                $"Is Match Username: {string.Equals(ownerUsername, owner, StringComparison.OrdinalIgnoreCase)}, " +
+                                $"Is Match GiteaUsername: {string.Equals(ownerGiteaUsername, owner, StringComparison.OrdinalIgnoreCase)}, " +
                                 $"Is Match RepoName: {repo.RepositoryName.Equals(repositoryName, StringComparison.OrdinalIgnoreCase)}");
             }
             
@@ -256,9 +256,11 @@ namespace DoAnWeb.Services
             }
             
             // Find the repository matching the owner username and repository name
+            // Use case-insensitive comparison for both username and repository name
             var result = repositories.FirstOrDefault(r => 
                 r.Owner != null && 
-                (r.Owner.Username == owner || r.Owner.GiteaUsername == owner) && 
+                (string.Equals(r.Owner.Username, owner, StringComparison.OrdinalIgnoreCase) || 
+                 string.Equals(r.Owner.GiteaUsername, owner, StringComparison.OrdinalIgnoreCase)) && 
                 r.RepositoryName.Equals(repositoryName, StringComparison.OrdinalIgnoreCase));
             
             if (result != null)

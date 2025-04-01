@@ -64,7 +64,7 @@ namespace DoAnWeb.Controllers.Api
                 .Where(user => 
                     user.Username.ToLower().Contains(normalizedQuery) || 
                     user.DisplayName.ToLower().Contains(normalizedQuery))
-                .OrderByDescending(u => u.Reputation)
+                .OrderByDescending(u => u.ReputationPoints)
                 .Take(maxResults)
                 .Select(user => new
                 {

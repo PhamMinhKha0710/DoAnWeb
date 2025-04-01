@@ -19,6 +19,7 @@ namespace DoAnWeb.Extensions.ServiceExtensions
             services.AddScoped<IAnswerService, AnswerService>();
             services.AddScoped<IQuestionRealTimeService, QuestionRealTimeService>();
             services.AddScoped<IMarkdownService, MarkdownService>();
+            services.AddScoped<IBadgeService, BadgeService>();
 
             // Register password hash service
             services.AddScoped<IPasswordHashService, PasswordHashService>();

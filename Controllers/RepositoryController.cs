@@ -109,6 +109,48 @@ namespace DoAnWeb.Controllers
                 // Get mapping between DevCommunity and Gitea
                 var mapping = _repositoryMappingService.GetByDevCommunityId(repository.RepositoryId);
                 _logger.LogInformation($"Repository mapping found: {(mapping != null ? "Yes" : "No")}");
+                
+                // Enhanced error handling - check if we need Gitea functionality but have no mapping
+                if (mapping == null)
+                {
+                    _logger.LogWarning($"No Gitea mapping found for repository ID {id}");
+                    
+                    // If this is not supposed to be a Gitea repository, we can still show DevCommunity details
+                    var viewModel = new RepositoryDetailsViewModel
+                    {
+                        Repository = repository,
+                        IsGiteaRepository = false,
+                        RepositoryName = repository.RepositoryName,
+                        Owner = repository.Owner?.Username ?? "Unknown",
+                        IsOwner = User.Identity.IsAuthenticated && repository.OwnerId == int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)
+                    };
+                    
+                    return View(viewModel);
+                }
+
+                // Check Gitea connectivity early
+                var giteaConnectivity = await TestGiteaConnectivityAsync();
+                if (!giteaConnectivity)
+                {
+                    _logger.LogWarning("Gitea server is not accessible");
+                    TempData["ErrorMessage"] = "Cannot connect to the Gitea server. Repository details may be limited.";
+                    
+                    // Return limited view with only local repository information
+                    var viewModel = new RepositoryDetailsViewModel
+                    {
+                        Repository = repository,
+                        IsGiteaRepository = true,
+                        RepositoryName = repository.RepositoryName,
+                        Owner = repository.Owner?.Username ?? "Unknown",
+                        IsOwner = User.Identity.IsAuthenticated && repository.OwnerId == int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value),
+                        GitCloneUrl = mapping?.CloneUrl
+                    };
+                    
+                    // Add a flag to show connection issue
+                    TempData["GiteaConnectionIssue"] = true;
+                    
+                    return View(viewModel);
+                }
 
                 // Kiểm tra synchronization status
                 var lastSyncWarning = string.Empty;
@@ -228,9 +270,15 @@ namespace DoAnWeb.Controllers
 
                 return View(repository);
             }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, $"HTTP request error in Details action for repository ID {id}: {httpEx.Message}");
+                TempData["ErrorMessage"] = "Cannot connect to the Git server. Please check your network connection and try again later.";
+                return RedirectToAction(nameof(Index));
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error in Details action for repository ID {id}");
+                _logger.LogError(ex, $"Error in Details action for repository ID {id}: {ex.Message}");
                 TempData["ErrorMessage"] = "An error occurred while loading the repository details. Please try again later.";
                 return RedirectToAction(nameof(Index));
             }
@@ -251,6 +299,39 @@ namespace DoAnWeb.Controllers
                     return RedirectToAction(nameof(Index));
                 }
                 
+                // Check Gitea connectivity early to provide better feedback
+                var giteaConnectivity = await TestGiteaConnectivityAsync();
+                if (!giteaConnectivity)
+                {
+                    _logger.LogWarning("Gitea server is not accessible");
+                    TempData["ErrorMessage"] = "Cannot connect to the Gitea server. Repository details may be limited.";
+                    
+                    // Try to fetch local repository info
+                    var localRepository = _repositoryService.GetRepositoryByName(owner, repo);
+                    if (localRepository != null)
+                    {
+                        // Return limited view with only local repository information
+                        var viewModel = new RepositoryDetailsViewModel
+                        {
+                            Repository = localRepository,
+                            IsGiteaRepository = true,
+                            RepositoryName = localRepository.RepositoryName,
+                            Owner = localRepository.Owner?.Username ?? owner,
+                            IsOwner = User.Identity.IsAuthenticated && localRepository.OwnerId == int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)
+                        };
+                        
+                        // Add a flag to show connection issue
+                        TempData["GiteaConnectionIssue"] = true;
+                        
+                        return View("Details", viewModel);
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Cannot connect to the Gitea server and no local repository information found. Please try again later.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+                
                 // Tìm repository dựa trên owner và repo name
                 _logger.LogInformation($"Searching for repository {owner}/{repo} in local database");
                 var repository = _repositoryService.GetRepositoryByName(owner, repo);
@@ -264,19 +345,8 @@ namespace DoAnWeb.Controllers
                         path = path 
                     });
                 }
-                else
-                {
-                    _logger.LogInformation($"Repository {owner}/{repo} not found in local database");
-                    
-                    // Nếu máy chủ Gitea không hoạt động, thông báo cho người dùng
-                    var giteaConnectivity = await TestGiteaConnectivityAsync();
-                    if (!giteaConnectivity)
-                    {
-                        _logger.LogError("Gitea server is not accessible");
-                        TempData["ErrorMessage"] = "Cannot connect to the Gitea server. Please check if Gitea is running and try again later.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
+                
+                _logger.LogInformation($"Repository {owner}/{repo} not found in local database");
                 
                 // Nếu repository không tồn tại trong DB nhưng người dùng đã đăng nhập
                 // Thử lấy dữ liệu từ Gitea
@@ -305,7 +375,13 @@ namespace DoAnWeb.Controllers
                         
                         _logger.LogInformation($"Found {giteaRepos.Count} repositories in Gitea for user {userId}");
                         
-                        // Tìm repository cần thiết
+                        // Log found repositories for debugging
+                        foreach (var gRepo in giteaRepos.Take(5))
+                        {
+                            _logger.LogDebug($"Gitea repo: {gRepo.Owner?.Login}/{gRepo.Name}");
+                        }
+                        
+                        // Tìm repository cần thiết - using case-insensitive comparison
                         var giteaRepo = giteaRepos.FirstOrDefault(r => 
                             r.Owner != null && 
                             r.Owner.Login != null && 
@@ -350,12 +426,12 @@ namespace DoAnWeb.Controllers
                         }
                         
                         // Không tìm thấy repository trong Gitea
-                        TempData["ErrorMessage"] = $"Repository '{repo}' not found for user '{owner}'.";
+                        TempData["ErrorMessage"] = $"Repository '{repo}' not found for user '{owner}'. Please check the repository name and owner.";
                         return RedirectToAction(nameof(Index));
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"Error processing repository {owner}/{repo} from Gitea");
+                        _logger.LogError(ex, $"Error processing repository {owner}/{repo} from Gitea: {ex.Message}");
                         TempData["ErrorMessage"] = "Error loading repository data from Gitea: " + ex.Message;
                         return RedirectToAction(nameof(Index));
                     }
@@ -365,10 +441,16 @@ namespace DoAnWeb.Controllers
                 TempData["ErrorMessage"] = $"Repository '{owner}/{repo}' not found. You may need to log in to view this repository.";
                 return RedirectToAction(nameof(Index));
             }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, $"HTTP request error in DetailsByName action for {owner}/{repo}: {httpEx.Message}");
+                TempData["ErrorMessage"] = "Cannot connect to the Git server. Please check your network connection and try again later.";
+                return RedirectToAction(nameof(Index));
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error loading repository details for {owner}/{repo}");
-                TempData["ErrorMessage"] = "Error loading repository details. Please try again later.";
+                _logger.LogError(ex, $"Error in DetailsByName action for {owner}/{repo}: {ex.Message}");
+                TempData["ErrorMessage"] = "An error occurred while loading the repository details. Please try again later.";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -526,18 +608,29 @@ namespace DoAnWeb.Controllers
 
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
                 
-                // Lấy repository từ Gitea
+                // Check Gitea connectivity first
+                var giteaConnectivity = await TestGiteaConnectivityAsync();
+                if (!giteaConnectivity)
+                {
+                    _logger.LogWarning("Gitea server is not accessible while trying to view file content");
+                    TempData["ErrorMessage"] = "Cannot connect to the Gitea server to retrieve file content. Please try again later.";
+                    TempData["GiteaConnectionIssue"] = true;
+                    return RedirectToAction("DetailsByName", new { owner, repo, branch });
+                }
+                
+                // Try to get file content from Gitea
                 try
                 {
                     var fileContent = await _giteaRepositoryService.GetFileContentAsync(userId, owner, repo, path, branch);
                     
                     if (fileContent == null)
                     {
-                        TempData["ErrorMessage"] = "Failed to get file content";
-                        return RedirectToAction("Details", new { owner, repo, branch });
+                        _logger.LogWarning($"Failed to get file content for {path} in {owner}/{repo}");
+                        TempData["ErrorMessage"] = "Failed to get file content. The file might not exist or you don't have permission to view it.";
+                        return RedirectToAction("DetailsByName", new { owner, repo, branch });
                     }
                     
-                    // Tạo view model
+                    // Create view model
                     var viewModel = new FileContentViewModel
                     {
                         FileName = System.IO.Path.GetFileName(path),
@@ -553,17 +646,23 @@ namespace DoAnWeb.Controllers
                     
                     return View(viewModel);
                 }
+                catch (HttpRequestException httpEx)
+                {
+                    _logger.LogError(httpEx, $"HTTP request error viewing file content for {path} in {owner}/{repo}: {httpEx.Message}");
+                    TempData["ErrorMessage"] = "Network error while retrieving file content. Please check your connection and try again.";
+                    return RedirectToAction("DetailsByName", new { owner, repo, branch });
+                }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error getting file content");
-                    TempData["ErrorMessage"] = "Error getting file content: " + ex.Message;
-                    return RedirectToAction("Details", new { owner, repo, branch });
+                    _logger.LogError(ex, $"Error getting file content for {path} in {owner}/{repo}: {ex.Message}");
+                    TempData["ErrorMessage"] = "Error retrieving file content. Please try again later.";
+                    return RedirectToAction("DetailsByName", new { owner, repo, branch });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error viewing file content");
-                TempData["ErrorMessage"] = "Error viewing file content";
+                _logger.LogError(ex, $"Unhandled error viewing file content for {path} in {owner}/{repo}: {ex.Message}");
+                TempData["ErrorMessage"] = "An unexpected error occurred while trying to view the file content.";
                 return RedirectToAction("Index");
             }
         }

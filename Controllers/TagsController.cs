@@ -52,6 +52,19 @@ namespace DoAnWeb.Controllers
             return View(tag);
         }
 
+        // GET: Tags/GetTagsJson
+        [HttpGet]
+        public IActionResult GetTagsJson()
+        {
+            // Get all tag names for autocomplete suggestions
+            var tagNames = _context.Tags
+                .OrderByDescending(t => t.QuestionTags.Count)
+                .Select(t => t.TagName)
+                .ToList();
+                
+            return Json(tagNames);
+        }
+
         // POST: Tags/Watch/5
         [HttpPost]
         [ValidateAntiForgeryToken]

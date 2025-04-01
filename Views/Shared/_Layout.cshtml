@@ -83,6 +83,8 @@
     <link rel="stylesheet" href="~/css/repositories.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/tags-modern.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/signalr-styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/badge-animations.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/search-suggestions.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DoAnWeb.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" integrity="sha512-vswe+cgvic/XBoF1OcM/TeJ2FW0OofqAVdCZiEYkd6dwGXthvkSFWOoGGJgS2CW70VK5dQM5Oh+7ne47s74VTg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
@@ -666,14 +668,16 @@
                 <div class="collapse navbar-collapse" id="navbarContent">
                     <div class="search-container mx-lg-4 flex-grow-1" data-aos="fade-down" data-aos-delay="100">
                         <div class="position-relative" id="globalSearchContainer">
+                            <form action="/Questions/Index" method="get" id="globalSearchForm">
                                 <div class="input-group nav-search-group">
                                 <span class="input-group-text bg-transparent border-end-0">
                                     <i class="bi bi-search"></i>
                                 </span>
-                                    <input type="text" id="globalSearchInput" class="form-control py-2 border-start-0 nav-search-input" 
+                                    <input type="text" name="search" id="globalSearchInput" class="form-control py-2 border-start-0 nav-search-input" 
                                        placeholder="Search questions, tags, or users..." aria-label="Search" 
                                        value="@ViewData["SearchTerm"]" autocomplete="off">
-                            </div>
+                                </div>
+                            </form>
                             <!-- Search Results Dropdown -->
                             <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown shadow-sm rounded">
                                 <div class="search-results-container">
@@ -1441,10 +1445,12 @@
                             <div class="d-flex flex-column h-100">
                                 <div class="mb-4">
                                     <a href="/" class="d-inline-block text-white">
-                                        <img src="~/images/devCommunity-logo.png" alt="Dev Community" style="max-width: 180px;" />
+                                        <img src="~/images/logo.png" alt="Dev Community" style="max-width: 180px;" />
                                     </a>
                                 </div>
-                                <p class="text-white opacity-80 mb-4">Nền tảng kết nối lập trình viên, nơi chia sẻ mã nguồn và giải đáp thắc mắc kỹ thuật từ cộng đồng.</p>
+                                <p class="text-white opacity-80 mb-2">Nền tảng kết nối lập trình viên,<br>
+                                nơi chia sẻ mã nguồn và giải đáp <br>
+                                thắc mắc kỹ thuật từ cộng đồng.</p>
                                 <div class="social-links d-flex gap-2 mb-4">
                                     <a href="#" class="social-link" aria-label="Email">
                                         <i class="bi bi-envelope-fill"></i>
@@ -1649,6 +1655,8 @@
     <script src="~/js/notification-service-fixed.js" asp-append-version="true"></script>
     <script src="~/js/view-counter.js" asp-append-version="true"></script>
     <script src="~/js/reputation-sync.js" asp-append-version="true"></script>
+    <script src="~/js/badge-progress-client.js" asp-append-version="true"></script>
+    <script src="~/js/search-autocomplete.js" asp-append-version="true"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

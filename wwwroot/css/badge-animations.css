@@ -1,0 +1,111 @@
+/* Badge Animations and Styles */
+
+/* Badge update animation */
+.badge-updated {
+    animation: badge-highlight 2s ease;
+}
+
+@keyframes badge-highlight {
+    0%, 100% {
+        background-color: transparent;
+    }
+    15%, 85% {
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+    }
+    50% {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+    }
+}
+
+/* Badge icon pulse animation */
+.badge-icon-pulse {
+    animation: badge-icon-pulse 1s ease-in-out 2;
+}
+
+@keyframes badge-icon-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+/* Badge progress number change animation */
+.progress-count.updated {
+    animation: count-updated 1.5s ease;
+}
+
+@keyframes count-updated {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+        color: var(--bs-primary);
+        font-weight: bold;
+    }
+}
+
+/* Progress bar animation - smoothly expands */
+.progress-bar {
+    transition: width 0.8s ease-in-out;
+}
+
+/* Badge toast notification */
+.badge-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 300px;
+    max-width: 400px;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    z-index: 1050;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--bs-primary);
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+.badge-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.badge-toast .toast-header {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+    border-bottom: 1px solid rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.badge-toast .toast-body {
+    padding: 15px;
+}
+
+.badge-icon-sm {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+/* Animate the badge icon in the toast */
+.badge-toast .badge-icon-sm {
+    animation: badge-toast-icon 2s ease infinite;
+}
+
+@keyframes badge-toast-icon {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-10deg);
+    }
+    75% {
+        transform: rotate(10deg);
+    }
+} 
