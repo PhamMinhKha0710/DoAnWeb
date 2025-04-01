@@ -75,7 +75,7 @@ DevCommunity là nền tảng kết nối lập trình viên thông qua việc c
 ## 🚀 Cài Đặt và Chạy Dự Án
 
 ### Yêu Cầu Hệ Thống
-- .NET 6.0 SDK trở lên
+- .NET 8.0 SDK trở lên
 - SQL Server 2019 trở lên
 - Visual Studio 2022 hoặc VS Code với C# extensions
 - Gitea server (tùy chọn cho tính năng quản lý mã nguồn)
