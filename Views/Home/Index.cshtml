@@ -3,102 +3,83 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card welcome-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="welcome-icon me-4 d-flex align-items-center justify-content-center">
-                            <i class="bi bi-code-square fs-1 text-primary"></i>
+<!-- Hero Banner Section -->
+<div class="hero-banner bg-gradient-primary text-white rounded-4 mb-4 p-4 p-md-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1 class="display-5 fw-bold mb-3 hero-title">Welcome back, @(User.Identity.IsAuthenticated ? User.Identity.Name : "Guest")!</h1>
+                <p class="lead mb-4 hero-subtitle opacity-90">Find answers to your technical questions and help others in our developer community.</p>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a asp-controller="Questions" asp-action="Create" class="btn btn-light btn-lg px-4 text-primary rounded-pill me-md-2">
+                        <i class="bi bi-plus-circle me-2"></i>Ask a Question
+                    </a>
+                    <a asp-controller="Questions" asp-action="Index" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                        <i class="bi bi-search me-2"></i>Browse Questions
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="hero-illustration text-center">
+                    <i class="bi bi-chat-quote-fill display-1 mb-3 hero-icon"></i>
+                    <div class="d-flex justify-content-center position-relative">
+                        <div class="stat-badge rounded-pill shadow-sm px-3 py-2 bg-white text-primary position-absolute" style="top: -20px; right: 20px;">
+                            <i class="bi bi-people-fill me-2"></i>@(ViewBag.TotalUsers ?? 1000)+ Users
                         </div>
-                        <div>
-                            <h2 class="mb-2 fw-bold">Welcome back, @(User.Identity.IsAuthenticated ? User.Identity.Name : "Guest")!</h2>
-                            <p class="text-muted mb-0">Find answers to your technical questions and help others answer theirs.</p>
+                        <div class="stat-badge rounded-pill shadow-sm px-3 py-2 bg-white text-primary position-absolute" style="bottom: -20px; left: 20px;">
+                            <i class="bi bi-chat-dots-fill me-2"></i>@(ViewBag.TotalQuestions ?? 5000)+ Questions
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="row">
-        <div class="col-md-3">
-            <!-- Content Sidebar -->
-            <div class="card mb-4 stats-card">
-                <div class="card-header bg-transparent border-bottom-0">
-                    <h5 class="mb-0 fw-bold">Reputation</h5>
-                </div>
-                <div class="card-body text-center">
-                    <div class="reputation-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
-                        @if (User.Identity.IsAuthenticated && ViewBag.CurrentUser != null)
-                        {
-                            <span class="display-5 fw-bold">@ViewBag.CurrentUser.Reputation</span>
-                        }
-                        else
-                        {
-                            <span class="display-5 fw-bold">0</span>
-                        }
+<div class="container">
+    <!-- Quick Stats Section (Mobile Only) -->
+    <div class="d-md-none mb-4">
+        <div class="row g-3">
+            <div class="col-6">
+                <div class="card h-100 stat-card border-0 rounded-4 shadow-sm hover-lift">
+                    <div class="card-body text-center">
+                        <i class="bi bi-award-fill text-primary fs-2 mb-2"></i>
+                        <h5 class="fw-bold mb-0">@(User.Identity.IsAuthenticated && ViewBag.CurrentUser != null ? ViewBag.CurrentUser.Reputation : 0)</h5>
+                        <span class="text-muted small">Reputation</span>
                     </div>
-                    <p class="text-muted">Earn reputation by Asking, Answering and Editing.</p>
                 </div>
             </div>
-
-            <div class="card mb-4 badge-card">
-                <div class="card-header bg-transparent border-bottom-0">
-                    <h5 class="mb-0 fw-bold">Badge progress</h5>
-                </div>
-                <div class="card-body">
-                    <div class="progress mb-3" style="height: 8px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: 15%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="col-6">
+                <div class="card h-100 stat-card border-0 rounded-4 shadow-sm hover-lift">
+                    <div class="card-body text-center">
+                        <i class="bi bi-tags-fill text-primary fs-2 mb-2"></i>
+                        <h5 class="fw-bold mb-0">@(ViewBag.WatchedTags?.Count ?? 0)</h5>
+                        <span class="text-muted small">Watched Tags</span>
                     </div>
-                    <p>Take the tour to earn your first badge!</p>
-                    <a href="#" class="btn btn-primary w-100">Get started here</a>
-                </div>
-            </div>
-
-            <div class="card mb-4 tags-card">
-                <div class="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">Watched tags</h5>
-                    <a asp-controller="Tags" asp-action="Index" class="text-decoration-none"><i class="bi bi-gear"></i></a>
-                </div>
-                <div class="card-body">
-                    @if (User.Identity.IsAuthenticated && ViewBag.WatchedTags != null && ViewBag.WatchedTags.Count > 0)
-                    {
-                        <div class="d-flex flex-wrap gap-2 mb-3">
-                            @foreach (var watchedTag in ViewBag.WatchedTags)
-                            {
-                                <div class="tag-item d-flex align-items-center">
-                                    <a asp-controller="Questions" asp-action="Index" asp-route-tag="@watchedTag.Tag.TagName" class="badge bg-light text-dark me-1 text-decoration-none">@watchedTag.Tag.TagName</a>
-                                    <form asp-controller="Tags" asp-action="Unwatch" asp-route-id="@watchedTag.TagId" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-sm p-0 text-danger"><i class="bi bi-x"></i></button>
-                                    </form>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-tags text-center py-3">
-                            <i class="bi bi-tags fs-1 text-muted mb-2"></i>
-                            <p class="text-muted">You're not watching any tags yet!</p>
-                        </div>
-                    }
-                    <a asp-controller="Tags" asp-action="Index" class="btn btn-outline-primary w-100">Customize your feed</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-9">
-            <!-- Main Content -->
-            <div class="card mb-4 questions-card">
-                <div class="card-header bg-transparent">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0 fw-bold">Interesting posts for you</h5>
-                            <p class="text-muted small mb-0">Based on your viewing history and watched tags</p>
-                        </div>
-                        <a asp-controller="Questions" asp-action="Create" class="btn btn-primary btn-sm">Ask a Question</a>
+    <div class="row g-4">
+        <!-- Main Content Area -->
+        <div class="col-lg-8 order-2 order-lg-1">
+            <!-- Featured Questions Section -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 hover-lift">
+                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold mb-1">Interesting Questions</h4>
+                        <p class="text-muted small">Based on your interests and activity</p>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button" id="questionSortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sort-down me-1"></i>Sort
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="questionSortDropdown">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-fire me-2"></i>Hot</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-clock-history me-2"></i>Recent</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-graph-up me-2"></i>Most Answered</a></li>
+                        </ul>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -107,40 +88,54 @@
                         <div class="list-group list-group-flush">
                             @foreach (var question in ViewBag.RecentQuestions)
                             {
-                                <div class="list-group-item question-item p-3">
-                                    <div class="d-flex">
-                                        <div class="me-3 text-center stats-box" style="min-width: 70px;">
-                                            <div class="votes mb-2">
-                                                <span class="d-block fw-bold">@question.Score</span>
-                                                <small>votes</small>
-                                            </div>
-                                            <div class="answers @(question.Answers?.Count > 0 ? "has-answers" : "zero")">
-                                                <span class="d-block fw-bold">@(question.Answers?.Count ?? 0)</span>
-                                                <small>answers</small>
-                                            </div>
-                                            <div class="views mt-2">
-                                                <span class="d-block">@question.ViewCount</span>
-                                                <small>views</small>
+                                <div class="list-group-item question-item p-4 border-0 border-bottom" data-id="@question.QuestionId">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto d-none d-sm-block">
+                                            <div class="question-stats d-flex flex-column align-items-center text-center" style="min-width: 80px;">
+                                                <div class="votes mb-2 py-2 px-3 rounded-pill @(question.Score > 0 ? "bg-success-subtle" : "bg-light")">
+                                                    <span class="fw-bold @(question.Score > 0 ? "text-success" : "")">@question.Score</span>
+                                                    <small class="d-block">votes</small>
+                                                </div>
+                                                <div class="answers py-2 px-3 rounded-pill @(question.Answers?.Count > 0 ? "bg-primary-subtle" : "bg-light")">
+                                                    <span class="fw-bold @(question.Answers?.Count > 0 ? "text-primary" : "")">@(question.Answers?.Count ?? 0)</span>
+                                                    <small class="d-block">answers</small>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="question-content">
-                                            <h5 class="mb-2"><a asp-controller="Questions" asp-action="Details" asp-route-id="@question.QuestionId" class="question-title">@question.Title</a></h5>
-                                            <p class="mb-3 question-excerpt">@(question.Body?.Substring(0, Math.Min(question.Body.Length, 150)) ?? "")...</p>
-                                            <div class="d-flex flex-wrap align-items-center">
-                                                <div class="tags me-auto mb-2 mb-md-0">
-                                                    @if (question.QuestionTags != null)
-                                                    {
-                                                        @foreach (var tag in question.QuestionTags)
+                                        <div class="col">
+                                            <div class="question-content">
+                                                <h5 class="mb-2 fw-bold question-title">
+                                                    <a asp-controller="Questions" asp-action="Details" asp-route-id="@question.QuestionId" class="stretched-link text-decoration-none text-dark">@question.Title</a>
+                                                </h5>
+                                                <p class="mb-3 question-excerpt text-muted">@(question.BodyExcerpt ?? question.Body?.Substring(0, Math.Min(question.Body.Length, 150)) + "...")</p>
+                                                
+                                                <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                                    <div class="tags mb-2 mb-sm-0">
+                                                        @if (question.QuestionTags != null)
                                                         {
-                                                            <a href="#" class="badge bg-light text-dark me-1 text-decoration-none">@tag.Tag.TagName</a>
+                                                            var displayedTags = 0;
+                                                            var maxTagsToShow = 4;
+                                                            
+                                                            @foreach (var tag in question.QuestionTags)
+                                                            {
+                                                                if (displayedTags < maxTagsToShow)
+                                                                {
+                                                                    <a asp-controller="Questions" asp-action="Index" asp-route-tag="@tag.Tag.TagName" class="badge rounded-pill bg-light text-dark hover-primary me-1 text-decoration-none">
+                                                                        @tag.Tag.TagName
+                                                                    </a>
+                                                                    displayedTags++;
+                                                                }
+                                                            }
+                                                            @if (question.QuestionTags.Count > maxTagsToShow)
+                                                            {
+                                                                <span class="badge bg-light text-muted rounded-pill">+@(question.QuestionTags.Count - maxTagsToShow)</span>
+                                                            }
                                                         }
-                                                    }
-                                                </div>
-                                                <div class="user-info d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <i class="bi bi-person-circle"></i>
                                                     </div>
-                                                    <small class="text-muted">asked @(question.CreatedDate?.ToString("MMM dd") ?? "unknown") by <a href="#" class="text-decoration-none">@(question.User?.DisplayName ?? "Anonymous")</a></small>
+                                                    <div class="user-info d-flex align-items-center small text-muted">
+                                                        <img src="@(question.User?.AvatarUrl ?? "/images/default-avatar.png")" class="avatar avatar-xs rounded-circle me-1" alt="User Avatar" style="width: 24px; height: 24px;">
+                                                        <span>asked @(question.CreatedDate?.ToString("MMM dd") ?? "unknown") by <a href="#" class="text-decoration-none fw-medium">@(question.User?.DisplayName ?? "Anonymous")</a></span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -148,31 +143,38 @@
                                 </div>
                             }
                         </div>
+                        <div class="p-4 text-center">
+                            <a asp-controller="Questions" asp-action="Index" class="btn btn-outline-primary rounded-pill">
+                                View All Questions <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     }
                     else
                     {
                         <div class="p-5 text-center empty-state">
-                            <i class="bi bi-chat-square-text fs-1 text-muted mb-3"></i>
-                            <h5>No questions found</h5>
-                            <p class="text-muted mb-3">Be the first to ask a question and start the conversation!</p>
-                            <a asp-controller="Questions" asp-action="Create" class="btn btn-primary">Ask a Question</a>
+                            <div class="empty-state-icon bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-chat-square-dots text-secondary fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">No questions found</h5>
+                            <p class="text-muted mb-4">Be the first to ask a question and start the conversation!</p>
+                            <a asp-controller="Questions" asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-plus-circle me-2"></i>Ask a Question
+                            </a>
                         </div>
                     }
                 </div>
-                <div class="card-footer bg-transparent text-center">
-                    <a asp-controller="Questions" asp-action="Index" class="text-decoration-none">View all questions <i class="bi bi-arrow-right"></i></a>
-                </div>
             </div>
-
-            <div class="card mb-4 repositories-card">
-                <div class="card-header bg-transparent">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0 fw-bold">Recent Repositories</h5>
-                            <p class="text-muted small mb-0">Latest code repositories from the community</p>
-                        </div>
-                        <a asp-controller="Repository" asp-action="Create" class="btn btn-primary btn-sm">Create Repository</a>
+            
+            <!-- Recent Repositories Section -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 hover-lift">
+                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold mb-1">Recent Repositories</h4>
+                        <p class="text-muted small">Share and discover code from the community</p>
                     </div>
+                    <a asp-controller="Repository" asp-action="Create" class="btn btn-sm btn-primary rounded-pill">
+                        <i class="bi bi-plus me-1"></i>New Repository
+                    </a>
                 </div>
                 <div class="card-body p-0">
                     @if (ViewBag.RecentRepositories != null && ViewBag.RecentRepositories.Count > 0)
@@ -180,69 +182,787 @@
                         <div class="list-group list-group-flush">
                             @foreach (var repo in ViewBag.RecentRepositories)
                             {
-                                <div class="list-group-item repo-item p-3">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-git me-2 fs-4 text-primary"></i>
-                                        <h5 class="mb-0"><a asp-controller="Repository" asp-action="Details" asp-route-id="@repo.RepositoryId" class="repo-title">@repo.RepositoryName</a></h5>
-                                        <span class="badge bg-secondary ms-2">@repo.Visibility</span>
+                                <div class="list-group-item repo-item p-4 border-0 border-bottom">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="repo-icon me-3 rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: rgba(var(--bs-primary-rgb), 0.1);">
+                                            <i class="bi bi-git text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-0 fw-bold">
+                                                <a asp-controller="Repository" asp-action="Details" asp-route-id="@repo.RepositoryId" class="stretched-link text-decoration-none text-dark">@repo.RepositoryName</a>
+                                            </h5>
+                                            <div class="d-flex align-items-center small">
+                                                <span class="badge @(repo.Visibility == "Public" ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary") me-2">@repo.Visibility</span>
+                                                <span class="text-muted small">Updated @repo.UpdatedDate?.ToString("MMM dd, yyyy")</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p class="mb-3 repo-description">@(repo.Description ?? "No description available")</p>
+                                    
+                                    <p class="mb-3 repo-description text-muted">@(repo.Description ?? "No description available")</p>
+                                    
                                     <div class="d-flex flex-wrap justify-content-between align-items-center">
-                                        <div class="repo-stats d-flex">
+                                        <div class="repo-stats d-flex small">
                                             <div class="me-3">
                                                 <i class="bi bi-file-earmark me-1"></i>
-                                                <small>@repo.RepositoryFiles.Count files</small>
+                                                <span>@repo.RepositoryFiles.Count files</span>
                                             </div>
-                                            <div>
+                                            <div class="me-3">
                                                 <i class="bi bi-git me-1"></i>
-                                                <small>@repo.RepositoryCommits.Count commits</small>
+                                                <span>@repo.RepositoryCommits.Count commits</span>
                                             </div>
                                         </div>
-                                        <div class="user-info d-flex align-items-center">
-                                            <div class="avatar me-2">
-                                                <i class="bi bi-person-circle"></i>
-                                            </div>
-                                            <small class="text-muted">By <a href="#" class="text-decoration-none">@(repo.Owner?.DisplayName ?? "Anonymous")</a> • Updated @repo.UpdatedDate?.ToString("MMM dd, yyyy")</small>
+                                        <div class="user-info d-flex align-items-center small text-muted">
+                                            <img src="@(repo.Owner?.AvatarUrl ?? "/images/default-avatar.png")" class="avatar avatar-xs rounded-circle me-1" alt="User Avatar" style="width: 24px; height: 24px;">
+                                            <span>By <a href="#" class="text-decoration-none fw-medium">@(repo.Owner?.DisplayName ?? "Anonymous")</a></span>
                                         </div>
                                     </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="p-4 text-center">
+                            <a asp-controller="Repository" asp-action="Index" class="btn btn-outline-primary rounded-pill">
+                                View All Repositories <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-5 text-center empty-state">
+                            <div class="empty-state-icon bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-git text-secondary fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">No repositories found</h5>
+                            <p class="text-muted mb-4">Create your first repository to share code with the community!</p>
+                            <a asp-controller="Repository" asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-plus-circle me-2"></i>Create Repository
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4 order-1 order-lg-2">
+            <!-- Profile & Stats Card (Desktop) -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 hover-lift d-none d-md-block">
+                @if (User.Identity.IsAuthenticated && ViewBag.CurrentUser != null)
+                {
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="position-relative d-inline-block">
+                                <img src="@(ViewBag.CurrentUser.AvatarUrl ?? "/images/default-avatar.png")" class="rounded-circle img-thumbnail mb-3" width="100" height="100" alt="Profile Image">
+                                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle p-1 border border-white" style="width: 20px; height: 20px;"></span>
+                            </div>
+                            <h5 class="fw-bold mb-1">@ViewBag.CurrentUser.DisplayName</h5>
+                            <p class="text-muted mb-0">@@@ViewBag.CurrentUser.Username</p>
+                        </div>
+                        
+                        <div class="row g-3 text-center mb-4">
+                            <div class="col-4">
+                                <div class="p-3 rounded-4 bg-light">
+                                    <h5 class="fw-bold mb-0 text-primary">@ViewBag.CurrentUser.Reputation</h5>
+                                    <small class="text-muted">Reputation</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 rounded-4 bg-light">
+                                    <h5 class="fw-bold mb-0">@(ViewBag.UserQuestions?.Count ?? 0)</h5>
+                                    <small class="text-muted">Questions</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 rounded-4 bg-light">
+                                    <h5 class="fw-bold mb-0">@(ViewBag.UserAnswers?.Count ?? 0)</h5>
+                                    <small class="text-muted">Answers</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-primary rounded-pill d-block">View Profile</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="card-body p-4 text-center">
+                        <div class="mb-4">
+                            <div class="empty-state-icon bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person-circle text-secondary fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">Join our community</h5>
+                            <p class="text-muted">Sign up to ask questions, follow topics, and engage with the community.</p>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-primary rounded-pill">Sign Up</a>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary rounded-pill">Log In</a>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <!-- Reputation Badge Card -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 hover-lift">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold card-title mb-3">Your next badge</h5>
+                    
+                    @if (User.Identity.IsAuthenticated && ViewBag.CurrentUser != null && ViewBag.BadgeProgress != null && ViewBag.BadgeProgress.Count > 0)
+                    {
+                        <div id="badge-progress-container">
+                            @foreach (var badge in ViewBag.BadgeProgress)
+                            {
+                                <div class="badge-progress mb-3" data-badge-id="@badge.BadgeId" data-current-count="@badge.CurrentCount" data-target-count="@badge.TargetCount">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="badge-icon rounded-circle @badge.ColorClass p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi @badge.IconClass text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-0">@badge.Name</h6>
+                                                <small class="text-muted">@badge.Description</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill progress-count">@badge.ProgressText</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar @badge.ColorClass" role="progressbar" style="width: @(badge.ProgressPercentage)%;" 
+                                            aria-valuenow="@badge.CurrentCount" aria-valuemin="0" aria-valuemax="@badge.TargetCount"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (User.Identity.IsAuthenticated)
+                    {
+                        <div id="badge-progress-container">
+                            <!-- Default badges will be replaced with real data once loaded -->
+                            <div class="badge-progress mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge-icon rounded-circle bg-warning p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-trophy-fill text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">Curious</h6>
+                                            <small class="text-muted">Ask 5 well-received questions</small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill progress-count">0/5</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="5"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="badge-progress mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge-icon rounded-circle bg-info p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-chat-dots-fill text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">Helper</h6>
+                                            <small class="text-muted">Answer 3 questions with score of 3+</small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill progress-count">0/3</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-badges text-center py-4 mb-3 bg-light rounded-4">
+                            <i class="bi bi-award fs-1 text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Sign in to track your badge progress!</p>
+                        </div>
+                    }
+                    
+                    <a href="#" class="btn btn-outline-primary btn-sm rounded-pill d-block">View all badges</a>
+                    
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="mt-2 text-center">
+                            <button id="btnTestBadgeProgress" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                <i class="bi bi-magic"></i> Test Badge Update
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <!-- Watched Tags Card -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold card-title mb-0">Watched Tags</h5>
+                        <a asp-controller="Tags" asp-action="Index" class="btn btn-sm btn-link text-decoration-none px-0">
+                            <i class="bi bi-gear"></i>
+                        </a>
+                    </div>
+                    
+                    @if (User.Identity.IsAuthenticated && ViewBag.WatchedTags != null && ViewBag.WatchedTags.Count > 0)
+                    {
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            @foreach (var watchedTag in ViewBag.WatchedTags)
+                            {
+                                <div class="tag-item d-inline-flex align-items-center bg-light rounded-pill py-1 ps-2 pe-1">
+                                    <a asp-controller="Questions" asp-action="Index" asp-route-tag="@watchedTag.Tag.TagName" class="text-decoration-none text-dark small">@watchedTag.Tag.TagName</a>
+                                    <form asp-controller="Tags" asp-action="Unwatch" asp-route-id="@watchedTag.TagId" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm rounded-circle p-1 ms-1" title="Remove tag">
+                                            <i class="bi bi-x-circle small"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             }
                         </div>
                     }
                     else
                     {
-                        <div class="p-5 text-center empty-state">
-                            <i class="bi bi-git fs-1 text-muted mb-3"></i>
-                            <h5>No repositories found</h5>
-                            <p class="text-muted mb-3">Create your first repository to share code with the community!</p>
-                            <a asp-controller="Repository" asp-action="Create" class="btn btn-primary">Create Repository</a>
+                        <div class="empty-tags text-center py-4 mb-3 bg-light rounded-4">
+                            <i class="bi bi-tags fs-1 text-muted mb-2"></i>
+                            <p class="text-muted mb-0">You're not watching any tags yet!</p>
                         </div>
                     }
+                    
+                    <a asp-controller="Tags" asp-action="Index" class="btn btn-outline-primary rounded-pill d-block">
+                        <i class="bi bi-tag me-1"></i>Browse Tags
+                    </a>
                 </div>
-                <div class="card-footer bg-transparent text-center">
-                    <a asp-controller="Repository" asp-action="Index" class="text-decoration-none">View all repositories <i class="bi bi-arrow-right"></i></a>
+            </div>
+            
+            <!-- Trending Topics Card -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 hover-lift">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold card-title mb-3">Trending Topics</h5>
+                    
+                    <div class="trending-tags">
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">react</a>
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">javascript</a>
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">c#</a>
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">python</a>
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">asp.net-core</a>
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">sql</a>
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">docker</a>
+                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill mb-2 me-1">blazor</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+@section Styles {
+    <style>
+        /* Reset and Base Styles */
+        :root {
+            --card-border-radius: 16px;
+            --pill-border-radius: 50px;
+            --transition-speed: 0.3s;
+            --hover-transform: translateY(-5px);
+            --shadow-sm: 0 5px 15px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --highlight-bg: rgba(var(--bs-primary-rgb), 0.04);
+        }
+        
+        /* Hero Banner Styling */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, var(--bs-primary) 0%, #4361ee 100%);
+            box-shadow: 0 10px 30px rgba(var(--bs-primary-rgb), 0.2);
+        }
+        
+        .hero-title, .hero-subtitle {
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .hero-subtitle {
+            letter-spacing: 0.2px;
+        }
+        
+        .hero-icon {
+            opacity: 0.9;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: pulse 3s infinite ease-in-out;
+        }
+        
+        .stat-badge {
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+        
+        .stat-badge:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Card Styling */
+        .card {
+            border-radius: var(--card-border-radius) !important;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding-top: 1.5rem;
+            padding-bottom: 1rem;
+        }
+        
+        .hover-lift {
+            transition: transform var(--transition-speed) ease, 
+                        box-shadow var(--transition-speed) ease,
+                        border-color var(--transition-speed) ease;
+            border: 1px solid transparent;
+        }
+        
+        .hover-lift:hover {
+            transform: var(--hover-transform);
+            box-shadow: var(--shadow-md) !important;
+            border-color: rgba(var(--bs-primary-rgb), 0.1);
+        }
+        
+        /* Question and Repo Items */
+        .question-item, .repo-item {
+            transition: all var(--transition-speed) ease;
+            border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+            position: relative; /* Ensure position relative for stretched-link */
+        }
+        
+        .question-item:hover, .repo-item:hover {
+            background-color: var(--highlight-bg);
+            padding-left: 1.5rem !important;
+        }
+        
+        /* Make the whole question-item clickable */
+        .question-item a.stretched-link::after,
+        .repo-item a.stretched-link::after {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            content: "";
+        }
+        
+        .question-stats .votes,
+        .question-stats .answers {
+            min-width: 70px;
+            transition: transform 0.2s ease;
+        }
+        
+        .question-stats .votes:hover,
+        .question-stats .answers:hover {
+            transform: scale(1.05);
+        }
+        
+        .question-title {
+            line-height: 1.4;
+            transition: color 0.2s ease;
+        }
+        
+        .question-title:hover {
+            color: var(--bs-primary) !important;
+        }
+        
+        /* Tags Styling */
+        .badge.rounded-pill {
+            padding: 0.5em 1em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .badge.hover-primary {
+            transition: all 0.2s ease;
+            position: relative; /* Ensure proper z-index for clickable tags */
+            z-index: 2; /* Above the stretched-link */
+        }
+        
+        .badge.hover-primary:hover {
+            background-color: var(--bs-primary) !important;
+            color: white !important;
+            box-shadow: 0 3px 8px rgba(var(--bs-primary-rgb), 0.3);
+        }
+        
+        .tag-item {
+            transition: all 0.2s ease;
+        }
+        
+        .tag-item:hover {
+            background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+        }
+        
+        /* User info and tags need to be above the stretched link to be clickable */
+        .tags, .user-info {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Empty State Styling */
+        .empty-state {
+            padding: 3rem 2rem;
+        }
+        
+        .empty-state-icon {
+            width: 90px;
+            height: 90px;
+            background-color: rgba(var(--bs-primary-rgb), 0.05) !important;
+            transition: all 0.3s ease;
+        }
+        
+        .empty-state:hover .empty-state-icon {
+            transform: scale(1.1) rotate(5deg);
+            background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+        }
+        
+        /* Reputation Badge Styling */
+        .badge-progress {
+            padding: 1rem;
+            border-radius: var(--card-border-radius);
+            transition: all 0.2s ease;
+            background-color: rgba(0,0,0,0.01);
+        }
+        
+        .badge-progress:hover {
+            background-color: rgba(var(--bs-primary-rgb), 0.03);
+            transform: translateX(5px);
+        }
+        
+        .badge-icon {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .badge-progress:hover .badge-icon {
+            transform: scale(1.15) rotate(10deg);
+        }
+        
+        .progress {
+            overflow: visible;
+            height: 8px;
+            border-radius: var(--pill-border-radius);
+            background-color: rgba(var(--bs-primary-rgb), 0.1);
+        }
+        
+        .progress-bar {
+            border-radius: var(--pill-border-radius);
+            position: relative;
+            overflow: visible;
+            box-shadow: 0 0 10px rgba(var(--bs-primary-rgb), 0.5);
+        }
+        
+        /* Avatar Styling */
+        .avatar-xs {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .avatar-xs:hover {
+            transform: scale(1.2);
+        }
+        
+        /* Button Styling */
+        .btn {
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden; /* For ripple effect */
+        }
+        
+        .btn-primary, .btn-light {
+            box-shadow: 0 4px 10px rgba(var(--bs-primary-rgb), 0.2);
+        }
+        
+        .btn-primary:hover, .btn-light:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(var(--bs-primary-rgb), 0.3);
+        }
+        
+        .btn-outline-primary:hover, .btn-outline-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+        }
+        
+        .btn-sm.btn-outline-primary {
+            font-weight: 500;
+            border-width: 1.5px;
+            padding: 0.25rem 0.75rem;
+        }
+        
+        .trending-tags .btn {
+            margin-right: 0.5rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .trending-tags .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(var(--bs-primary-rgb), 0.2);
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 0; /* Ensure ripple doesn't overlap form elements */
+            animation: ripple-effect 0.6s ease-out forwards;
+            pointer-events: none; /* Don't intercept clicks */
+        }
+        
+        @@keyframes ripple-effect {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(150);
+                opacity: 0;
+            }
+        }
+        
+        /* Special Effects */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(var(--bs-primary-rgb), 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-card i {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover i {
+            transform: scale(1.2);
+            color: var(--bs-primary);
+        }
+        
+        /* Mobile optimizations */
+        @@media (max-width: 767.98px) {
+            :root {
+                --card-border-radius: 12px;
+            }
+            
+            .hero-banner {
+                padding: 2rem 1rem !important;
+            }
+            
+            .hero-title {
+                font-size: 1.75rem;
+            }
+            
+            .card-header {
+                padding-top: 1.25rem;
+            }
+            
+            .stat-card {
+                border-width: 1.5px !important;
+            }
+            
+            .question-item, .repo-item {
+                padding: 1.25rem !important;
+            }
+            
+            .question-item:hover, .repo-item:hover {
+                padding-left: 1.25rem !important;
+            }
+            
+            .badge.rounded-pill {
+                padding: 0.4em 0.8em;
+                font-size: 0.8em;
+            }
+        }
+        
+        /* Animations */
+        @@keyframes pulse {
+            0%, 100% { 
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+        
+        @@keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        /* Ripple animation */
+        @@keyframes ripple-effect {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(150);
+                opacity: 0;
+            }
+        }
+        
+        .float-animation {
+            animation: float 5s ease infinite;
+        }
+    </style>
+}
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Add animation to question and repository items
-            const items = document.querySelectorAll('.question-item, .repo-item');
-            items.forEach((item, index) => {
-                item.style.opacity = '0';
-                item.style.transform = 'translateY(20px)';
-                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            // Add staggered fade-in animation to items
+            const elements = document.querySelectorAll('.question-item, .repo-item, .card');
+            
+            elements.forEach((element, index) => {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(30px)';
+                element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
                 
                 setTimeout(() => {
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateY(0)';
-                }, 100 + (index * 50));
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, 100 + (index * 80));
+            });
+            
+            // Add float animation to specific elements
+            document.querySelectorAll('.hero-icon, .empty-state-icon').forEach(el => {
+                el.classList.add('float-animation');
+            });
+            
+            // Add random highlight effect to simulate activity
+            setInterval(() => {
+                // Pick a random question
+                const questions = document.querySelectorAll('.question-item');
+                if (questions.length === 0) return;
+                
+                const randomIndex = Math.floor(Math.random() * questions.length);
+                const randomQuestion = questions[randomIndex];
+                
+                // Create a highlight effect
+                randomQuestion.style.transition = 'background-color 1s ease';
+                randomQuestion.style.backgroundColor = 'rgba(var(--bs-primary-rgb), 0.08)';
+                
+                setTimeout(() => {
+                    randomQuestion.style.backgroundColor = '';
+                    
+                    // Increment a counter or update some text to show activity
+                    const votesElement = randomQuestion.querySelector('.votes .fw-bold');
+                    if (votesElement) {
+                        const currentVotes = parseInt(votesElement.textContent);
+                        if (!isNaN(currentVotes)) {
+                            votesElement.textContent = currentVotes + 1;
+                            votesElement.style.transition = 'transform 0.3s ease, color 0.3s ease';
+                            votesElement.style.transform = 'scale(1.2)';
+                            votesElement.style.color = 'var(--bs-success)';
+                            
+                            setTimeout(() => {
+                                votesElement.style.transform = '';
+                            }, 300);
+                        }
+                    }
+                }, 1500);
+            }, 8000);
+            
+            // Add improved ripple effect to buttons that doesn't interfere with functionality
+            document.querySelectorAll('.btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Prevent creating ripple effect on form submission buttons
+                    // to avoid interference with form validation and submission
+                    if (this.type === 'submit' && this.form) return;
+                    
+                    // Only add ripple effect to direct button clicks, not when clicking child elements
+                    if (e.target !== this) return;
+                    
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const ripple = document.createElement('span');
+                    ripple.className = 'ripple';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    
+                    this.appendChild(ripple);
+                    
+                    // Auto-remove ripple after animation completes
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+            
+            // Ensure all links with stretched-link still work properly
+            document.querySelectorAll('.question-item, .repo-item').forEach(item => {
+                const stretchedLink = item.querySelector('.stretched-link');
+                // If there's a stretched link but the item doesn't have position relative
+                if (stretchedLink && getComputedStyle(item).position !== 'relative') {
+                    item.style.position = 'relative';
+                }
+            });
+            
+            // Make sure tag links are clickable above the stretched-link
+            document.querySelectorAll('.tags a, .user-info a').forEach(link => {
+                if (getComputedStyle(link).zIndex < 2) {
+                    link.style.position = 'relative';
+                    link.style.zIndex = '2';
+                }
             });
         });
     </script>
+    
+    @if (User.IsInRole("Admin"))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const testButton = document.getElementById('btnTestBadgeProgress');
+                if (testButton) {
+                    testButton.addEventListener('click', function() {
+                        // Call the backend to trigger a progress update
+                        fetch('/Badge/SimulateProgress', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log('Progress update triggered');
+                            } else {
+                                console.error('Failed to trigger progress update');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                    });
+                }
+            });
+        </script>
+    }
 }
 

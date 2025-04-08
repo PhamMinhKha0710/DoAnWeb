@@ -72,5 +72,11 @@ namespace DoAnWeb.ViewModels
         /// </summary>
         public List<string> UploadedImageUrls { get; set; } = new List<string>();
         public bool IsSaved { get; set; } // Added property to track if question is saved by current user
+        
+        /// <summary>
+        /// Collection of available tags for tag suggestions
+        /// Used for providing autocomplete suggestions in the tag input field
+        /// </summary>
+        public IEnumerable<string> AvailableTags { get; set; } = new List<string>();
     }
 }

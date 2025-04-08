@@ -27,6 +27,35 @@
                     <h1 class="card-title fs-4 fw-bold mb-0"><i class="bi bi-question-circle-fill me-2"></i>Ask a Question</h1>
                 </div>
                 <div class="card-body p-4">
+                    <!-- Thông báo thành công hoặc lỗi -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    <!-- Form instructions -->
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Form Information</h5>
+                        <p class="mb-2">This form requires the following information:</p>
+                        <ul class="mb-0">
+                            <li><strong>Title</strong> - Required</li>
+                            <li><strong>Question Content</strong> - Required</li>
+                            <li><strong>Tags</strong> - Required, at least one tag</li>
+                            <li><strong>Attachments</strong> - Optional</li>
+                        </ul>
+                    </div>
+
                     <!-- Question creation form with file upload support -->
                     <form asp-action="Create" method="post" enctype="multipart/form-data" id="question-form">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -73,9 +102,16 @@
                             </div>
                         </div>
 
-                        <!-- Tags input with icon (now optional) -->
+                        <!-- Available tags data for JavaScript -->
+                        @if (Model.AvailableTags != null && Model.AvailableTags.Any())
+                        {
+                            var tagsJson = Newtonsoft.Json.JsonConvert.SerializeObject(Model.AvailableTags);
+                            <div id="available-tags-data" data-tags="@tagsJson" style="display: none;"></div>
+                        }
+
+                        <!-- Tags input with icon (required) -->
                         <div class="mb-4">
-                            <label asp-for="Tags" class="form-label fw-medium"><i class="bi bi-tags-fill me-1 text-primary"></i>Tags (Optional)</label>
+                            <label asp-for="Tags" class="form-label fw-medium"><i class="bi bi-tags-fill me-1 text-primary"></i>Tags</label>
                             <div class="input-group shadow-sm rounded-3 overflow-hidden">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="bi bi-tags"></i>
@@ -90,6 +126,8 @@
                                     <div>Add up to 5 tags to describe what your question is about. Use comma to separate tags.</div>
                                 </div>
                             </div>
+                            <!-- Tag suggestions will appear here -->
+                            <div id="tag-suggestions" class="mt-2 bg-light rounded-3 p-2" style="display: none;"></div>
                         </div>
 
                         <!-- File upload section with image preview -->
@@ -233,6 +271,89 @@
     </div>
 </div>
 
+<!-- Include custom CSS for questions -->
+@section Styles {
+    <link rel="stylesheet" href="~/css/questions.css" />
+    <link rel="stylesheet" href="~/css/questions-fix.css" />
+    <link rel="stylesheet" href="~/css/code-blocks.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <style>
+        /* Additional styles to ensure submit button is visible */
+        #submit-button {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 9999 !important;
+            position: relative !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        
+        /* Fix for form layout */
+        .d-grid.gap-2.d-md-flex {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Ensure the button container is visible */
+        .justify-content-md-end {
+            display: flex !important;
+            visibility: visible !important;
+        }
+        
+        /* Image preview styling */
+        .image-preview {
+            position: relative;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .image-preview .remove-preview {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #dc3545;
+            border: none;
+        }
+        
+        /* Tag suggestion styling */
+        .tag-suggestion {
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+        
+        .tag-suggestion:hover {
+            background-color: #e9ecef;
+        }
+        
+        /* Hover effects */
+        .hover-action {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+    </style>
+}
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <!-- Markdown parser library -->
@@ -242,6 +363,16 @@
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+    <!-- HTML Sanitizer script (must be loaded before markdown editor) -->
+    <script src="~/js/html-sanitizer.js"></script>
+    <!-- Custom Markdown editor implementation -->
+    <script src="~/js/markdown-editor.js"></script>
+    <!-- Enhanced file attachment handling -->
+    <script src="~/js/question-attachments.js"></script>
+    <!-- Tag suggestions -->
+    <script src="~/js/tag-suggestions.js"></script>
+    <!-- Form fix script -->
+    <script src="~/js/form-fix.js"></script>
     
     <!-- Image Upload Preview Script -->
     <script>
@@ -254,7 +385,7 @@
                 previewContainer.innerHTML = '';
                 
                 if (this.files) {
-                    Array.from(this.files).forEach(file => {
+                    Array.from(this.files).forEach((file, index) => {
                         if (!file.type.match('image.*')) {
                             // Create a generic file preview for non-image files
                             const fileCol = document.createElement('div');
@@ -276,12 +407,17 @@
                                         <span class="text-truncate small">${file.name}</span>
                                     </div>
                                     <div class="text-muted small text-end">${(file.size / 1024).toFixed(2)} KB</div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger w-100 mt-2 remove-file" data-index="${index}">
+                                        <i class="bi bi-trash me-1"></i>Remove
+                                    </button>
                                 </div>
                             `;
+                            
                             previewContainer.appendChild(fileCol);
                             return;
                         }
                         
+                        // For image files
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             const imgCol = document.createElement('div');
@@ -291,12 +427,38 @@
                                     <img src="${e.target.result}" class="img-fluid rounded-3" style="height: 120px; width: 100%; object-fit: cover;" alt="Preview">
                                     <div class="mt-2 text-truncate small fw-medium">${file.name}</div>
                                     <div class="text-muted small text-end">${(file.size / 1024).toFixed(2)} KB</div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger w-100 mt-2 remove-file" data-index="${index}">
+                                        <i class="bi bi-trash me-1"></i>Remove
+                                    </button>
                                 </div>
                             `;
                             previewContainer.appendChild(imgCol);
                         };
                         reader.readAsDataURL(file);
                     });
+                    
+                    // Add event listeners for remove buttons
+                    setTimeout(() => {
+                        document.querySelectorAll('.remove-file').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const index = this.getAttribute('data-index');
+                                const parentCol = this.closest('.col-md-4');
+                                if (parentCol) {
+                                    parentCol.remove();
+                                    
+                                    // Notify user that file will be removed when form is submitted
+                                    const notification = document.createElement('div');
+                                    notification.className = 'alert alert-info mt-2 col-12';
+                                    notification.innerHTML = '<i class="bi bi-info-circle me-2"></i> File will be removed when you submit the form';
+                                    previewContainer.appendChild(notification);
+                                    
+                                    setTimeout(() => {
+                                        notification.remove();
+                                    }, 3000);
+                                }
+                            });
+                        });
+                    }, 100);
                 }
             });
             
@@ -347,6 +509,64 @@
                     this.style.boxShadow = 'none';
                 });
             });
+            
+            // Tag suggestions functionality
+            const tagsInput = document.getElementById('Tags');
+            const tagSuggestions = document.getElementById('tag-suggestions');
+            
+            // Only initialize if we have available tags data
+            const availableTagsElement = document.getElementById('available-tags-data');
+            if (availableTagsElement) {
+                const availableTags = JSON.parse(availableTagsElement.getAttribute('data-tags') || '[]');
+                
+                tagsInput.addEventListener('input', function() {
+                    const inputValue = this.value;
+                    const lastTag = inputValue.split(',').pop().trim().toLowerCase();
+                    
+                    if (lastTag.length > 1) {
+                        // Filter available tags that match the input
+                        const matchingTags = availableTags.filter(tag => 
+                            tag.toLowerCase().includes(lastTag) && tag.toLowerCase() !== lastTag
+                        ).slice(0, 5); // Limit to 5 suggestions
+                        
+                        if (matchingTags.length > 0) {
+                            tagSuggestions.innerHTML = '';
+                            matchingTags.forEach(tag => {
+                                const suggestionElement = document.createElement('div');
+                                suggestionElement.className = 'tag-suggestion';
+                                suggestionElement.innerHTML = `<i class="bi bi-tag me-2"></i>${tag}`;
+                                suggestionElement.addEventListener('click', function() {
+                                    const currentTags = tagsInput.value.split(',');
+                                    currentTags.pop(); // Remove the last (incomplete) tag
+                                    
+                                    // Add the selected tag
+                                    if (currentTags.length > 0 && currentTags[0] !== '') {
+                                        tagsInput.value = currentTags.join(',') + ', ' + tag;
+                                    } else {
+                                        tagsInput.value = tag;
+                                    }
+                                    
+                                    tagSuggestions.style.display = 'none';
+                                    tagsInput.focus();
+                                });
+                                tagSuggestions.appendChild(suggestionElement);
+                            });
+                            tagSuggestions.style.display = 'block';
+                        } else {
+                            tagSuggestions.style.display = 'none';
+                        }
+                    } else {
+                        tagSuggestions.style.display = 'none';
+                    }
+                });
+                
+                // Hide suggestions when clicking elsewhere
+                document.addEventListener('click', function(e) {
+                    if (!tagsInput.contains(e.target) && !tagSuggestions.contains(e.target)) {
+                        tagSuggestions.style.display = 'none';
+                    }
+                });
+            }
         });
     </script>
 }

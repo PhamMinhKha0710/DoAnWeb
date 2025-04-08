@@ -39,6 +39,16 @@
         </div>
     }
     
+    @if (TempData["GiteaConnectionIssue"] != null && (bool)TempData["GiteaConnectionIssue"] == true)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Gitea Connection Issue:</strong> Cannot connect to the Gitea server. Some repository features like file browsing and commit history may be limited.
+            <a asp-action="TestGiteaConnection" class="btn btn-sm btn-warning ms-3">Test Connection</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
     @if (Model.ShowOwnershipFix)
     {
         <div class="alert alert-warning alert-dismissible fade show" role="alert">

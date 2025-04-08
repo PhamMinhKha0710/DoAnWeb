@@ -990,51 +990,52 @@ function initGlobalSearch() {
             clearTimeout(debounceTimeout);
         }
         
-        // Debounce input to avoid too many requests
-        debounceTimeout = setTimeout(() => {
-            if (searchTerm.length >= 2) {
-                performSearch(searchTerm);
-            } else {
-                hideDropdown();
-            }
-        }, 300);
-    });
-    
-    // Focus event - show dropdown if there's text
-    searchInput.addEventListener('focus', function() {
-        const searchTerm = searchInput.value.trim();
+        // Only search if there's at least 2 characters
         if (searchTerm.length >= 2) {
-            performSearch(searchTerm);
-        }
-    });
-    
-    // Handle click on search button
-    searchButton.addEventListener('click', function() {
-        const searchTerm = searchInput.value.trim();
-        if (searchTerm.length > 0) {
-            window.location.href = `/Questions/Index?search=${encodeURIComponent(searchTerm)}`;
-        }
-    });
-    
-    // Handle Enter key press
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const searchTerm = searchInput.value.trim();
-            if (searchTerm.length > 0) {
-                window.location.href = `/Questions/Index?search=${encodeURIComponent(searchTerm)}`;
-            }
-        }
-    });
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        const isClickInside = searchInput.contains(e.target) || 
-                             searchDropdown.contains(e.target) ||
-                             searchButton.contains(e.target);
-        
-        if (!isClickInside && searchDropdown.classList.contains('active')) {
+            // Add debounce to avoid making too many requests
+            debounceTimeout = setTimeout(() => {
+                performSearch(searchTerm);
+            }, 300); // 300ms delay
+        } else if (searchTerm.length === 0) {
             hideDropdown();
         }
     });
+    
+    // Handle clicks outside to close dropdown
+    document.addEventListener('click', function(e) {
+        // Check if click is outside the search container
+        if (!e.target.closest('#globalSearchContainer') && searchDropdown.classList.contains('active')) {
+            hideDropdown();
+        }
+    });
+    
+    // Handle "View all results" button
+    if (viewAllButton) {
+        viewAllButton.addEventListener('click', function(e) {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length >= 2) {
+                window.location.href = `/Questions/Index?search=${encodeURIComponent(searchTerm)}`;
+            }
+        });
+    }
+    
+    // Close dropdown when pressing Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && searchDropdown.classList.contains('active')) {
+            hideDropdown();
+        }
+    });
+    
+    // Handle form submission
+    const searchForm = searchInput.closest('form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length < 2) {
+                e.preventDefault();
+                return;
+            }
+            // Default form action will execute
+        });
+    }
 }

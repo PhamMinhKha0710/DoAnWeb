@@ -69,6 +69,7 @@ namespace DoAnWeb.Extensions
             app.MapHub<PresenceHub>("/presenceHub");
             app.MapHub<ChatHub>("/chatHub");
             app.MapHub<ActivityHub>("/activityHub");
+            app.MapHub<BadgeHub>("/badgeHub");
 
             return app;
         }
